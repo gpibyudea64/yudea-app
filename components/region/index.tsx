@@ -1,6 +1,7 @@
 "use client";
-import { useBranches, useDeleteBranch } from "@/hooks/use-branch";
-import { Branch, BranchForm } from "@/types/branch";
+
+import { useDeleteRegion, useRegions } from "@/hooks/use-region";
+import { Region, RegionForm } from "@/types/region";
 import { useState } from "react";
 import { Button } from "../ui/button";
 import { Calendar, Church, Edit, Plus, Trash2 } from "lucide-react";
@@ -13,43 +14,46 @@ import {
   TableHeader,
   TableRow,
 } from "../ui/table";
-import BranchDialog from "./branch-dialog";
+import RegionDialog from "./region-dialog";
 
-export default function Branches() {
+export default function Regions() {
   const [page] = useState(1);
   const [limit] = useState(10);
 
-  const { data, isLoading } = useBranches(page, limit);
-  const deleteMutation = useDeleteBranch();
+  const { data, isLoading } = useRegions(page, limit);
+  const deleteMutation = useDeleteRegion();
 
-  const branches = data?.data ?? [];
+  const regions = data?.data ?? [];
 
   const [open, setOpen] = useState(false);
-  const [editing, setEditing] = useState<Branch | null>(null);
+  const [editing, setEditing] = useState<Region | null>(null);
 
-  const [form, setForm] = useState<BranchForm>({
+  const [form, setForm] = useState<RegionForm>({
     name: "",
+    branchId: "",
   });
 
   function openCreate() {
     setEditing(null);
     setForm({
       name: "",
+      branchId: "",
     });
     setOpen(true);
   }
 
-  function openEdit(item: Branch) {
+  function openEdit(item: Region) {
     setEditing(item);
 
     setForm({
       name: item.name,
+      branchId: item.branchId,
     });
     setOpen(true);
   }
 
   async function handleDelete(id: string) {
-    const confirmed = confirm("Delete this branch?");
+    const confirmed = confirm("Delete this region?");
     if (!confirmed) return;
     deleteMutation.mutateAsync(id);
   }
@@ -61,7 +65,7 @@ export default function Branches() {
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="space-y-1">
             <h1 className="text-3xl font-bold bg-linear-to-r from-slate-900 to-slate-700 dark:from-slate-100 dark:to-slate-300 bg-clip-text text-transparent">
-              Branch Management
+              Region Management
             </h1>
             <p className="text-muted-foreground">
               Track and manage church branch
@@ -72,7 +76,7 @@ export default function Branches() {
             className="shadow-lg hover:shadow-xl transition-all"
           >
             <Plus className="mr-2 h-4 w-4" />
-            Create Branch
+            Create Region
           </Button>
         </div>
 
@@ -81,7 +85,7 @@ export default function Branches() {
           <CardHeader className="border-b">
             <CardTitle className="flex items-center gap-2">
               <Calendar className="h-5 w-5" />
-              Branch Records
+              Region Records
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
@@ -90,6 +94,7 @@ export default function Branches() {
                 <TableHeader>
                   <TableRow className="bg-muted/50">
                     <TableHead className="font-semibold">Name</TableHead>
+                    <TableHead className="font-semibold">Branch</TableHead>
                     <TableHead className="font-semibold text-center w-40">
                       Actions
                     </TableHead>
@@ -103,18 +108,18 @@ export default function Branches() {
                         <div className="flex flex-col items-center gap-2">
                           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
                           <p className="text-muted-foreground">
-                            Loading branches data...
+                            Loading regions data...
                           </p>
                         </div>
                       </TableCell>
                     </TableRow>
-                  ) : branches.length === 0 ? (
+                  ) : regions.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={2} className="text-center py-12">
                         <div className="flex flex-col items-center gap-2">
                           <Church className="h-12 w-12 text-muted-foreground/50" />
                           <p className="text-muted-foreground">
-                            No branches records found
+                            No regions records found
                           </p>
                           <Button
                             variant="outline"
@@ -128,13 +133,17 @@ export default function Branches() {
                       </TableCell>
                     </TableRow>
                   ) : (
-                    branches.map((item: Branch) => (
+                    regions.map((item: Region) => (
                       <TableRow
                         key={item.id}
                         className="hover:bg-muted/50 transition-colors"
                       >
                         <TableCell className="font-medium">
                           {item.name}
+                        </TableCell>
+
+                        <TableCell className="font-medium">
+                          {item.branch?.name ?? ""}
                         </TableCell>
 
                         <TableCell>
@@ -169,7 +178,7 @@ export default function Branches() {
           </CardContent>
         </Card>
 
-        <BranchDialog
+        <RegionDialog
           editing={editing}
           form={form}
           open={open}

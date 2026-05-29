@@ -1,5 +1,4 @@
-import { Attendance, Branch } from "@/app/generated/prisma/client";
-import { AttendanceForm } from "@/types/attendance";
+import { Branch } from "@/app/generated/prisma/client";
 import { BranchForm } from "@/types/branch";
 import { PaginatedResponse } from "@/types/shared";
 

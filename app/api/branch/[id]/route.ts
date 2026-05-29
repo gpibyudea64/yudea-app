@@ -1,6 +1,18 @@
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 
+async function findOneOrThrow(id: string) {
+  const branch = await prisma.branch.findUnique({
+    where: { id },
+    include: {
+      regions: true,
+    },
+  });
+
+  if (!branch) return null;
+  return branch;
+}
+
 // GET /api/attendance/:id
 export async function GET(
   _req: NextRequest,
@@ -8,9 +20,7 @@ export async function GET(
 ) {
   const { id } = await params;
   try {
-    const branch = await prisma.branch.findUnique({
-      where: { id: id },
-    });
+    const branch = await findOneOrThrow(id);
 
     if (!branch) {
       return NextResponse.json({ error: "branch not found" }, { status: 404 });
@@ -35,9 +45,7 @@ export async function PATCH(
     const body = await req.json();
     const { name } = body;
 
-    const existing = await prisma.branch.findUnique({
-      where: { id: id },
-    });
+    const existing = await findOneOrThrow(id);
 
     if (!existing) {
       return NextResponse.json({ error: "branch not found" }, { status: 404 });

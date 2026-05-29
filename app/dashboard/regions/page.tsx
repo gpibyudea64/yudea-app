@@ -1,5 +1,5 @@
-import RegionsPage from "@/components/regions";
+import Regions from "@/components/region";
 
 export default function RegionsDashboardPage() {
-  return <RegionsPage />;
+  return <Regions />;
 }
