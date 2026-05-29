@@ -1,3 +1,8 @@
+import { badgeVariants } from "@/components/ui/badge";
+import { VariantProps } from "class-variance-authority";
+
+type BadgeVariant = NonNullable<VariantProps<typeof badgeVariants>["variant"]>;
+
 export function toTitleCase(str: string): string {
   return str
     .toLowerCase()
@@ -77,9 +82,24 @@ export function toPaginatedResult<T>(
 
   const items = payload.items ?? payload.data ?? payload.results ?? [];
   const meta = payload.meta ?? {};
-  const page = meta.page ?? meta.currentPage ?? payload.page ?? payload.currentPage ?? fallbackPage;
-  const limit = meta.limit ?? meta.perPage ?? payload.limit ?? payload.perPage ?? fallbackLimit;
-  const total = meta.total ?? meta.totalItems ?? payload.total ?? payload.totalItems ?? items.length;
+  const page =
+    meta.page ??
+    meta.currentPage ??
+    payload.page ??
+    payload.currentPage ??
+    fallbackPage;
+  const limit =
+    meta.limit ??
+    meta.perPage ??
+    payload.limit ??
+    payload.perPage ??
+    fallbackLimit;
+  const total =
+    meta.total ??
+    meta.totalItems ??
+    payload.total ??
+    payload.totalItems ??
+    items.length;
   const totalPages =
     meta.totalPages ??
     meta.pageCount ??
@@ -97,3 +117,13 @@ export function toPaginatedResult<T>(
     },
   };
 }
+
+export const getServiceTypeColor = (type: string) => {
+  const types: Record<string, BadgeVariant> = {
+    "Sunday Service": "default",
+    "Wednesday Service": "secondary",
+    "Youth Service": "destructive",
+    "Children's Church": "outline",
+  };
+  return types[type] || "default";
+};

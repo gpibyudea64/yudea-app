@@ -40,3 +40,75 @@ model Session {
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id])
 }
+
+model Branch {
+  id        String   @id @default(uuid())
+  name      String
+  regions   Region[]
+  createdAt DateTime @default(now())
+}
+
+model Region {
+  id                  String   @id @default(uuid())
+  name                String
+  branchId            String
+  branch              Branch   @relation(fields: [branchId], references: [id])
+  families            Family[]
+  coordinatorMemberId String?  @unique
+  coordinator         Member?  @relation("RegionCoordinator", fields: [coordinatorMemberId], references: [id])
+  createdAt           DateTime @default(now())
+}
+
+model Family {
+  id         String   @id @default(uuid())
+  familyName String
+  address    String?
+  regionId   String
+  region     Region   @relation(fields: [regionId], references: [id])
+  members    Member[]
+  createdAt  DateTime @default(now())
+}
+
+model Member {
+  id                String     @id @default(uuid())
+  name              String
+  gender            Gender
+  birthDate         DateTime
+  phone             String?
+  email             String?
+  role              MemberRole
+  isActive          Boolean    @default(true)
+  isDeceased        Boolean    @default(false)
+  deathDate         DateTime?
+  familyId          String
+  family            Family     @relation(fields: [familyId], references: [id])
+  coordinatedRegion Region?    @relation("RegionCoordinator")
+
+  createdAt DateTime @default(now())
+}
+
+enum MemberRole {
+  FAMILY_HEAD
+  WIFE
+  CHILD
+  OTHER
+}
+
+model Attendance {
+  id          String   @id @default(uuid())
+  serviceDate DateTime
+  serviceType String
+
+  maleCount   Int
+  femaleCount Int
+  totalCount  Int
+
+  createdAt DateTime @default(now())
+
+  @@unique([serviceDate, serviceType])
+}
+
+enum Gender {
+  MALE
+  FEMALE
+}

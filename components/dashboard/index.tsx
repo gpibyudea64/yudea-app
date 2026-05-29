@@ -5,9 +5,10 @@ import RegionStat from "./region-stat";
 export default function Dashboard() {
   return (
     <div className="flex flex-col gap-4">
-      <BranchStat />
+      hello
+      {/* <BranchStat />
       <RegionStat />
-      <MemberStat />
+      <MemberStat /> */}
     </div>
   );
 }

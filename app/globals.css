@@ -154,4 +154,16 @@
       );
     background-attachment: fixed;
   }
+
+  /* Add to your global.css or component style */
+  input[type="datetime-local"] {
+    display: block;
+    padding: 0.5rem;
+  }
+
+  /* For better datetime-local styling */
+  input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    padding: 5px;
+  }
 }
