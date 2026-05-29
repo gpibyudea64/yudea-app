@@ -15,12 +15,14 @@ import {
   TableRow,
 } from "../ui/table";
 import RegionDialog from "./region-dialog";
+import { DataTableControls } from "../ui/data-table-controls";
 
 export default function Regions() {
-  const [page] = useState(1);
-  const [limit] = useState(10);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [search, setSearch] = useState("");
 
-  const { data, isLoading } = useRegions(page, limit);
+  const { data, isLoading } = useRegions(page, limit, search);
   const deleteMutation = useDeleteRegion();
 
   const regions = data?.data ?? [];
@@ -75,6 +77,14 @@ export default function Regions() {
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
+            <DataTableControls
+              search={search}
+              onSearchChange={setSearch}
+              searchPlaceholder="Search regions or branches..."
+              meta={data?.meta}
+              onPageChange={setPage}
+              onLimitChange={setLimit}
+            />
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
@@ -164,11 +174,7 @@ export default function Regions() {
           </CardContent>
         </Card>
 
-        <RegionDialog
-          editing={editing}
-          open={open}
-          setOpen={setOpen}
-        />
+        <RegionDialog editing={editing} open={open} setOpen={setOpen} />
       </div>
     </div>
   );

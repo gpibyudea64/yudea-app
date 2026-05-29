@@ -1,59 +1,59 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  createAttendance,
-  deleteAttendance,
-  getAttendance,
-  getAttendances,
-  updateAttendance,
-} from "@/lib/api/attendance";
-import { AttendanceForm } from "@/types/attendance";
+  createFamily,
+  deleteFamily,
+  getFamilies,
+  getFamily,
+  updateFamily,
+} from "@/lib/api/family";
+import { FamilyForm } from "@/types/family";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-const QUERY_KEY = "attendance";
+const QUERY_KEY = "family";
 
 // ── queries ───────────────────────────────────────────────
 
-export function useAttendances(page = 1, limit = 10, search = "") {
+export function useFamilies(page = 1, limit = 10, search = "") {
   return useQuery({
     queryKey: [QUERY_KEY, page, limit, search],
-    queryFn: () => getAttendances(page, limit, search),
+    queryFn: () => getFamilies(page, limit, search),
   });
 }
 
-export function useAttendance(id: string) {
+export function useFamily(id: string) {
   return useQuery({
     queryKey: [QUERY_KEY, id],
-    queryFn: () => getAttendance(id),
+    queryFn: () => getFamily(id),
     enabled: !!id,
   });
 }
 
 // ── mutations ─────────────────────────────────────────────
 
-export function useCreateAttendance() {
+export function useCreateFamily() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (payload: AttendanceForm) => createAttendance(payload),
+    mutationFn: (payload: FamilyForm) => createFamily(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
     },
   });
 }
 
-export function useUpdateAttendance() {
+export function useUpdateFamily() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<AttendanceForm> }) =>
-      updateAttendance(id, data),
+    mutationFn: ({ id, data }: { id: string; data: Partial<FamilyForm> }) =>
+      updateFamily(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
     },
   });
 }
 
-export function useDeleteAttendance() {
+export function useDeleteFamily() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => deleteAttendance(id),
+    mutationFn: (id: string) => deleteFamily(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
     },

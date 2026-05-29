@@ -1,12 +1,19 @@
-import { Attendance } from "@/app/generated/prisma/client";
-import { AttendanceForm } from "@/types/attendance";
-import { PaginatedResponse } from "@/types/shared";
+import type { Attendance } from "@/app/generated/prisma/client";
+import type { AttendanceForm } from "@/types/attendance";
+import type { PaginatedResponse } from "@/types/shared";
 
 export async function getAttendances(
   page = 1,
   limit = 10,
+  search = "",
 ): Promise<PaginatedResponse<Attendance>> {
-  const res = await fetch(`/api/attendance?page=${page}&limit=${limit}`);
+  const params = new URLSearchParams({
+    page: String(page),
+    limit: String(limit),
+  });
+  if (search) params.set("search", search);
+
+  const res = await fetch(`/api/attendance?${params.toString()}`);
   if (!res.ok) throw new Error("Failed to fetch attendance");
   return res.json();
 }

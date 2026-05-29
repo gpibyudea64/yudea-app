@@ -7,15 +7,20 @@ export async function GET(req: NextRequest) {
     const { searchParams } = req.nextUrl;
     const page = Math.max(1, Number(searchParams.get("page") ?? 1));
     const limit = Math.max(1, Number(searchParams.get("limit") ?? 10));
+    const search = searchParams.get("search")?.trim() ?? "";
     const skip = (page - 1) * limit;
+    const where = search
+      ? { serviceType: { contains: search, mode: "insensitive" as const } }
+      : {};
 
     const [items, total] = await prisma.$transaction([
       prisma.attendance.findMany({
+        where,
         skip,
         take: limit,
         orderBy: { createdAt: "desc" },
       }),
-      prisma.attendance.count(),
+      prisma.attendance.count({ where }),
     ]);
 
     return NextResponse.json({

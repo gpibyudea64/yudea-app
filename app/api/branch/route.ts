@@ -6,10 +6,15 @@ export async function GET(req: NextRequest) {
     const { searchParams } = req.nextUrl;
     const page = Math.max(1, Number(searchParams.get("page") ?? 1));
     const limit = Math.max(1, Number(searchParams.get("limit") ?? 10));
+    const search = searchParams.get("search")?.trim() ?? "";
     const skip = (page - 1) * limit;
+    const where = search
+      ? { name: { contains: search, mode: "insensitive" as const } }
+      : {};
 
     const [items, total] = await prisma.$transaction([
       prisma.branch.findMany({
+        where,
         skip,
         take: limit,
         orderBy: { createdAt: "desc" },
@@ -17,7 +22,7 @@ export async function GET(req: NextRequest) {
           regions: true,
         },
       }),
-      prisma.branch.count(),
+      prisma.branch.count({ where }),
     ]);
 
     return NextResponse.json({

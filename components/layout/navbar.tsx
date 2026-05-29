@@ -13,7 +13,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { usePathname, useRouter } from "next/navigation";
 import { useStoredUser } from "@/lib/auth-session";
 import { signOut } from "next-auth/react";
-import { toTitleCase } from "@/lib/helper";
+import { toTitleCase } from "@/lib/client-helper";
 
 interface NavbarProps {
   onMenuClick?: () => void;

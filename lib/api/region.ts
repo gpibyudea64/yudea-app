@@ -1,12 +1,18 @@
-import { Region } from "@/app/generated/prisma/client";
-import { RegionForm } from "@/types/region";
-import { PaginatedResponse } from "@/types/shared";
+import type { Region, RegionForm } from "@/types/region";
+import type { PaginatedResponse } from "@/types/shared";
 
 export async function getRegions(
   page = 1,
   limit = 10,
+  search = "",
 ): Promise<PaginatedResponse<Region>> {
-  const res = await fetch(`/api/region?page=${page}&limit=${limit}`);
+  const params = new URLSearchParams({
+    page: String(page),
+    limit: String(limit),
+  });
+  if (search) params.set("search", search);
+
+  const res = await fetch(`/api/region?${params.toString()}`);
   if (!res.ok) throw new Error("Failed to fetch regions");
   return res.json();
 }

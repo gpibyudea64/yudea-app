@@ -12,10 +12,10 @@ const QUERY_KEY = "branch";
 
 // ── queries ───────────────────────────────────────────────
 
-export function useBranches(page = 1, limit = 10) {
+export function useBranches(page = 1, limit = 10, search = "") {
   return useQuery({
-    queryKey: [QUERY_KEY, page, limit],
-    queryFn: () => getBranches(page, limit),
+    queryKey: [QUERY_KEY, page, limit, search],
+    queryFn: () => getBranches(page, limit, search),
   });
 }
 

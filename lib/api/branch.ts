@@ -1,12 +1,19 @@
-import { Branch } from "@/app/generated/prisma/client";
-import { BranchForm } from "@/types/branch";
-import { PaginatedResponse } from "@/types/shared";
+import type { Branch } from "@/types/branch";
+import type { BranchForm } from "@/types/branch";
+import type { PaginatedResponse } from "@/types/shared";
 
 export async function getBranches(
   page = 1,
   limit = 10,
+  search = "",
 ): Promise<PaginatedResponse<Branch>> {
-  const res = await fetch(`/api/branch?page=${page}&limit=${limit}`);
+  const params = new URLSearchParams({
+    page: String(page),
+    limit: String(limit),
+  });
+  if (search) params.set("search", search);
+
+  const res = await fetch(`/api/branch?${params.toString()}`);
   if (!res.ok) throw new Error("Failed to fetch branch");
   return res.json();
 }

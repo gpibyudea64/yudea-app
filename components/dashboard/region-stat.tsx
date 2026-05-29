@@ -1,12 +1,14 @@
 "use client";
 
-import { useRegionsCount } from "@/services/region";
+import { useRegions } from "@/hooks/use-region";
+import { MapPin } from "lucide-react";
 import { StatCard } from "./stat-card";
 
 export default function RegionStat() {
-  const { data } = useRegionsCount();
-  const totalFamilies = data?.reduce(
-    (sum, region) => sum + (region.totalFamilies ?? 0),
+  const { data } = useRegions(1, 999);
+  const regions = data?.data ?? [];
+  const totalFamilies = regions.reduce(
+    (sum, region) => sum + (region.families?.length ?? 0),
     0,
   );
 
@@ -24,8 +26,9 @@ export default function RegionStat() {
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
         <StatCard
           description="Total regions"
-          quantity={data?.length ?? 0}
+          quantity={data?.meta.total ?? 0}
           title="All Regions"
+          icon={<MapPin className="h-5 w-5 text-blue-600" />}
         />
         <StatCard
           description="Total families across all regions"
@@ -35,12 +38,12 @@ export default function RegionStat() {
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {data?.map((item) => (
+        {regions.map((item) => (
           <StatCard
             key={item.id}
             description="Families in this region"
-            quantity={item?.totalFamilies ?? 0}
-            title={item.regionName}
+            quantity={item.families?.length ?? 0}
+            title={item.name}
           />
         ))}
       </div>

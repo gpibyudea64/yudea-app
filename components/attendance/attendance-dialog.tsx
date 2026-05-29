@@ -13,7 +13,7 @@ import {
   useCreateAttendance,
   useUpdateAttendance,
 } from "@/hooks/use-attendance";
-import { Attendance } from "@/app/generated/prisma/client";
+import type { Attendance } from "@/app/generated/prisma/client";
 import { AttendanceForm } from "@/types/attendance";
 import { Dispatch, SetStateAction, useEffect } from "react";
 import { toast } from "sonner";

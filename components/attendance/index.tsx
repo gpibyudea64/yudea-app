@@ -26,16 +26,22 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useAttendances, useDeleteAttendance } from "@/hooks/use-attendance";
-import { Attendance } from "@/app/generated/prisma/client";
+import type { Attendance } from "@/app/generated/prisma/client";
 import AttendanceDialog from "./attendance-dialog";
 import AttendanceCard from "./attendance-card";
-import { getServiceTypeColor } from "@/lib/helper";
+import { getServiceTypeColor } from "@/lib/client-helper";
+import { DataTableControls } from "../ui/data-table-controls";
 
 export default function AttendancePage() {
-  const [page] = useState(1);
-  const [limit] = useState(10);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [search, setSearch] = useState("");
 
-  const { data: attendanceResult, isLoading } = useAttendances(page, limit);
+  const { data: attendanceResult, isLoading } = useAttendances(
+    page,
+    limit,
+    search,
+  );
   const deleteMutation = useDeleteAttendance();
 
   const attendances = attendanceResult?.data ?? [];
@@ -149,6 +155,14 @@ export default function AttendancePage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
+            <DataTableControls
+              search={search}
+              onSearchChange={setSearch}
+              searchPlaceholder="Search service type..."
+              meta={attendanceResult?.meta}
+              onPageChange={setPage}
+              onLimitChange={setLimit}
+            />
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>

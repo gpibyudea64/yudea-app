@@ -30,7 +30,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { PaginationMeta, SelectOption } from "@/type/shared";
+import { PaginationMeta, SelectOption } from "@/types/shared";
 
 type PrimitiveValue = string | number | boolean;
 export type FormValues = Record<string, PrimitiveValue>;

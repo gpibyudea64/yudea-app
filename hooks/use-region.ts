@@ -12,10 +12,10 @@ const QUERY_KEY = "region";
 
 // ── queries ───────────────────────────────────────────────
 
-export function useRegions(page = 1, limit = 10) {
+export function useRegions(page = 1, limit = 10, search = "") {
   return useQuery({
-    queryKey: [QUERY_KEY, page, limit],
-    queryFn: () => getRegions(page, limit),
+    queryKey: [QUERY_KEY, page, limit, search],
+    queryFn: () => getRegions(page, limit, search),
   });
 }
 

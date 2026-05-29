@@ -1,7 +1,8 @@
+import { attachPelkat } from "@/lib/helper";
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 
-// GET /api/region?page=1&limit=10
+// GET /api/member?page=1&limit=10
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = req.nextUrl;
@@ -13,9 +14,14 @@ export async function GET(req: NextRequest) {
       ? {
           OR: [
             { name: { contains: search, mode: "insensitive" as const } },
+            { email: { contains: search, mode: "insensitive" as const } },
+            { phone: { contains: search, mode: "insensitive" as const } },
             {
-              branch: {
-                name: { contains: search, mode: "insensitive" as const },
+              family: {
+                familyName: {
+                  contains: search,
+                  mode: "insensitive" as const,
+                },
               },
             },
           ],
@@ -23,24 +29,18 @@ export async function GET(req: NextRequest) {
       : {};
 
     const [items, total] = await prisma.$transaction([
-      prisma.region.findMany({
+      prisma.member.findMany({
         where,
         skip,
         take: limit,
         orderBy: { createdAt: "desc" },
-        include: {
-          branch: true,
-          families: true,
-          coordinator: {
-            include: { family: true },
-          },
-        },
+        include: { family: true },
       }),
-      prisma.region.count({ where }),
+      prisma.member.count({ where }),
     ]);
 
     return NextResponse.json({
-      data: items,
+      data: items.map(attachPelkat),
       meta: {
         total,
         page,
@@ -50,45 +50,50 @@ export async function GET(req: NextRequest) {
     });
   } catch (error) {
     return NextResponse.json(
-      { error: "Failed to fetch regions" },
+      { error: "Failed to fetch members" },
       { status: 500 },
     );
   }
 }
 
-// POST /api/region
+// POST /api/member
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { name, branchId } = body;
 
-    if (!name || !branchId) {
+    if (
+      !body.name ||
+      !body.gender ||
+      !body.birthDate ||
+      !body.role ||
+      !body.familyId
+    ) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 },
       );
     }
 
-    const region = await prisma.region.create({
+    const member = await prisma.member.create({
       data: {
-        name,
-        branch: { connect: { id: branchId } },
+        name: body.name,
+        gender: body.gender,
+        birthDate: new Date(body.birthDate),
+        phone: body.phone || null,
+        email: body.email || null,
+        role: body.role,
+        isActive: body.isActive ?? true,
+        isDeceased: body.isDeceased ?? false,
+        deathDate: body.deathDate ? new Date(body.deathDate) : null,
+        family: { connect: { id: body.familyId } },
       },
+      include: { family: true },
     });
 
-    const full = await prisma.region.findUnique({
-      where: { id: region.id },
-      include: {
-        branch: true,
-        families: true,
-        coordinator: { include: { family: true } },
-      },
-    });
-
-    return NextResponse.json(full, { status: 201 });
+    return NextResponse.json(attachPelkat(member), { status: 201 });
   } catch (error) {
     return NextResponse.json(
-      { error: "Failed to create region" },
+      { error: "Failed to create member" },
       { status: 500 },
     );
   }

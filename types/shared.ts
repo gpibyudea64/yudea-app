@@ -7,3 +7,10 @@ export type PaginatedResponse<T> = {
     totalPages: number;
   };
 };
+
+export type PaginationMeta = PaginatedResponse<unknown>["meta"];
+
+export type SelectOption = {
+  label: string;
+  value: string;
+};
