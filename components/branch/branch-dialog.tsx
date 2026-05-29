@@ -1,4 +1,4 @@
-import { Calendar, Edit, GitBranch, Plus } from "lucide-react";
+import { Edit, GitBranch, Plus } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -9,31 +9,46 @@ import {
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
-import { Branch } from "@/app/generated/prisma/client";
-import { Dispatch, SetStateAction } from "react";
+import { Branch } from "@/types/branch";
+import { Dispatch, SetStateAction, useEffect } from "react";
 import { toast } from "sonner";
 import { useCreateBranch, useUpdateBranch } from "@/hooks/use-branch";
 import { BranchForm } from "@/types/branch";
+import { useForm } from "react-hook-form";
 
 export default function BranchDialog({
-  form,
   editing,
   open,
   setOpen,
-  setForm,
 }: {
-  form: BranchForm;
   editing: Branch | null;
   open: boolean;
   setOpen: Dispatch<SetStateAction<boolean>>;
-  setForm: Dispatch<SetStateAction<BranchForm>>;
 }) {
   const createMutation = useCreateBranch();
   const updateMutation = useUpdateBranch();
-  async function handleSubmit() {
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm<BranchForm>({
+    defaultValues: {
+      name: "",
+    },
+  });
+
+  useEffect(() => {
+    reset({
+      name: editing?.name ?? "",
+    });
+  }, [editing, open, reset]);
+
+  async function onSubmit(values: BranchForm) {
     try {
       const payload = {
-        ...form,
+        ...values,
       };
 
       if (editing) {
@@ -48,10 +63,11 @@ export default function BranchDialog({
       toast.success("Successfull");
 
       setOpen(false);
-    } catch (e) {
+    } catch {
       toast.error("Error");
     }
   }
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="sm:max-w-125 fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
@@ -71,34 +87,25 @@ export default function BranchDialog({
           </DialogTitle>
         </DialogHeader>
 
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleSubmit();
-          }}
-        >
+        <form onSubmit={handleSubmit(onSubmit)}>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label
-                htmlFor="serviceDate"
+                htmlFor="branchName"
                 className="flex items-center gap-2 text-sm font-medium"
               >
                 <GitBranch className="h-4 w-4" />
                 Name
               </Label>
               <Input
-                id="serviceDate"
+                id="branchName"
                 type="text"
-                value={form.name}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    name: e.target.value,
-                  })
-                }
+                {...register("name", { required: "Name is required" })}
                 className="w-full"
-                required
               />
+              {errors.name && (
+                <p className="text-sm text-red-500">{errors.name.message}</p>
+              )}
             </div>
           </div>
 
@@ -110,7 +117,7 @@ export default function BranchDialog({
             >
               Cancel
             </Button>
-            <Button type="submit">
+            <Button type="submit" disabled={isSubmitting}>
               {editing ? (
                 <>
                   <Edit className="mr-2 h-4 w-4" />

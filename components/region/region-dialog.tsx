@@ -9,15 +9,9 @@ import {
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
-import { Branch } from "@/app/generated/prisma/client";
-import { Dispatch, SetStateAction } from "react";
+import { Dispatch, SetStateAction, useEffect } from "react";
 import { toast } from "sonner";
-import {
-  useBranches,
-  useCreateBranch,
-  useUpdateBranch,
-} from "@/hooks/use-branch";
-import { BranchForm } from "@/types/branch";
+import { useBranches } from "@/hooks/use-branch";
 import { Region, RegionForm } from "@/types/region";
 import { useCreateRegion, useUpdateRegion } from "@/hooks/use-region";
 import {
@@ -28,19 +22,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
+import { Controller, useForm } from "react-hook-form";
 
 export default function RegionDialog({
-  form,
   editing,
   open,
   setOpen,
-  setForm,
 }: {
-  form: RegionForm;
   editing: Region | null;
   open: boolean;
   setOpen: Dispatch<SetStateAction<boolean>>;
-  setForm: Dispatch<SetStateAction<RegionForm>>;
 }) {
   const createMutation = useCreateRegion();
   const updateMutation = useUpdateRegion();
@@ -52,11 +43,30 @@ export default function RegionDialog({
     value: branch.id,
   }));
 
-  console.log(data);
-  async function handleSubmit() {
+  const {
+    control,
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm<RegionForm>({
+    defaultValues: {
+      name: "",
+      branchId: "",
+    },
+  });
+
+  useEffect(() => {
+    reset({
+      name: editing?.name ?? "",
+      branchId: editing?.branchId ?? "",
+    });
+  }, [editing, open, reset]);
+
+  async function onSubmit(values: RegionForm) {
     try {
       const payload = {
-        ...form,
+        ...values,
       };
 
       if (editing) {
@@ -71,10 +81,11 @@ export default function RegionDialog({
       toast.success("Successfull");
 
       setOpen(false);
-    } catch (e) {
+    } catch {
       toast.error("Error");
     }
   }
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="sm:max-w-125 fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
@@ -94,66 +105,61 @@ export default function RegionDialog({
           </DialogTitle>
         </DialogHeader>
 
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleSubmit();
-          }}
-        >
+        <form onSubmit={handleSubmit(onSubmit)}>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label
-                htmlFor="serviceDate"
+                htmlFor="regionName"
                 className="flex items-center gap-2 text-sm font-medium"
               >
                 <GitBranch className="h-4 w-4" />
                 Name
               </Label>
               <Input
-                id="serviceDate"
+                id="regionName"
                 type="text"
-                value={form.name}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    name: e.target.value,
-                  })
-                }
+                {...register("name", { required: "Name is required" })}
                 className="w-full"
-                required
               />
+              {errors.name && (
+                <p className="text-sm text-red-500">{errors.name.message}</p>
+              )}
             </div>
 
             <div className="space-y-2">
               <Label
-                htmlFor="serviceDate"
+                htmlFor="branchId"
                 className="flex items-center gap-2 text-sm font-medium"
               >
                 <GitBranch className="h-4 w-4" />
                 Branch
               </Label>
-              <Select
-                value={form.branchId}
-                onValueChange={(e) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    branchId: e,
-                  }))
-                }
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Branch" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    {branchOptions?.map((item) => (
-                      <SelectItem key={item.value} value={item.value}>
-                        {item.label}
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
+              <Controller
+                control={control}
+                name="branchId"
+                rules={{ required: "Branch is required" }}
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger id="branchId" className="w-full">
+                      <SelectValue placeholder="Branch" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        {branchOptions?.map((item) => (
+                          <SelectItem key={item.value} value={item.value}>
+                            {item.label}
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              {errors.branchId && (
+                <p className="text-sm text-red-500">
+                  {errors.branchId.message}
+                </p>
+              )}
             </div>
           </div>
 
@@ -165,7 +171,7 @@ export default function RegionDialog({
             >
               Cancel
             </Button>
-            <Button type="submit">
+            <Button type="submit" disabled={isSubmitting}>
               {editing ? (
                 <>
                   <Edit className="mr-2 h-4 w-4" />

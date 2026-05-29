@@ -1,6 +1,6 @@
 "use client";
 import { useBranches, useDeleteBranch } from "@/hooks/use-branch";
-import { Branch, BranchForm } from "@/types/branch";
+import { Branch } from "@/types/branch";
 import { useState } from "react";
 import { Button } from "../ui/button";
 import { Calendar, Church, Edit, Plus, Trash2 } from "lucide-react";
@@ -27,24 +27,13 @@ export default function Branches() {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Branch | null>(null);
 
-  const [form, setForm] = useState<BranchForm>({
-    name: "",
-  });
-
   function openCreate() {
     setEditing(null);
-    setForm({
-      name: "",
-    });
     setOpen(true);
   }
 
   function openEdit(item: Branch) {
     setEditing(item);
-
-    setForm({
-      name: item.name,
-    });
     setOpen(true);
   }
 
@@ -171,9 +160,7 @@ export default function Branches() {
 
         <BranchDialog
           editing={editing}
-          form={form}
           open={open}
-          setForm={setForm}
           setOpen={setOpen}
         />
       </div>

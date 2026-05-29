@@ -1,7 +1,7 @@
 "use client";
 
 import { useDeleteRegion, useRegions } from "@/hooks/use-region";
-import { Region, RegionForm } from "@/types/region";
+import { Region } from "@/types/region";
 import { useState } from "react";
 import { Button } from "../ui/button";
 import { Calendar, Church, Edit, Plus, Trash2 } from "lucide-react";
@@ -28,27 +28,13 @@ export default function Regions() {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Region | null>(null);
 
-  const [form, setForm] = useState<RegionForm>({
-    name: "",
-    branchId: "",
-  });
-
   function openCreate() {
     setEditing(null);
-    setForm({
-      name: "",
-      branchId: "",
-    });
     setOpen(true);
   }
 
   function openEdit(item: Region) {
     setEditing(item);
-
-    setForm({
-      name: item.name,
-      branchId: item.branchId,
-    });
     setOpen(true);
   }
 
@@ -180,9 +166,7 @@ export default function Regions() {
 
         <RegionDialog
           editing={editing}
-          form={form}
           open={open}
-          setForm={setForm}
           setOpen={setOpen}
         />
       </div>

@@ -15,29 +15,68 @@ import {
 } from "@/hooks/use-attendance";
 import { Attendance } from "@/app/generated/prisma/client";
 import { AttendanceForm } from "@/types/attendance";
-import { Dispatch, SetStateAction } from "react";
+import { Dispatch, SetStateAction, useEffect } from "react";
 import { toast } from "sonner";
+import { useForm, useWatch } from "react-hook-form";
 
 export default function AttendanceDialog({
-  form,
   editing,
   open,
   setOpen,
-  setForm,
 }: {
-  form: AttendanceForm;
   editing: Attendance | null;
   open: boolean;
   setOpen: Dispatch<SetStateAction<boolean>>;
-  setForm: Dispatch<SetStateAction<AttendanceForm>>;
 }) {
   const createMutation = useCreateAttendance();
   const updateMutation = useUpdateAttendance();
-  async function handleSubmit() {
+
+  const {
+    register,
+    control,
+    handleSubmit,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm<AttendanceForm>({
+    defaultValues: {
+      serviceDate: "",
+      serviceType: "",
+      maleCount: 0,
+      femaleCount: 0,
+    },
+  });
+
+  const [maleCount, femaleCount] = useWatch({
+    control,
+    name: ["maleCount", "femaleCount"],
+  });
+
+  useEffect(() => {
+    if (!editing) {
+      reset({
+        serviceDate: "",
+        serviceType: "",
+        maleCount: 0,
+        femaleCount: 0,
+      });
+      return;
+    }
+
+    const date = new Date(editing.serviceDate);
+
+    reset({
+      serviceDate: date.toISOString().slice(0, 16),
+      serviceType: editing.serviceType,
+      maleCount: editing.maleCount,
+      femaleCount: editing.femaleCount,
+    });
+  }, [editing, open, reset]);
+
+  async function onSubmit(values: AttendanceForm) {
     try {
       const payload = {
-        ...form,
-        totalCount: Number(form.maleCount) + Number(form.femaleCount),
+        ...values,
+        totalCount: Number(values.maleCount) + Number(values.femaleCount),
       };
 
       if (editing) {
@@ -52,10 +91,11 @@ export default function AttendanceDialog({
       toast.success("Successfull");
 
       setOpen(false);
-    } catch (e) {
+    } catch {
       toast.error("Error");
     }
   }
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="sm:max-w-125 fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
@@ -75,12 +115,7 @@ export default function AttendanceDialog({
           </DialogTitle>
         </DialogHeader>
 
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleSubmit();
-          }}
-        >
+        <form onSubmit={handleSubmit(onSubmit)}>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label
@@ -93,16 +128,16 @@ export default function AttendanceDialog({
               <Input
                 id="serviceDate"
                 type="datetime-local"
-                value={form.serviceDate}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    serviceDate: e.target.value,
-                  })
-                }
+                {...register("serviceDate", {
+                  required: "Service date is required",
+                })}
                 className="w-full"
-                required
               />
+              {errors.serviceDate && (
+                <p className="text-sm text-red-500">
+                  {errors.serviceDate.message}
+                </p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -116,17 +151,17 @@ export default function AttendanceDialog({
               <Input
                 id="serviceType"
                 type="text"
-                value={form.serviceType}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    serviceType: e.target.value,
-                  })
-                }
+                {...register("serviceType", {
+                  required: "Service type is required",
+                })}
                 placeholder="e.g., Sunday Service"
                 className="w-full"
-                required
               />
+              {errors.serviceType && (
+                <p className="text-sm text-red-500">
+                  {errors.serviceType.message}
+                </p>
+              )}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -141,17 +176,22 @@ export default function AttendanceDialog({
                 <Input
                   id="maleCount"
                   type="number"
-                  value={form.maleCount}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      maleCount: parseInt(e.target.value) || 0,
-                    })
-                  }
+                  {...register("maleCount", {
+                    valueAsNumber: true,
+                    required: "Male count is required",
+                    min: {
+                      value: 0,
+                      message: "Male count cannot be negative",
+                    },
+                  })}
                   min="0"
                   className="w-full"
-                  required
                 />
+                {errors.maleCount && (
+                  <p className="text-sm text-red-500">
+                    {errors.maleCount.message}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -165,17 +205,22 @@ export default function AttendanceDialog({
                 <Input
                   id="femaleCount"
                   type="number"
-                  value={form.femaleCount}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      femaleCount: parseInt(e.target.value) || 0,
-                    })
-                  }
+                  {...register("femaleCount", {
+                    valueAsNumber: true,
+                    required: "Female count is required",
+                    min: {
+                      value: 0,
+                      message: "Female count cannot be negative",
+                    },
+                  })}
                   min="0"
                   className="w-full"
-                  required
                 />
+                {errors.femaleCount && (
+                  <p className="text-sm text-red-500">
+                    {errors.femaleCount.message}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -186,7 +231,7 @@ export default function AttendanceDialog({
                   Total Attendance:
                 </span>
                 <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                  {Number(form.maleCount) + Number(form.femaleCount)}
+                  {Number(maleCount) + Number(femaleCount)}
                 </span>
               </div>
             </div>
@@ -200,7 +245,7 @@ export default function AttendanceDialog({
             >
               Cancel
             </Button>
-            <Button type="submit">
+            <Button type="submit" disabled={isSubmitting}>
               {editing ? (
                 <>
                   <Edit className="mr-2 h-4 w-4" />

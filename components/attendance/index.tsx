@@ -25,7 +25,6 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { AttendanceForm } from "@/types/attendance";
 import { useAttendances, useDeleteAttendance } from "@/hooks/use-attendance";
 import { Attendance } from "@/app/generated/prisma/client";
 import AttendanceDialog from "./attendance-dialog";
@@ -44,13 +43,6 @@ export default function AttendancePage() {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Attendance | null>(null);
 
-  const [form, setForm] = useState<AttendanceForm>({
-    serviceDate: "",
-    serviceType: "",
-    maleCount: 0,
-    femaleCount: 0,
-  });
-
   // Calculate statistics
   const totalAttendances = attendances.reduce(
     (sum, item) => sum + item.totalCount,
@@ -68,27 +60,11 @@ export default function AttendancePage() {
 
   function openCreate() {
     setEditing(null);
-    setForm({
-      serviceDate: "",
-      serviceType: "",
-      maleCount: 0,
-      femaleCount: 0,
-    });
     setOpen(true);
   }
 
   function openEdit(item: Attendance) {
     setEditing(item);
-
-    // Convert Date to YYYY-MM-DDThh:mm format for datetime-local input
-    const date = new Date(item.serviceDate);
-    const formattedDate = date.toISOString().slice(0, 16);
-    setForm({
-      serviceDate: formattedDate,
-      serviceType: item.serviceType,
-      maleCount: item.maleCount,
-      femaleCount: item.femaleCount,
-    });
     setOpen(true);
   }
 
@@ -306,9 +282,7 @@ export default function AttendancePage() {
 
         <AttendanceDialog
           editing={editing}
-          form={form}
           open={open}
-          setForm={setForm}
           setOpen={setOpen}
         />
       </div>

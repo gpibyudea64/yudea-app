@@ -12,6 +12,6 @@ export type Region = {
   coordinatorMemberId: string | null;
   createdAt: Date;
   branch?: Branch;
-  families?: any[];
+  families?: unknown[];
   coordinator?: null;
 };
