@@ -4,11 +4,12 @@ import { NextRequest, NextResponse } from "next/server";
 // GET /api/attendance/:id
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
+  const { id } = await params;
   try {
     const attendance = await prisma.attendance.findUnique({
-      where: { id: params.id },
+      where: { id: id },
     });
 
     if (!attendance) {
@@ -30,14 +31,15 @@ export async function GET(
 // PATCH /api/attendance/:id
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
+  const { id } = await params;
   try {
     const body = await req.json();
     const { serviceDate, serviceType, maleCount, femaleCount } = body;
 
     const existing = await prisma.attendance.findUnique({
-      where: { id: params.id },
+      where: { id: id },
     });
 
     if (!existing) {
@@ -51,7 +53,7 @@ export async function PATCH(
     const updatedFemaleCount = femaleCount ?? existing.femaleCount;
 
     const attendance = await prisma.attendance.update({
-      where: { id: params.id },
+      where: { id: id },
       data: {
         ...(serviceDate !== undefined && {
           serviceDate: new Date(serviceDate),
@@ -75,11 +77,12 @@ export async function PATCH(
 // DELETE /api/attendance/:id
 export async function DELETE(
   _req: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
+  const { id } = await params;
   try {
     await prisma.attendance.delete({
-      where: { id: params.id },
+      where: { id: id },
     });
 
     return NextResponse.json({ message: "Deleted successfully" });

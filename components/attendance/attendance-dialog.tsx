@@ -16,6 +16,7 @@ import {
 import { Attendance } from "@/app/generated/prisma/client";
 import { AttendanceForm } from "@/types/attendance";
 import { Dispatch, SetStateAction } from "react";
+import { toast } from "sonner";
 
 export default function AttendanceDialog({
   form,
@@ -33,21 +34,27 @@ export default function AttendanceDialog({
   const createMutation = useCreateAttendance();
   const updateMutation = useUpdateAttendance();
   async function handleSubmit() {
-    const payload = {
-      ...form,
-      totalCount: Number(form.maleCount) + Number(form.femaleCount),
-    };
+    try {
+      const payload = {
+        ...form,
+        totalCount: Number(form.maleCount) + Number(form.femaleCount),
+      };
 
-    if (editing) {
-      await updateMutation.mutateAsync({
-        id: editing.id,
-        data: payload,
-      });
-    } else {
-      await createMutation.mutateAsync(payload);
+      if (editing) {
+        await updateMutation.mutateAsync({
+          id: editing.id,
+          data: payload,
+        });
+      } else {
+        await createMutation.mutateAsync(payload);
+      }
+
+      toast.success("Successfull");
+
+      setOpen(false);
+    } catch (e) {
+      toast.error("Error");
     }
-
-    setOpen(false);
   }
   return (
     <Dialog open={open} onOpenChange={setOpen}>

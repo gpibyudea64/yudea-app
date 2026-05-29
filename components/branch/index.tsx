@@ -1,0 +1,183 @@
+"use client";
+import { Branch } from "@/app/generated/prisma/client";
+import { useBranches, useDeleteBranch } from "@/hooks/use-branch";
+import { BranchForm } from "@/types/branch";
+import { useState } from "react";
+import { Button } from "../ui/button";
+import { Calendar, Church, Edit, Plus, Trash2 } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "../ui/table";
+import BranchDialog from "./branch-dialog";
+
+export default function Branches() {
+  const [page] = useState(1);
+  const [limit] = useState(10);
+
+  const { data: attendanceResult, isLoading } = useBranches(page, limit);
+  const deleteMutation = useDeleteBranch();
+
+  const attendances = attendanceResult?.data ?? [];
+
+  const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<Branch | null>(null);
+
+  const [form, setForm] = useState<BranchForm>({
+    name: "",
+  });
+
+  function openCreate() {
+    setEditing(null);
+    setForm({
+      name: "",
+    });
+    setOpen(true);
+  }
+
+  function openEdit(item: Branch) {
+    setEditing(item);
+
+    setForm({
+      name: item.name,
+    });
+    setOpen(true);
+  }
+
+  async function handleDelete(id: string) {
+    const confirmed = confirm("Delete this branch?");
+    if (!confirmed) return;
+    deleteMutation.mutateAsync(id);
+  }
+
+  return (
+    <div className="min-h-screen bg-linear-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900">
+      <div className="container mx-auto px-4 py-8 space-y-6">
+        {/* Header Section */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <h1 className="text-3xl font-bold bg-linear-to-r from-slate-900 to-slate-700 dark:from-slate-100 dark:to-slate-300 bg-clip-text text-transparent">
+              Branch Management
+            </h1>
+            <p className="text-muted-foreground">
+              Track and manage church branch
+            </p>
+          </div>
+          <Button
+            onClick={openCreate}
+            className="shadow-lg hover:shadow-xl transition-all"
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Create Branch
+          </Button>
+        </div>
+
+        {/* Table Section */}
+        <Card className="shadow-xl">
+          <CardHeader className="border-b">
+            <CardTitle className="flex items-center gap-2">
+              <Calendar className="h-5 w-5" />
+              Branch Records
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/50">
+                    <TableHead className="font-semibold">Name</TableHead>
+                    <TableHead className="font-semibold text-center w-40">
+                      Actions
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+
+                <TableBody>
+                  {isLoading ? (
+                    <TableRow>
+                      <TableCell colSpan={2} className="text-center py-12">
+                        <div className="flex flex-col items-center gap-2">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                          <p className="text-muted-foreground">
+                            Loading attendance data...
+                          </p>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ) : attendances.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={2} className="text-center py-12">
+                        <div className="flex flex-col items-center gap-2">
+                          <Church className="h-12 w-12 text-muted-foreground/50" />
+                          <p className="text-muted-foreground">
+                            No attendance records found
+                          </p>
+                          <Button
+                            variant="outline"
+                            onClick={openCreate}
+                            className="mt-2"
+                          >
+                            <Plus className="mr-2 h-4 w-4" />
+                            Create First Record
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    attendances.map((item: Branch) => (
+                      <TableRow
+                        key={item.id}
+                        className="hover:bg-muted/50 transition-colors"
+                      >
+                        <TableCell className="font-medium">
+                          {item.name}
+                        </TableCell>
+
+                        <TableCell>
+                          <div className="flex gap-2 justify-center">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => openEdit(item)}
+                              className="hover:bg-primary hover:text-primary-foreground transition-colors"
+                            >
+                              <Edit className="h-3 w-3 mr-1" />
+                              Edit
+                            </Button>
+
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => handleDelete(item.id)}
+                              className="hover:bg-red-600 transition-colors"
+                            >
+                              <Trash2 className="h-3 w-3 mr-1" />
+                              Delete
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+
+        <BranchDialog
+          editing={editing}
+          form={form}
+          open={open}
+          setForm={setForm}
+          setOpen={setOpen}
+        />
+      </div>
+    </div>
+  );
+}
