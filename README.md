@@ -1,36 +1,130 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Yudea App
 
-## Getting Started
+Yudea App is a church administration dashboard for managing branches, regions, families, members, Pelkat grouping, attendance, users, and role-based access settings.
 
-First, run the development server:
+The project is built with Next.js 16 App Router, React 19, Prisma 7, PostgreSQL, NextAuth v5, TanStack Query, shadcn/Radix UI components, Tailwind CSS 4, and Vitest.
+
+## Features
+
+- Dashboard statistics for members, regions, and branches.
+- Branch, region, family, member, attendance, and user management.
+- Member Pelkat classification derived from age, gender, marital/family role, and active/deceased status.
+- Credentials-based authentication with NextAuth and Prisma.
+- Role-based page access and edit permissions for `ADMIN`, `STAFF`, `COORDINATOR`, and `MEMBER`.
+- Admin settings page for persisted RBAC route access overrides.
+- API route handlers for CRUD, counts, and RBAC configuration.
+
+## Project Structure
+
+```text
+app/                    Next.js App Router pages, layouts, and API routes
+components/             Feature components and shared UI primitives
+hooks/                  React Query and page access hooks
+lib/                    Auth, Prisma, RBAC, helper, and client API utilities
+nav/                    Dashboard navigation configuration
+prisma/                 Prisma schema, migrations, and seed data
+schemas/                Zod schemas
+services/               Service-level utilities
+tests/                  Vitest tests
+types/                  Shared TypeScript models
+proxy.ts                Next.js 16 request proxy for auth redirects
+```
+
+For this repository, follow `AGENTS.md`: Next.js APIs and conventions may differ from older versions, so read the relevant files in `node_modules/next/dist/docs/` before changing Next-specific code.
+
+## Requirements
+
+- Node.js 20 or newer
+- npm
+- PostgreSQL database
+
+## Environment
+
+Create a local `.env` file with at least:
+
+```bash
+DATABASE_URL="postgresql://USER:PASSWORD@HOST:PORT/DATABASE"
+AUTH_SECRET="replace-with-a-secure-random-secret"
+```
+
+`DATABASE_URL` is used by Prisma, `lib/prisma.ts`, and `auth.ts`. `AUTH_SECRET` is used by NextAuth.
+
+## Setup
+
+Install dependencies:
+
+```bash
+npm install
+```
+
+Generate the Prisma client:
+
+```bash
+npx prisma generate
+```
+
+Apply database migrations:
+
+```bash
+npx prisma migrate dev
+```
+
+Seed demo data:
+
+```bash
+npx prisma db seed
+```
+
+Start the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Demo Accounts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+The seed script creates:
 
-## Learn More
+| Email | Password | Role |
+| --- | --- | --- |
+| `admin@example.com` | `admin123` | `ADMIN` |
+| `demo@example.com` | `demo1234` | `STAFF` |
 
-To learn more about Next.js, take a look at the following resources:
+Use these only for local development.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Scripts
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+| Command | Purpose |
+| --- | --- |
+| `npm run dev` | Start the Next.js development server |
+| `npm run build` | Build the production app |
+| `npm run start` | Start the production server after building |
+| `npm run lint` | Run ESLint |
+| `npm run test` | Run Vitest once |
+| `npm run test:watch` | Run Vitest in watch mode |
 
-## Deploy on Vercel
+## Documentation
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- [API Reference](docs/API.md)
+- [Data Model](docs/DATA_MODEL.md)
+- [Authentication and RBAC](docs/AUTH_RBAC.md)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Development Notes
+
+- `proxy.ts` handles route-level redirects for dashboard and login pages. In Next.js 16, `proxy.ts` replaces the older middleware convention.
+- `auth.config.ts` contains shared NextAuth configuration. `auth.ts` adds the Prisma adapter and credentials provider.
+- `lib/rbac.ts` defines default route permissions and helpers. `lib/rbac-settings.ts` persists admin overrides in `AppSetting`.
+- Generated Prisma client code is configured to output to `app/generated/prisma`.
+- List endpoints return `{ data, meta }`, where `meta` contains pagination details.
+
+## Verification
+
+Before shipping changes, run:
+
+```bash
+npm run lint
+npm run test
+npm run build
+```
