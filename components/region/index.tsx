@@ -84,7 +84,7 @@ export default function Regions() {
             <DataTableControls
               search={search}
               onSearchChange={setSearch}
-              searchPlaceholder="Search regions or Wilayah Pelayanan..."
+              searchPlaceholder="Search Sektor Pelayanan or Wilayah Pelayanan..."
               meta={data?.meta}
               onPageChange={setPage}
               onLimitChange={setLimit}

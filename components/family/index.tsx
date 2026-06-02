@@ -55,7 +55,7 @@ export default function FamiliesPage() {
               Family Management
             </h1>
             <p className="text-muted-foreground">
-              Track Keluarga, regions, and household members
+              Track Keluarga, Sektor Pelayanan, and household members
             </p>
           </div>
           {canEdit && (
