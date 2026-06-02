@@ -1,4 +1,4 @@
-import { MemberPelkat } from "@prisma/client";
+import { MemberPelkat } from "@/app/generated/prisma/enums";
 import { useQuery } from "@tanstack/react-query";
 
 type MemberCount = {
