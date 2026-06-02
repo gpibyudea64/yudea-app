@@ -1,6 +1,6 @@
 # Data Model
 
-The Prisma schema is in `prisma/schema.prisma`. PostgreSQL is the configured datasource, and the generated Prisma client is written to `app/generated/prisma`.
+The Prisma schema is in `prisma/schema.prisma`. PostgreSQL is the configured datasource, and the Prisma client is generated with the default `@prisma/client` output.
 
 ## Core Entities
 

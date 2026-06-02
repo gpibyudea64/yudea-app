@@ -119,7 +119,7 @@ Use these only for local development.
 - `proxy.ts` handles route-level redirects for dashboard and login pages. In Next.js 16, `proxy.ts` replaces the older middleware convention.
 - `auth.config.ts` contains shared NextAuth configuration. `auth.ts` adds the Prisma adapter and credentials provider.
 - `lib/rbac.ts` defines default route permissions and helpers. `lib/rbac-settings.ts` persists admin overrides in `AppSetting`.
-- Generated Prisma client code is configured to output to `app/generated/prisma`.
+- Prisma client code is generated with the default `@prisma/client` output.
 - List endpoints return `{ data, meta }`, where `meta` contains pagination details.
 
 ## Verification

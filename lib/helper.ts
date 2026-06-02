@@ -1,10 +1,5 @@
-import {
-  Gender,
-  Member,
-  MemberPelkat,
-  MemberRole,
-  Prisma,
-} from "@prisma/client";
+import { MemberPelkat } from "@/app/generated/prisma/enums";
+import { Gender, Member, MemberRole, Prisma } from "@prisma/client";
 
 export function toTitleCase(str: string): string {
   return str
