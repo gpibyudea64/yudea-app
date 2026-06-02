@@ -5,6 +5,7 @@ import { PrismaClient } from "@/app/generated/prisma/client";
 import { Pool } from "pg";
 import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
+import { normalizeAppRole } from "@/lib/rbac";
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
@@ -34,7 +35,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         if (!isValid) return null;
 
-        return user;
+        return {
+          ...user,
+          role: normalizeAppRole(user.role),
+        };
       },
     }),
   ],
@@ -43,17 +47,17 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     jwt({ token, user }) {
       if (user) {
         token.id = user.id;
-        token.role = user.role;
+        token.role = normalizeAppRole(user.role as string);
       }
       return token;
     },
     session({ session, token }) {
       session.user.id = token.id as string;
-      session.user.role = token.role as string;
+      session.user.role = normalizeAppRole(token.role as string);
       return session;
     },
   },
   pages: {
-    signIn: "/login",
+    signIn: "/public/login",
   },
 });

@@ -1,5 +1,6 @@
 "use client";
 
+import { usePageAccess } from "@/hooks/use-page-access";
 import { useDeleteRegion, useRegions } from "@/hooks/use-region";
 import { Region } from "@/types/region";
 import { useState } from "react";
@@ -22,6 +23,7 @@ export default function Regions() {
   const [limit, setLimit] = useState(10);
   const [search, setSearch] = useState("");
 
+  const { canEdit } = usePageAccess("/dashboard/regions");
   const { data, isLoading } = useRegions(page, limit, search);
   const deleteMutation = useDeleteRegion();
 
@@ -59,13 +61,15 @@ export default function Regions() {
               Track and manage church branch
             </p>
           </div>
-          <Button
-            onClick={openCreate}
-            className="shadow-lg hover:shadow-xl transition-all"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Create Region
-          </Button>
+          {canEdit && (
+            <Button
+              onClick={openCreate}
+              className="shadow-lg hover:shadow-xl transition-all"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Create Region
+            </Button>
+          )}
         </div>
 
         {/* Table Section */}
@@ -91,16 +95,21 @@ export default function Regions() {
                   <TableRow className="bg-muted/50">
                     <TableHead className="font-semibold">Name</TableHead>
                     <TableHead className="font-semibold">Branch</TableHead>
-                    <TableHead className="font-semibold text-center w-40">
-                      Actions
-                    </TableHead>
+                    {canEdit && (
+                      <TableHead className="font-semibold text-center w-40">
+                        Actions
+                      </TableHead>
+                    )}
                   </TableRow>
                 </TableHeader>
 
                 <TableBody>
                   {isLoading ? (
                     <TableRow>
-                      <TableCell colSpan={2} className="text-center py-12">
+                      <TableCell
+                        colSpan={canEdit ? 3 : 2}
+                        className="text-center py-12"
+                      >
                         <div className="flex flex-col items-center gap-2">
                           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
                           <p className="text-muted-foreground">
@@ -111,20 +120,25 @@ export default function Regions() {
                     </TableRow>
                   ) : regions.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={2} className="text-center py-12">
+                      <TableCell
+                        colSpan={canEdit ? 3 : 2}
+                        className="text-center py-12"
+                      >
                         <div className="flex flex-col items-center gap-2">
                           <Church className="h-12 w-12 text-muted-foreground/50" />
                           <p className="text-muted-foreground">
                             No regions records found
                           </p>
-                          <Button
-                            variant="outline"
-                            onClick={openCreate}
-                            className="mt-2"
-                          >
-                            <Plus className="mr-2 h-4 w-4" />
-                            Create First Record
-                          </Button>
+                          {canEdit && (
+                            <Button
+                              variant="outline"
+                              onClick={openCreate}
+                              className="mt-2"
+                            >
+                              <Plus className="mr-2 h-4 w-4" />
+                              Create First Record
+                            </Button>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>
@@ -142,29 +156,31 @@ export default function Regions() {
                           {item.branch?.name ?? ""}
                         </TableCell>
 
-                        <TableCell>
-                          <div className="flex gap-2 justify-center">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => openEdit(item)}
-                              className="hover:bg-primary hover:text-primary-foreground transition-colors"
-                            >
-                              <Edit className="h-3 w-3 mr-1" />
-                              Edit
-                            </Button>
+                        {canEdit && (
+                          <TableCell>
+                            <div className="flex gap-2 justify-center">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => openEdit(item)}
+                                className="hover:bg-primary hover:text-primary-foreground transition-colors"
+                              >
+                                <Edit className="h-3 w-3 mr-1" />
+                                Edit
+                              </Button>
 
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              onClick={() => handleDelete(item.id)}
-                              className="hover:bg-red-600 transition-colors"
-                            >
-                              <Trash2 className="h-3 w-3 mr-1" />
-                              Delete
-                            </Button>
-                          </div>
-                        </TableCell>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => handleDelete(item.id)}
+                                className="hover:bg-red-600 transition-colors"
+                              >
+                                <Trash2 className="h-3 w-3 mr-1" />
+                                Delete
+                              </Button>
+                            </div>
+                          </TableCell>
+                        )}
                       </TableRow>
                     ))
                   )}
@@ -174,7 +190,9 @@ export default function Regions() {
           </CardContent>
         </Card>
 
-        <RegionDialog editing={editing} open={open} setOpen={setOpen} />
+        {canEdit && (
+          <RegionDialog editing={editing} open={open} setOpen={setOpen} />
+        )}
       </div>
     </div>
   );

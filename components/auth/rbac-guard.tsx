@@ -4,32 +4,34 @@ import { ReactNode, useMemo } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useStoredRoleAccessMap } from "@/lib/rbac-config";
-import { getAllowedRolesForPathFromConfig, hasRequiredRole } from "@/lib/rbac";
+import { useStoredRoleAccessConfig } from "@/lib/rbac-config";
+import { canViewPath, getDefaultDashboardPath } from "@/lib/rbac";
 import { useStoredUser } from "@/lib/auth-session";
 
 export function RbacGuard({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const currentUser = useStoredUser();
-  const roleAccessMap = useStoredRoleAccessMap();
+  const roleAccessConfig = useStoredRoleAccessConfig();
 
-  const allowedRoles = useMemo(
-    () => getAllowedRolesForPathFromConfig(pathname, roleAccessMap),
-    [pathname, roleAccessMap],
+  const isAllowed = useMemo(
+    () => canViewPath(currentUser?.role, pathname, roleAccessConfig),
+    [currentUser?.role, pathname, roleAccessConfig],
   );
 
-  const isAllowed = hasRequiredRole(currentUser?.role, allowedRoles);
-
-  if (!allowedRoles?.length) {
-    return <>{children}</>;
-  }
+  const hasRestrictedRoute = useMemo(() => {
+    const entry = Object.keys(roleAccessConfig).some(
+      (path) =>
+        pathname === path || pathname.startsWith(`${path}/`),
+    );
+    return entry;
+  }, [pathname, roleAccessConfig]);
 
   if (!currentUser) {
     return <>{children}</>;
   }
 
-  if (isAllowed) {
+  if (!hasRestrictedRoute || isAllowed) {
     return <>{children}</>;
   }
 
@@ -43,8 +45,12 @@ export function RbacGuard({ children }: { children: ReactNode }) {
           <p className="text-sm text-muted-foreground">
             Your role does not have permission to open this page.
           </p>
-          <Button onClick={() => router.push("/dashboard")}>
-            Back to Dashboard
+          <Button
+            onClick={() =>
+              router.push(getDefaultDashboardPath(currentUser.role))
+            }
+          >
+            Go to your dashboard
           </Button>
         </CardContent>
       </Card>

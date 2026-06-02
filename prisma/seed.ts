@@ -12,11 +12,12 @@ async function main() {
     where: {
       email: "admin@example.com",
     },
-    update: {},
+    update: { role: "ADMIN" },
     create: {
       name: "Admin",
       email: "admin@example.com",
       password,
+      role: "ADMIN",
     },
   });
 
@@ -29,7 +30,7 @@ async function main() {
       name: "Demo User",
       email: "demo@example.com",
       password: hashedPassword,
-      role: "demo",
+      role: "STAFF",
     },
   });
 

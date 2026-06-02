@@ -1,5 +1,6 @@
 "use client";
 import { useBranches, useDeleteBranch } from "@/hooks/use-branch";
+import { usePageAccess } from "@/hooks/use-page-access";
 import { Branch } from "@/types/branch";
 import { useState } from "react";
 import { Button } from "../ui/button";
@@ -21,6 +22,7 @@ export default function Branches() {
   const [limit, setLimit] = useState(10);
   const [search, setSearch] = useState("");
 
+  const { canEdit } = usePageAccess("/dashboard/branches");
   const { data, isLoading } = useBranches(page, limit, search);
   const deleteMutation = useDeleteBranch();
 
@@ -58,13 +60,15 @@ export default function Branches() {
               Track and manage church branch
             </p>
           </div>
-          <Button
-            onClick={openCreate}
-            className="shadow-lg hover:shadow-xl transition-all"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Create Branch
-          </Button>
+          {canEdit && (
+            <Button
+              onClick={openCreate}
+              className="shadow-lg hover:shadow-xl transition-all"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Create Branch
+            </Button>
+          )}
         </div>
 
         {/* Table Section */}
@@ -89,16 +93,21 @@ export default function Branches() {
                 <TableHeader>
                   <TableRow className="bg-muted/50">
                     <TableHead className="font-semibold">Name</TableHead>
-                    <TableHead className="font-semibold text-center w-40">
-                      Actions
-                    </TableHead>
+                    {canEdit && (
+                      <TableHead className="font-semibold text-center w-40">
+                        Actions
+                      </TableHead>
+                    )}
                   </TableRow>
                 </TableHeader>
 
                 <TableBody>
                   {isLoading ? (
                     <TableRow>
-                      <TableCell colSpan={2} className="text-center py-12">
+                      <TableCell
+                        colSpan={canEdit ? 2 : 1}
+                        className="text-center py-12"
+                      >
                         <div className="flex flex-col items-center gap-2">
                           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
                           <p className="text-muted-foreground">
@@ -109,20 +118,25 @@ export default function Branches() {
                     </TableRow>
                   ) : branches.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={2} className="text-center py-12">
+                      <TableCell
+                        colSpan={canEdit ? 2 : 1}
+                        className="text-center py-12"
+                      >
                         <div className="flex flex-col items-center gap-2">
                           <Church className="h-12 w-12 text-muted-foreground/50" />
                           <p className="text-muted-foreground">
                             No branches records found
                           </p>
-                          <Button
-                            variant="outline"
-                            onClick={openCreate}
-                            className="mt-2"
-                          >
-                            <Plus className="mr-2 h-4 w-4" />
-                            Create First Record
-                          </Button>
+                          {canEdit && (
+                            <Button
+                              variant="outline"
+                              onClick={openCreate}
+                              className="mt-2"
+                            >
+                              <Plus className="mr-2 h-4 w-4" />
+                              Create First Record
+                            </Button>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>
@@ -136,29 +150,31 @@ export default function Branches() {
                           {item.name}
                         </TableCell>
 
-                        <TableCell>
-                          <div className="flex gap-2 justify-center">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => openEdit(item)}
-                              className="hover:bg-primary hover:text-primary-foreground transition-colors"
-                            >
-                              <Edit className="h-3 w-3 mr-1" />
-                              Edit
-                            </Button>
+                        {canEdit && (
+                          <TableCell>
+                            <div className="flex gap-2 justify-center">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => openEdit(item)}
+                                className="hover:bg-primary hover:text-primary-foreground transition-colors"
+                              >
+                                <Edit className="h-3 w-3 mr-1" />
+                                Edit
+                              </Button>
 
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              onClick={() => handleDelete(item.id)}
-                              className="hover:bg-red-600 transition-colors"
-                            >
-                              <Trash2 className="h-3 w-3 mr-1" />
-                              Delete
-                            </Button>
-                          </div>
-                        </TableCell>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => handleDelete(item.id)}
+                                className="hover:bg-red-600 transition-colors"
+                              >
+                                <Trash2 className="h-3 w-3 mr-1" />
+                                Delete
+                              </Button>
+                            </div>
+                          </TableCell>
+                        )}
                       </TableRow>
                     ))
                   )}
@@ -168,7 +184,9 @@ export default function Branches() {
           </CardContent>
         </Card>
 
-        <BranchDialog editing={editing} open={open} setOpen={setOpen} />
+        {canEdit && (
+          <BranchDialog editing={editing} open={open} setOpen={setOpen} />
+        )}
       </div>
     </div>
   );

@@ -4,8 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useMemo } from "react";
 import { useStoredUser } from "@/lib/auth-session";
-import { useStoredRoleAccessMap } from "@/lib/rbac-config";
-import { hasRequiredRole } from "@/lib/rbac";
+import { useStoredRoleAccessConfig } from "@/lib/rbac-config";
+import { canViewPath } from "@/lib/rbac";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -29,15 +29,19 @@ export function Sidebar({
 }: SidebarProps) {
   const pathname = usePathname();
   const currentUser = useStoredUser();
-  const roleAccessMap = useStoredRoleAccessMap();
+  const roleAccessConfig = useStoredRoleAccessConfig();
 
-  // const filteredMenuItems = useMemo(
-  //   () =>
-  //     menuItems.filter((item) =>
-  //       hasRequiredRole(currentUser?.role, roleAccessMap[item.href] ?? item.roles),
-  //     ),
-  //   [currentUser?.role, roleAccessMap],
-  // );
+  const filteredMenuItems = useMemo(
+    () =>
+      menuItems.filter((item) =>
+        canViewPath(
+          currentUser?.role,
+          item.href,
+          roleAccessConfig,
+        ),
+      ),
+    [currentUser?.role, roleAccessConfig],
+  );
 
   const sidebarBody = (isMobile = false) => (
     <div
@@ -82,7 +86,7 @@ export function Sidebar({
           isMobile ? "" : "flex-1",
         )}
       >
-        {menuItems.map((item) => {
+        {filteredMenuItems.map((item) => {
           const Icon = item.icon;
           const isActive = pathname === item.href;
 

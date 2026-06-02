@@ -2,49 +2,54 @@
 
 import { useSyncExternalStore } from "react";
 import {
-  defaultRoleAccessMap,
-  parseRoleAccessMap,
-  RoleAccessMap,
-  serializeRoleAccessMap,
+  configToViewMap,
+  defaultRoleAccessConfig,
+  parseRoleAccessConfig,
+  RoleAccessConfig,
+  serializeRoleAccessConfig,
 } from "@/lib/rbac";
 
 const ROLE_ACCESS_STORAGE_KEY = "role_access_config";
 const ROLE_ACCESS_COOKIE_KEY = "role_access_config";
 const ROLE_ACCESS_EVENT = "role-access-config-updated";
 let cachedRoleAccessRaw: string | null | undefined;
-let cachedRoleAccessMap: RoleAccessMap = defaultRoleAccessMap;
+let cachedRoleAccessConfig: RoleAccessConfig = defaultRoleAccessConfig;
 
 const setCookie = (name: string, value: string, maxAge = 60 * 60 * 24 * 30) => {
   if (typeof document === "undefined") return;
   document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=${maxAge}; samesite=lax`;
 };
 
-export const getStoredRoleAccessMap = (): RoleAccessMap => {
+export const getStoredRoleAccessConfig = (): RoleAccessConfig => {
   if (typeof window === "undefined") {
-    return defaultRoleAccessMap;
+    return defaultRoleAccessConfig;
   }
 
   const rawConfig = localStorage.getItem(ROLE_ACCESS_STORAGE_KEY);
   if (rawConfig === cachedRoleAccessRaw) {
-    return cachedRoleAccessMap;
+    return cachedRoleAccessConfig;
   }
 
   cachedRoleAccessRaw = rawConfig;
-  cachedRoleAccessMap = parseRoleAccessMap(rawConfig);
-  return cachedRoleAccessMap;
+  cachedRoleAccessConfig = parseRoleAccessConfig(rawConfig);
+  return cachedRoleAccessConfig;
 };
 
-export const persistRoleAccessMap = (config: RoleAccessMap) => {
+/** View-only map for sidebar and legacy consumers */
+export const getStoredRoleAccessMap = () =>
+  configToViewMap(getStoredRoleAccessConfig());
+
+export const persistRoleAccessConfig = (config: RoleAccessConfig) => {
   if (typeof window === "undefined") return;
 
-  const serialized = serializeRoleAccessMap(config);
+  const serialized = serializeRoleAccessConfig(config);
   localStorage.setItem(ROLE_ACCESS_STORAGE_KEY, serialized);
   setCookie(ROLE_ACCESS_COOKIE_KEY, serialized);
   window.dispatchEvent(new CustomEvent(ROLE_ACCESS_EVENT));
 };
 
-export const resetStoredRoleAccessMap = () => {
-  persistRoleAccessMap(defaultRoleAccessMap);
+export const resetStoredRoleAccessConfig = () => {
+  persistRoleAccessConfig(defaultRoleAccessConfig);
 };
 
 export const roleAccessConfigEvent = ROLE_ACCESS_EVENT;
@@ -63,9 +68,14 @@ const subscribeToRoleAccessConfig = (callback: () => void) => {
   };
 };
 
-export const useStoredRoleAccessMap = () =>
+export const useStoredRoleAccessConfig = () =>
   useSyncExternalStore(
     subscribeToRoleAccessConfig,
-    getStoredRoleAccessMap,
-    () => defaultRoleAccessMap,
+    getStoredRoleAccessConfig,
+    () => defaultRoleAccessConfig,
   );
+
+export const useStoredRoleAccessMap = () => {
+  const config = useStoredRoleAccessConfig();
+  return configToViewMap(config);
+};

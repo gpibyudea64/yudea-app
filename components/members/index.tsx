@@ -1,5 +1,6 @@
 "use client";
 
+import { usePageAccess } from "@/hooks/use-page-access";
 import { useDeleteMember, useMembers } from "@/hooks/use-member";
 import type { Member } from "@/types/member";
 import { Badge } from "../ui/badge";
@@ -30,6 +31,7 @@ export default function MembersPage() {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [search, setSearch] = useState("");
+  const { canEdit } = usePageAccess("/dashboard/members");
   const { data, isLoading } = useMembers(page, limit, search);
   const deleteMutation = useDeleteMember();
   const members = data?.data ?? [];
@@ -65,13 +67,15 @@ export default function MembersPage() {
               Create and update church member records
             </p>
           </div>
-          <Button
-            onClick={openCreate}
-            className="shadow-lg transition-all hover:shadow-xl"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Create Member
-          </Button>
+          {canEdit && (
+            <Button
+              onClick={openCreate}
+              className="shadow-lg transition-all hover:shadow-xl"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Create Member
+            </Button>
+          )}
         </div>
 
         <Card className="shadow-xl">
@@ -100,15 +104,20 @@ export default function MembersPage() {
                     <TableHead className="font-semibold">Role</TableHead>
                     <TableHead className="font-semibold">Pelkat</TableHead>
                     <TableHead className="font-semibold">Status</TableHead>
-                    <TableHead className="w-40 text-center font-semibold">
-                      Actions
-                    </TableHead>
+                    {canEdit && (
+                      <TableHead className="w-40 text-center font-semibold">
+                        Actions
+                      </TableHead>
+                    )}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {isLoading ? (
                     <TableRow>
-                      <TableCell colSpan={7} className="py-12 text-center">
+                      <TableCell
+                        colSpan={canEdit ? 7 : 6}
+                        className="py-12 text-center"
+                      >
                         <div className="flex flex-col items-center gap-2">
                           <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary" />
                           <p className="text-muted-foreground">
@@ -119,20 +128,25 @@ export default function MembersPage() {
                     </TableRow>
                   ) : members.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={7} className="py-12 text-center">
+                      <TableCell
+                        colSpan={canEdit ? 7 : 6}
+                        className="py-12 text-center"
+                      >
                         <div className="flex flex-col items-center gap-2">
                           <Users className="h-12 w-12 text-muted-foreground/50" />
                           <p className="text-muted-foreground">
                             No member records found
                           </p>
-                          <Button
-                            variant="outline"
-                            onClick={openCreate}
-                            className="mt-2"
-                          >
-                            <Plus className="mr-2 h-4 w-4" />
-                            Create First Member
-                          </Button>
+                          {canEdit && (
+                            <Button
+                              variant="outline"
+                              onClick={openCreate}
+                              className="mt-2"
+                            >
+                              <Plus className="mr-2 h-4 w-4" />
+                              Create First Member
+                            </Button>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>
@@ -157,28 +171,30 @@ export default function MembersPage() {
                             {item.isActive ? "Active" : "Inactive"}
                           </Badge>
                         </TableCell>
-                        <TableCell>
-                          <div className="flex justify-center gap-2">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => openEdit(item)}
-                              className="transition-colors hover:bg-primary hover:text-primary-foreground"
-                            >
-                              <Edit className="mr-1 h-3 w-3" />
-                              Edit
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              onClick={() => handleDelete(item.id)}
-                              className="transition-colors hover:bg-red-600"
-                            >
-                              <Trash2 className="mr-1 h-3 w-3" />
-                              Delete
-                            </Button>
-                          </div>
-                        </TableCell>
+                        {canEdit && (
+                          <TableCell>
+                            <div className="flex justify-center gap-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => openEdit(item)}
+                                className="transition-colors hover:bg-primary hover:text-primary-foreground"
+                              >
+                                <Edit className="mr-1 h-3 w-3" />
+                                Edit
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => handleDelete(item.id)}
+                                className="transition-colors hover:bg-red-600"
+                              >
+                                <Trash2 className="mr-1 h-3 w-3" />
+                                Delete
+                              </Button>
+                            </div>
+                          </TableCell>
+                        )}
                       </TableRow>
                     ))
                   )}
@@ -188,7 +204,9 @@ export default function MembersPage() {
           </CardContent>
         </Card>
 
-        <MemberDialog editing={editing} open={open} setOpen={setOpen} />
+        {canEdit && (
+          <MemberDialog editing={editing} open={open} setOpen={setOpen} />
+        )}
       </div>
     </div>
   );

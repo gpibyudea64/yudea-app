@@ -17,7 +17,9 @@ import { useState } from "react";
 import { LoginFormValues, loginSchema } from "@/schemas/auth.schema";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { signIn } from "next-auth/react";
+import { persistAuthSession } from "@/lib/auth-session";
+import { getDefaultDashboardPath, normalizeAppRole } from "@/lib/rbac";
+import { getSession, signIn } from "next-auth/react";
 import { Eye, EyeClosed } from "lucide-react";
 
 export default function LoginForm() {
@@ -47,6 +49,22 @@ export default function LoginForm() {
         setError("Invalid email or password");
         return;
       }
+
+      const session = await getSession();
+      if (session?.user) {
+        const role = normalizeAppRole(session.user.role);
+        persistAuthSession({
+          user: {
+            id: session.user.id,
+            email: session.user.email ?? undefined,
+            name: session.user.name ?? undefined,
+            role,
+          },
+        });
+        router.push(getDefaultDashboardPath(role));
+        return;
+      }
+
       router.push("/dashboard");
     } catch (error) {
       console.error("Login failed:", error);

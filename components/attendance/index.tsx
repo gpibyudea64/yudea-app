@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { usePageAccess } from "@/hooks/use-page-access";
 import { useAttendances, useDeleteAttendance } from "@/hooks/use-attendance";
 import type { Attendance } from "@/app/generated/prisma/client";
 import AttendanceDialog from "./attendance-dialog";
@@ -37,6 +38,7 @@ export default function AttendancePage() {
   const [limit, setLimit] = useState(10);
   const [search, setSearch] = useState("");
 
+  const { canEdit } = usePageAccess("/dashboard/attendance");
   const { data: attendanceResult, isLoading } = useAttendances(
     page,
     limit,
@@ -93,13 +95,15 @@ export default function AttendancePage() {
               Track and manage church service attendance
             </p>
           </div>
-          <Button
-            onClick={openCreate}
-            className="shadow-lg hover:shadow-xl transition-all"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Create Attendance
-          </Button>
+          {canEdit && (
+            <Button
+              onClick={openCreate}
+              className="shadow-lg hover:shadow-xl transition-all"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Create Attendance
+            </Button>
+          )}
         </div>
 
         {/* Statistics Cards */}
@@ -180,16 +184,21 @@ export default function AttendancePage() {
                     <TableHead className="font-semibold text-center">
                       Total
                     </TableHead>
-                    <TableHead className="font-semibold text-center w-40">
-                      Actions
-                    </TableHead>
+                    {canEdit && (
+                      <TableHead className="font-semibold text-center w-40">
+                        Actions
+                      </TableHead>
+                    )}
                   </TableRow>
                 </TableHeader>
 
                 <TableBody>
                   {isLoading ? (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center py-12">
+                      <TableCell
+                        colSpan={canEdit ? 6 : 5}
+                        className="text-center py-12"
+                      >
                         <div className="flex flex-col items-center gap-2">
                           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
                           <p className="text-muted-foreground">
@@ -200,20 +209,25 @@ export default function AttendancePage() {
                     </TableRow>
                   ) : attendances.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center py-12">
+                      <TableCell
+                        colSpan={canEdit ? 6 : 5}
+                        className="text-center py-12"
+                      >
                         <div className="flex flex-col items-center gap-2">
                           <Church className="h-12 w-12 text-muted-foreground/50" />
                           <p className="text-muted-foreground">
                             No attendance records found
                           </p>
-                          <Button
-                            variant="outline"
-                            onClick={openCreate}
-                            className="mt-2"
-                          >
-                            <Plus className="mr-2 h-4 w-4" />
-                            Create First Record
-                          </Button>
+                          {canEdit && (
+                            <Button
+                              variant="outline"
+                              onClick={openCreate}
+                              className="mt-2"
+                            >
+                              <Plus className="mr-2 h-4 w-4" />
+                              Create First Record
+                            </Button>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>
@@ -262,29 +276,31 @@ export default function AttendancePage() {
                           </span>
                         </TableCell>
 
-                        <TableCell>
-                          <div className="flex gap-2 justify-center">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => openEdit(item)}
-                              className="hover:bg-primary hover:text-primary-foreground transition-colors"
-                            >
-                              <Edit className="h-3 w-3 mr-1" />
-                              Edit
-                            </Button>
+                        {canEdit && (
+                          <TableCell>
+                            <div className="flex gap-2 justify-center">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => openEdit(item)}
+                                className="hover:bg-primary hover:text-primary-foreground transition-colors"
+                              >
+                                <Edit className="h-3 w-3 mr-1" />
+                                Edit
+                              </Button>
 
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              onClick={() => handleDelete(item.id)}
-                              className="hover:bg-red-600 transition-colors"
-                            >
-                              <Trash2 className="h-3 w-3 mr-1" />
-                              Delete
-                            </Button>
-                          </div>
-                        </TableCell>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => handleDelete(item.id)}
+                                className="hover:bg-red-600 transition-colors"
+                              >
+                                <Trash2 className="h-3 w-3 mr-1" />
+                                Delete
+                              </Button>
+                            </div>
+                          </TableCell>
+                        )}
                       </TableRow>
                     ))
                   )}
@@ -294,11 +310,13 @@ export default function AttendancePage() {
           </CardContent>
         </Card>
 
-        <AttendanceDialog
-          editing={editing}
-          open={open}
-          setOpen={setOpen}
-        />
+        {canEdit && (
+          <AttendanceDialog
+            editing={editing}
+            open={open}
+            setOpen={setOpen}
+          />
+        )}
       </div>
     </div>
   );

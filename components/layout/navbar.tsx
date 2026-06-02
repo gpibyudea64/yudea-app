@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { usePathname, useRouter } from "next/navigation";
-import { useStoredUser } from "@/lib/auth-session";
+import { clearAuthSession, useStoredUser } from "@/lib/auth-session";
 import { signOut } from "next-auth/react";
 import { toTitleCase } from "@/lib/client-helper";
 
@@ -27,12 +27,13 @@ export function Navbar({ onMenuClick }: NavbarProps) {
 
   const handleLogout = async () => {
     try {
-      await signOut();
-
-      router.push("/public/login");
+      clearAuthSession();
+      await signOut({ redirect: false });
+      router.replace("/public/login");
       router.refresh();
     } catch (error) {
       console.error("Logout failed", error);
+      window.location.assign("/public/login");
     }
   };
 
@@ -105,7 +106,13 @@ export function Navbar({ onMenuClick }: NavbarProps) {
                 Profile
               </DropdownMenuItem>
 
-              <DropdownMenuItem className="rounded-xl" onClick={handleLogout}>
+              <DropdownMenuItem
+                className="rounded-xl"
+                onSelect={(event) => {
+                  event.preventDefault();
+                  void handleLogout();
+                }}
+              >
                 <LogOut className="mr-2 h-4 w-4" />
                 Logout
               </DropdownMenuItem>
