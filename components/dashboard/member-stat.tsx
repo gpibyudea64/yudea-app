@@ -21,21 +21,21 @@ export default function MemberStat() {
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <StatCard
-          description="Total members across the church"
+          description="Total Warga Jemaat across the church"
           quantity={dataMember?.all ?? 0}
-          title="All Members"
+          title="All Warga Jemaat"
           icon={<Users className="h-5 w-5 text-blue-600" />}
         />
         <StatCard
-          description="Total female members"
+          description="Total female Warga Jemaat"
           quantity={dataMember?.female ?? 0}
-          title="Female Members"
+          title="Female Warga Jemaat"
           icon={<Venus className="h-5 w-5 text-pink-600" />}
         />
         <StatCard
-          description="Total male members"
+          description="Total male Warga Jemaat"
           quantity={dataMember?.male ?? 0}
-          title="Male Members"
+          title="Male Warga Jemaat"
           icon={<Mars className="h-5 w-5 text-blue-600" />}
         />
       </div>
@@ -44,7 +44,7 @@ export default function MemberStat() {
         {pelkatCounts?.map((pelkat) => (
           <StatCard
             key={pelkat.pelkat}
-            description="Members in this pelkat"
+            description="Warga Jemaat in this pelkat"
             quantity={pelkat.total}
             title={pelkat.pelkat}
           />

@@ -89,7 +89,7 @@ export default function MembersPage() {
             <DataTableControls
               search={search}
               onSearchChange={setSearch}
-              searchPlaceholder="Search members, families, email, or phone..."
+              searchPlaceholder="Search Warga Jemaat, Keluarga, email, or phone..."
               meta={data?.meta}
               onPageChange={setPage}
               onLimitChange={setLimit}
@@ -167,7 +167,9 @@ export default function MembersPage() {
                         <TableCell>{formatLabel(item.role)}</TableCell>
                         <TableCell>{formatLabel(item.pelkat ?? "")}</TableCell>
                         <TableCell>
-                          <Badge variant={item.isActive ? "default" : "outline"}>
+                          <Badge
+                            variant={item.isActive ? "default" : "outline"}
+                          >
                             {item.isActive ? "Active" : "Inactive"}
                           </Badge>
                         </TableCell>

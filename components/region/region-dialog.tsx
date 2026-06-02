@@ -94,12 +94,12 @@ export default function RegionDialog({
             {editing ? (
               <>
                 <Edit className="h-5 w-5" />
-                Update Region
+                Update Sektor Pelayanan
               </>
             ) : (
               <>
                 <Plus className="h-5 w-5" />
-                Create Region Record
+                Create Sektor Pelayanan Record
               </>
             )}
           </DialogTitle>

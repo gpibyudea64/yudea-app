@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import * as XLSX from "xlsx";
 import { useBirthdayMembers } from "@/hooks/use-birthday";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -33,6 +34,14 @@ function formatRange(start: string, end: string) {
     month: "short",
   });
   return `${startLabel} - ${endLabel}`;
+}
+
+function formatExcelDate(value: string) {
+  return new Date(value).toLocaleDateString("id-ID", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
 }
 
 export default function BirthdayDashboard() {
@@ -78,8 +87,46 @@ export default function BirthdayDashboard() {
         </div>
 
         <Card className="shadow-xl">
-          <CardHeader className="border-b">
+          <CardHeader className="flex flex-col gap-3 border-b px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
             <CardTitle>Daftar Ulang Tahun</CardTitle>
+            <Button
+              onClick={() => {
+                if (!members.length) return;
+
+                const worksheetData = members.map((member) => ({
+                  "Nama Lengkap": member.name,
+                  "Sektor Pelayanan": member.regionName,
+                  "Tanggal Lahir": formatExcelDate(member.birthDate),
+                }));
+
+                const worksheet = XLSX.utils.json_to_sheet(worksheetData);
+                const workbook = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(
+                  workbook,
+                  worksheet,
+                  "Ulang Tahun",
+                );
+
+                const fileData = XLSX.write(workbook, {
+                  bookType: "xlsx",
+                  type: "array",
+                });
+                const blob = new Blob([fileData], {
+                  type: "application/octet-stream",
+                });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement("a");
+                link.href = url;
+                link.download = `ulang-tahun-${selectedDate}.xlsx`;
+                link.click();
+                URL.revokeObjectURL(url);
+              }}
+              disabled={members.length === 0}
+              variant="outline"
+              size="sm"
+            >
+              Export ke Excel
+            </Button>
           </CardHeader>
           <CardContent className="p-0">
             <div className="overflow-x-auto">
@@ -89,7 +136,9 @@ export default function BirthdayDashboard() {
                     <TableHead className="font-semibold">
                       Nama Lengkap
                     </TableHead>
-                    <TableHead className="font-semibold">Region</TableHead>
+                    <TableHead className="font-semibold">
+                      Sektor Pelayanan
+                    </TableHead>
                     <TableHead className="font-semibold">
                       Tanggal Lahir
                     </TableHead>

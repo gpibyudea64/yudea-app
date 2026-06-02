@@ -170,16 +170,16 @@ export default function FamilyDialog({
             <div className="space-y-2">
               <Label htmlFor="regionId" className="flex items-center gap-2">
                 <MapPin className="h-4 w-4" />
-                Region
+                Sektor Pelayanan
               </Label>
               <Controller
                 control={control}
                 name="regionId"
-                rules={{ required: "Region is required" }}
+                rules={{ required: "Sektor Pelayanan is required" }}
                 render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger id="regionId" className="w-full">
-                      <SelectValue placeholder="Select region" />
+                      <SelectValue placeholder="Select Sektor Pelayanan" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectGroup>
@@ -213,7 +213,7 @@ export default function FamilyDialog({
             <div className="rounded-lg border p-4">
               <div className="mb-3 flex items-center gap-2 font-medium">
                 <Users className="h-4 w-4" />
-                Existing members
+                Existing Warga Jemaat
               </div>
               <div className="grid gap-2 md:grid-cols-2">
                 {editing.members.map((member) => (
@@ -235,7 +235,7 @@ export default function FamilyDialog({
             <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-2 font-medium">
                 <UserPlus className="h-4 w-4" />
-                New members
+                New Warga Jemaat
               </div>
               <Button
                 type="button"
@@ -251,7 +251,8 @@ export default function FamilyDialog({
             <div className="space-y-4">
               {fields.length === 0 ? (
                 <p className="text-sm text-muted-foreground">
-                  Add members now or create them later from the member page.
+                  Add Warga Jemaat now or create them later from the member
+                  page.
                 </p>
               ) : (
                 fields.map((field, index) => (

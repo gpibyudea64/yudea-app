@@ -83,7 +83,7 @@ export default function Branches() {
             <DataTableControls
               search={search}
               onSearchChange={setSearch}
-              searchPlaceholder="Search branches..."
+              searchPlaceholder="Search Wilayah Pelayanan..."
               meta={data?.meta}
               onPageChange={setPage}
               onLimitChange={setLimit}
@@ -111,7 +111,7 @@ export default function Branches() {
                         <div className="flex flex-col items-center gap-2">
                           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
                           <p className="text-muted-foreground">
-                            Loading branches data...
+                            Loading Wilayah Pelayanan data...
                           </p>
                         </div>
                       </TableCell>
@@ -125,7 +125,7 @@ export default function Branches() {
                         <div className="flex flex-col items-center gap-2">
                           <Church className="h-12 w-12 text-muted-foreground/50" />
                           <p className="text-muted-foreground">
-                            No branches records found
+                            No Wilayah Pelayanan records found
                           </p>
                           {canEdit && (
                             <Button

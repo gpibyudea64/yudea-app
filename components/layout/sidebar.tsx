@@ -34,11 +34,7 @@ export function Sidebar({
   const filteredMenuItems = useMemo(
     () =>
       menuItems.filter((item) =>
-        canViewPath(
-          currentUser?.role,
-          item.href,
-          roleAccessConfig,
-        ),
+        canViewPath(currentUser?.role, item.href, roleAccessConfig),
       ),
     [currentUser?.role, roleAccessConfig],
   );
@@ -66,7 +62,7 @@ export function Sidebar({
         </div>
       </div>
 
-      <div className="relative mb-4 shrink-0 rounded-[1.25rem] border border-white/10 bg-white/5 p-3.5 backdrop-blur-sm sm:mb-5 sm:p-4">
+      <div className="relative mb-4 shrink-0 rounded-4xl border border-white/10 bg-white/5 p-3.5 backdrop-blur-sm sm:mb-5 sm:p-4">
         <p className="text-xs uppercase tracking-[0.24em] text-sidebar-foreground/45">
           Signed In
         </p>
@@ -121,15 +117,6 @@ export function Sidebar({
           );
         })}
       </nav>
-
-      {!isMobile && (
-        <div className="relative mt-2 shrink-0">
-          <Separator className="my-3 bg-white/10 sm:my-4" />
-          <p className="text-xs text-sidebar-foreground/45">
-            © {new Date().getFullYear()} Church System
-          </p>
-        </div>
-      )}
     </div>
   );
 
@@ -138,7 +125,7 @@ export function Sidebar({
       <Sheet open={mobileOpen} onOpenChange={onMobileOpenChange}>
         <SheetContent
           side="left"
-          className="h-[100dvh] max-h-[100dvh] overflow-hidden w-[min(86vw,20rem)] border-white/10 bg-sidebar p-0 text-sidebar-foreground lg:hidden [&>button]:right-3 [&>button]:top-3 [&>button]:text-white"
+          className="h-dvh max-h-dvh overflow-hidden w-[min(86vw,20rem)] border-white/10 bg-sidebar p-0 text-sidebar-foreground lg:hidden [&>button]:right-3 [&>button]:top-3 [&>button]:text-white"
         >
           <SheetHeader className="sr-only">
             <SheetTitle>Navigation Menu</SheetTitle>

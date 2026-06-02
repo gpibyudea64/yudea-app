@@ -32,7 +32,7 @@ export default function PelkatMenu() {
             Pelkat Members
           </h1>
           <p className="text-muted-foreground">
-            Members grouped by their calculated pelkat category
+            Warga Jemaat grouped by their calculated pelkat category
           </p>
         </div>
 
@@ -44,7 +44,7 @@ export default function PelkatMenu() {
             <DataTableControls
               search={search}
               onSearchChange={setSearch}
-              searchPlaceholder="Search members or families..."
+              searchPlaceholder="Search members or Keluarga..."
               meta={data?.meta}
               onPageChange={setPage}
               onLimitChange={setLimit}
@@ -78,7 +78,9 @@ export default function PelkatMenu() {
                           {member.name}
                         </TableCell>
                         <TableCell>{member.family?.familyName ?? ""}</TableCell>
-                        <TableCell>{formatLabel(member.pelkat ?? "")}</TableCell>
+                        <TableCell>
+                          {formatLabel(member.pelkat ?? "")}
+                        </TableCell>
                       </TableRow>
                     ))
                   )}

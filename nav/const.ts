@@ -19,6 +19,12 @@ export const menuItems = [
     roles: ["ADMIN", "STAFF", "COORDINATOR"] satisfies AppRole[],
   },
   {
+    title: "Ulang Tahun",
+    href: "/dashboard/birthday",
+    icon: Cake,
+    roles: ["ADMIN", "STAFF", "COORDINATOR"] satisfies AppRole[],
+  },
+  {
     title: "Wilayah Pelayanan",
     href: "/dashboard/branches",
     icon: Church,
@@ -41,12 +47,6 @@ export const menuItems = [
     href: "/dashboard/members",
     icon: Users,
     roles: ["ADMIN", "STAFF", "COORDINATOR", "MEMBER"] satisfies AppRole[],
-  },
-  {
-    title: "Ulang Tahun",
-    href: "/dashboard/birthday",
-    icon: Cake,
-    roles: ["ADMIN", "STAFF", "COORDINATOR"] satisfies AppRole[],
   },
   {
     title: "Majelis Jemaat",

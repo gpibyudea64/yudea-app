@@ -55,7 +55,7 @@ export default function FamiliesPage() {
               Family Management
             </h1>
             <p className="text-muted-foreground">
-              Track families, regions, and household members
+              Track Keluarga, regions, and household members
             </p>
           </div>
           {canEdit && (
@@ -80,7 +80,7 @@ export default function FamiliesPage() {
             <DataTableControls
               search={search}
               onSearchChange={setSearch}
-              searchPlaceholder="Search families, regions, or addresses..."
+              searchPlaceholder="Search Keluarga, regions, or addresses..."
               meta={data?.meta}
               onPageChange={setPage}
               onLimitChange={setLimit}
@@ -90,9 +90,13 @@ export default function FamiliesPage() {
                 <TableHeader>
                   <TableRow className="bg-muted/50">
                     <TableHead className="font-semibold">Family</TableHead>
-                    <TableHead className="font-semibold">Region</TableHead>
+                    <TableHead className="font-semibold">
+                      Sektor Pelayanan
+                    </TableHead>
                     <TableHead className="font-semibold">Address</TableHead>
-                    <TableHead className="font-semibold">Members</TableHead>
+                    <TableHead className="font-semibold">
+                      Warga Jemaat
+                    </TableHead>
                     {canEdit && (
                       <TableHead className="w-40 text-center font-semibold">
                         Actions

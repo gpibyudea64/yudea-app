@@ -13,13 +13,13 @@ export async function getFamilies(
   if (search) params.set("search", search);
 
   const res = await fetch(`/api/family?${params.toString()}`);
-  if (!res.ok) throw new Error("Failed to fetch families");
+  if (!res.ok) throw new Error("Failed to fetch Keluarga");
   return res.json();
 }
 
 export async function getFamily(id: string): Promise<Family> {
   const res = await fetch(`/api/family/${id}`);
-  if (!res.ok) throw new Error("Failed to fetch region");
+  if (!res.ok) throw new Error("Failed to fetch Sektor Pelayanan");
   return res.json();
 }
 

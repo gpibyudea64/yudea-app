@@ -43,7 +43,7 @@ export default function Regions() {
   }
 
   async function handleDelete(id: string) {
-    const confirmed = confirm("Delete this region?");
+    const confirmed = confirm("Delete this Sektor Pelayanan?");
     if (!confirmed) return;
     deleteMutation.mutateAsync(id);
   }
@@ -55,7 +55,7 @@ export default function Regions() {
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="space-y-1">
             <h1 className="text-3xl font-bold bg-linear-to-r from-slate-900 to-slate-700 dark:from-slate-100 dark:to-slate-300 bg-clip-text text-transparent">
-              Region Management
+              Sektor Pelayanan Management
             </h1>
             <p className="text-muted-foreground">
               Track and manage church branch
@@ -67,7 +67,7 @@ export default function Regions() {
               className="shadow-lg hover:shadow-xl transition-all"
             >
               <Plus className="mr-2 h-4 w-4" />
-              Create Region
+              Create Sektor Pelayanan
             </Button>
           )}
         </div>
@@ -77,14 +77,14 @@ export default function Regions() {
           <CardHeader className="border-b">
             <CardTitle className="flex items-center gap-2">
               <Calendar className="h-5 w-5" />
-              Region Records
+              Sektor Pelayanan Records
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             <DataTableControls
               search={search}
               onSearchChange={setSearch}
-              searchPlaceholder="Search regions or branches..."
+              searchPlaceholder="Search regions or Wilayah Pelayanan..."
               meta={data?.meta}
               onPageChange={setPage}
               onLimitChange={setLimit}

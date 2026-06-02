@@ -16,10 +16,10 @@ export default function RegionStat() {
     <section className="space-y-4">
       <div>
         <p className="text-xs uppercase tracking-[0.24em] text-muted-foreground">
-          Region Overview
+          Sektor Pelayanan Overview
         </p>
         <h2 className="mt-2 text-2xl font-semibold tracking-tight">
-          Families in every region
+          Keluarga in every Sektor Pelayanan
         </h2>
       </div>
 
@@ -31,9 +31,9 @@ export default function RegionStat() {
           icon={<MapPin className="h-5 w-5 text-blue-600" />}
         />
         <StatCard
-          description="Total families across all regions"
+          description="Total Keluarga across all regions"
           quantity={totalFamilies ?? 0}
-          title="All Families"
+          title="All Keluarga"
         />
       </div>
 
@@ -41,7 +41,7 @@ export default function RegionStat() {
         {regions.map((item) => (
           <StatCard
             key={item.id}
-            description="Families in this region"
+            description="Keluarga in this Sektor Pelayanan"
             quantity={item.families?.length ?? 0}
             title={item.name}
           />

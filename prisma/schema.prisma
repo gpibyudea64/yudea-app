@@ -90,6 +90,7 @@ model Member {
   isActive          Boolean    @default(true)
   isDeceased        Boolean    @default(false)
   deathDate         DateTime?
+  isPresbyter       Boolean    @default(false)
   familyId          String
   family            Family     @relation(fields: [familyId], references: [id])
   coordinatedRegion Region?    @relation("RegionCoordinator")

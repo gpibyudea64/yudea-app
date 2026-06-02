@@ -7,7 +7,7 @@ The project is built with Next.js 16 App Router, React 19, Prisma 7, PostgreSQL,
 ## Features
 
 - Dashboard statistics for members, regions, and branches.
-- Branch, region, family, member, attendance, and user management.
+- Branch, Sektor Pelayanan, family, member, attendance, and user management.
 - Member Pelkat classification derived from age, gender, marital/family role, and active/deceased status.
 - Credentials-based authentication with NextAuth and Prisma.
 - Role-based page access and edit permissions for `ADMIN`, `STAFF`, `COORDINATOR`, and `MEMBER`.
@@ -87,23 +87,23 @@ Open `http://localhost:3000`.
 
 The seed script creates:
 
-| Email | Password | Role |
-| --- | --- | --- |
+| Email               | Password   | Role    |
+| ------------------- | ---------- | ------- |
 | `admin@example.com` | `admin123` | `ADMIN` |
-| `demo@example.com` | `demo1234` | `STAFF` |
+| `demo@example.com`  | `demo1234` | `STAFF` |
 
 Use these only for local development.
 
 ## Scripts
 
-| Command | Purpose |
-| --- | --- |
-| `npm run dev` | Start the Next.js development server |
-| `npm run build` | Build the production app |
-| `npm run start` | Start the production server after building |
-| `npm run lint` | Run ESLint |
-| `npm run test` | Run Vitest once |
-| `npm run test:watch` | Run Vitest in watch mode |
+| Command              | Purpose                                    |
+| -------------------- | ------------------------------------------ |
+| `npm run dev`        | Start the Next.js development server       |
+| `npm run build`      | Build the production app                   |
+| `npm run start`      | Start the production server after building |
+| `npm run lint`       | Run ESLint                                 |
+| `npm run test`       | Run Vitest once                            |
+| `npm run test:watch` | Run Vitest in watch mode                   |
 
 ## Documentation
 

@@ -11,7 +11,7 @@ export default function Dashboard() {
             Dashboard
           </h1>
           <p className="text-muted-foreground">
-            Overview of branches, regions, families, and members
+            Overview of Wilayah Pelayanan, regions, Keluarga, and Warga Jemaat
           </p>
         </div>
 

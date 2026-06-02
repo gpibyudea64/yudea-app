@@ -191,13 +191,13 @@ export default function UserDialog({
 
             {role === "COORDINATOR" && (
               <div className="space-y-2">
-                <Label htmlFor="regionId">Region</Label>
+                <Label htmlFor="regionId">Sektor Pelayanan</Label>
                 <Select
                   value={watch("regionId")}
                   onValueChange={(value) => setValue("regionId", value)}
                 >
                   <SelectTrigger id="regionId">
-                    <SelectValue placeholder="Select region" />
+                    <SelectValue placeholder="Select Sektor Pelayanan" />
                   </SelectTrigger>
                   <SelectContent>
                     {regionsData?.data.map((region) => (
