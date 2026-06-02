@@ -5,24 +5,15 @@ export default auth((req) => {
   const isLoggedIn = !!req.auth;
   const { pathname } = req.nextUrl;
 
-  const isLoginPage = pathname.startsWith("/public/login");
-
-  // ignore all api routes
-  if (pathname.startsWith("/api")) {
-    return NextResponse.next();
-  }
-
   if (!isLoggedIn && pathname.startsWith("/dashboard")) {
     return NextResponse.redirect(new URL("/public/login", req.url));
   }
 
-  if (isLoggedIn && isLoginPage) {
+  if (isLoggedIn && pathname.startsWith("/public/login")) {
     return NextResponse.redirect(new URL("/dashboard", req.url));
   }
-
-  return NextResponse.next();
 });
 
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
+  matcher: ["/dashboard/:path*", "/public/login"],
 };
