@@ -4,6 +4,8 @@ import { requireAdmin } from "@/lib/server-auth";
 import bcrypt from "bcryptjs";
 import { NextRequest, NextResponse } from "next/server";
 
+export const runtime = "nodejs";
+
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },

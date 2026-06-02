@@ -2,6 +2,8 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { NextRequest, NextResponse } from "next/server";
 
+export const runtime = "nodejs";
+
 // GET /api/region?page=1&limit=10
 export async function GET(req: NextRequest) {
   try {

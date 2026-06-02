@@ -4,6 +4,8 @@ import { requireAdmin } from "@/lib/server-auth";
 import bcrypt from "bcryptjs";
 import { NextRequest, NextResponse } from "next/server";
 
+export const runtime = "nodejs";
+
 export async function GET(req: NextRequest) {
   const authResult = await requireAdmin();
   if (authResult.error) return authResult.error;

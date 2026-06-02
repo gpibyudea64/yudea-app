@@ -1,3 +1,5 @@
+export const runtime = "nodejs";
+
 import { attachPelkat } from "@/lib/helper";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";

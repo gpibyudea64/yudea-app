@@ -1,3 +1,5 @@
+export const runtime = "nodejs";
+
 import { prisma } from "@/lib/prisma";
 import { BloodType } from "@prisma/client";
 import { NextResponse } from "next/server";

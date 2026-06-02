@@ -6,6 +6,8 @@ import { serializeRoleAccessConfig } from "@/lib/rbac";
 import { requireAdmin, requireAuth } from "@/lib/server-auth";
 import { NextRequest, NextResponse } from "next/server";
 
+export const runtime = "nodejs";
+
 export async function GET() {
   const authResult = await requireAuth();
   if (authResult.error) return authResult.error;
