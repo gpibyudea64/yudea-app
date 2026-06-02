@@ -62,28 +62,86 @@ async function main() {
     },
   });
 
-  await prisma.region.create({
+  const region2 = await prisma.region.create({
     data: {
       name: "Region B",
       branchId: branch1.id,
     },
   });
 
-  await prisma.region.create({
+  const region3 = await prisma.region.create({
     data: {
       name: "Region C",
       branchId: branch2.id,
     },
   });
 
+  // --- Seed Coordinator Users for Each Region ---
+  const coordinatorPassword = await bcrypt.hash("coordinator123", 10);
+  const regionA_Coordinator = await prisma.user.create({
+    data: {
+      name: "Coordinator Region A",
+      email: "coordinator-a@example.com",
+      password: coordinatorPassword,
+      role: "COORDINATOR",
+      regionId: region1.id,
+    },
+  });
+
+  const regionB_Coordinator = await prisma.user.create({
+    data: {
+      name: "Coordinator Region B",
+      email: "coordinator-b@example.com",
+      password: coordinatorPassword,
+      role: "COORDINATOR",
+      regionId: region2.id,
+    },
+  });
+
+  const regionC_Coordinator = await prisma.user.create({
+    data: {
+      name: "Coordinator Region C",
+      email: "coordinator-c@example.com",
+      password: coordinatorPassword,
+      role: "COORDINATOR",
+      regionId: region3.id,
+    },
+  });
+
   // --- Seed Families ---
   const families: Awaited<ReturnType<typeof prisma.family.create>>[] = [];
-  for (let i = 0; i < 5; i++) {
+
+  // Families for Region A
+  for (let i = 0; i < 3; i++) {
     const family = await prisma.family.create({
       data: {
-        familyName: "testing family name",
-        address: "testing address",
+        familyName: `Region A Family ${i + 1}`,
+        address: `Address in Region A ${i + 1}`,
         regionId: region1.id,
+      },
+    });
+    families.push(family);
+  }
+
+  // Families for Region B
+  for (let i = 0; i < 3; i++) {
+    const family = await prisma.family.create({
+      data: {
+        familyName: `Region B Family ${i + 1}`,
+        address: `Address in Region B ${i + 1}`,
+        regionId: region2.id,
+      },
+    });
+    families.push(family);
+  }
+
+  // Families for Region C
+  for (let i = 0; i < 3; i++) {
+    const family = await prisma.family.create({
+      data: {
+        familyName: `Region C Family ${i + 1}`,
+        address: `Address in Region C ${i + 1}`,
+        regionId: region3.id,
       },
     });
     families.push(family);

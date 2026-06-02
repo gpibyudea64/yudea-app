@@ -43,6 +43,11 @@ export const persistAuthSession = (payload: {
     } else {
       clearCookie("user_name");
     }
+    if (payload.user.regionId) {
+      setCookie("user_region_id", payload.user.regionId);
+    } else {
+      clearCookie("user_region_id");
+    }
   }
 
   window.dispatchEvent(new CustomEvent(AUTH_SESSION_EVENT));

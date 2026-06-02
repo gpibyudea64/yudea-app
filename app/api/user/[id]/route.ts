@@ -15,7 +15,7 @@ export async function PATCH(
 
   try {
     const body = await req.json();
-    const { name, email, password, role } = body;
+    const { name, email, password, role, regionId } = body;
 
     const existing = await prisma.user.findUnique({ where: { id } });
     if (!existing) {
@@ -40,6 +40,17 @@ export async function PATCH(
       }
     }
 
+    if (
+      normalizedRole === "COORDINATOR" &&
+      regionId === undefined &&
+      !existing.regionId
+    ) {
+      return NextResponse.json(
+        { error: "Coordinator must be assigned to a region" },
+        { status: 400 },
+      );
+    }
+
     const user = await prisma.user.update({
       where: { id },
       data: {
@@ -47,12 +58,20 @@ export async function PATCH(
         ...(email !== undefined && { email }),
         ...(normalizedRole !== undefined && { role: normalizedRole }),
         ...(password && { password: await bcrypt.hash(password, 10) }),
+        ...(regionId !== undefined
+          ? {
+              region: regionId
+                ? { connect: { id: regionId } }
+                : { disconnect: true },
+            }
+          : {}),
       },
       select: {
         id: true,
         name: true,
         email: true,
         role: true,
+        regionId: true,
       },
     });
 

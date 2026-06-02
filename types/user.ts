@@ -5,6 +5,7 @@ export type AppUser = {
   name: string | null;
   email: string;
   role: AppRole | string;
+  regionId?: string | null;
 };
 
 export type UserForm = {
@@ -12,6 +13,7 @@ export type UserForm = {
   email: string;
   password?: string;
   role: string;
+  regionId?: string;
 };
 
 export type UserListItem = Omit<AppUser, "password">;

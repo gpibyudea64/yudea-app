@@ -18,6 +18,8 @@ model User {
   email    String    @unique
   password String?
   role     String    @default("ADMIN")
+  regionId String?
+  region   Region?   @relation(fields: [regionId], references: [id])
   sessions Session[]
   accounts Account[]
 }
@@ -61,6 +63,7 @@ model Region {
   branchId            String
   branch              Branch   @relation(fields: [branchId], references: [id])
   families            Family[]
+  coordinators        User[]
   coordinatorMemberId String?  @unique
   coordinator         Member?  @relation("RegionCoordinator", fields: [coordinatorMemberId], references: [id])
   createdAt           DateTime @default(now())

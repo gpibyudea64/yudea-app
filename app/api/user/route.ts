@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { name, email, password, role } = body;
+    const { name, email, password, role, regionId } = body;
 
     if (!email || !password || !role) {
       return NextResponse.json(
@@ -78,6 +78,13 @@ export async function POST(req: NextRequest) {
     const normalizedRole = normalizeAppRole(role);
     if (!(APP_ROLES as readonly string[]).includes(normalizedRole)) {
       return NextResponse.json({ error: "Invalid role" }, { status: 400 });
+    }
+
+    if (normalizedRole === "COORDINATOR" && !regionId) {
+      return NextResponse.json(
+        { error: "Coordinator must be assigned to a region" },
+        { status: 400 },
+      );
     }
 
     const existing = await prisma.user.findUnique({ where: { email } });
@@ -96,12 +103,14 @@ export async function POST(req: NextRequest) {
         email,
         password: hashedPassword,
         role: normalizedRole,
+        ...(regionId ? { region: { connect: { id: regionId } } } : {}),
       },
       select: {
         id: true,
         name: true,
         email: true,
         role: true,
+        regionId: true,
       },
     });
 

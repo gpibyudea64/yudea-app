@@ -7,6 +7,7 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { userFormSchema, type UserFormValues } from "@/schemas/user.schema";
 import { useCreateUser, useUpdateUser } from "@/hooks/use-user";
+import { useRegions } from "@/hooks/use-region";
 import { Button } from "../ui/button";
 import {
   Dialog,
@@ -51,10 +52,12 @@ export default function UserDialog({
       email: "",
       password: "",
       role: "STAFF",
+      regionId: "",
     },
   });
 
   const role = watch("role");
+  const { data: regionsData } = useRegions(1, 999);
 
   useEffect(() => {
     reset({
@@ -62,32 +65,40 @@ export default function UserDialog({
       email: editing?.email ?? "",
       password: "",
       role: (editing?.role as UserFormValues["role"]) ?? "STAFF",
+      regionId: editing?.regionId ?? "",
     });
   }, [editing, open, reset]);
 
   async function onSubmit(values: UserFormValues) {
     try {
+      const updatePayload: Partial<UserForm> = {
+        name: values.name,
+        email: values.email,
+        role: values.role,
+        regionId: values.role === "COORDINATOR" ? values.regionId : undefined,
+      };
+
       if (editing) {
-        const payload: Partial<UserForm> = {
-          name: values.name,
-          email: values.email,
-          role: values.role,
-        };
         if (values.password) {
-          payload.password = values.password;
+          updatePayload.password = values.password;
         }
-        await updateMutation.mutateAsync({ id: editing.id, data: payload });
+        await updateMutation.mutateAsync({
+          id: editing.id,
+          data: updatePayload,
+        });
       } else {
         if (!values.password) {
           toast.error("Password is required for new users");
           return;
         }
-        await createMutation.mutateAsync({
+        const createPayload: UserForm = {
           name: values.name,
           email: values.email,
           password: values.password,
           role: values.role,
-        });
+          regionId: values.role === "COORDINATOR" ? values.regionId : undefined,
+        };
+        await createMutation.mutateAsync(createPayload);
       }
 
       toast.success(editing ? "User updated" : "User created");
@@ -177,6 +188,32 @@ export default function UserDialog({
                 <p className="text-sm text-red-500">{errors.role.message}</p>
               )}
             </div>
+
+            {role === "COORDINATOR" && (
+              <div className="space-y-2">
+                <Label htmlFor="regionId">Region</Label>
+                <Select
+                  value={watch("regionId")}
+                  onValueChange={(value) => setValue("regionId", value)}
+                >
+                  <SelectTrigger id="regionId">
+                    <SelectValue placeholder="Select region" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {regionsData?.data.map((region) => (
+                      <SelectItem key={region.id} value={region.id}>
+                        {region.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {errors.regionId && (
+                  <p className="text-sm text-red-500">
+                    {errors.regionId.message}
+                  </p>
+                )}
+              </div>
+            )}
           </div>
 
           <DialogFooter className="gap-2 sm:gap-3 mt-4">

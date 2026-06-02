@@ -10,6 +10,7 @@ export const userFormSchema = z.object({
     .optional()
     .or(z.literal("")),
   role: z.enum(APP_ROLES),
+  regionId: z.string().optional(),
 });
 
 export type UserFormValues = z.infer<typeof userFormSchema>;

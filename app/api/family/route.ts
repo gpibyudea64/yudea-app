@@ -1,16 +1,20 @@
 import type { Member } from "@/app/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/auth";
 import { NextRequest, NextResponse } from "next/server";
 
 // GET /api/family?page=1&limit=10
 export async function GET(req: NextRequest) {
   try {
+    const session = await auth();
     const { searchParams } = req.nextUrl;
     const page = Math.max(1, Number(searchParams.get("page") ?? 1));
     const limit = Math.max(1, Number(searchParams.get("limit") ?? 10));
     const search = searchParams.get("search")?.trim() ?? "";
     const skip = (page - 1) * limit;
-    const where = search
+
+    // Build where clause for search
+    let where: any = search
       ? {
           OR: [
             { familyName: { contains: search, mode: "insensitive" as const } },
@@ -23,6 +27,15 @@ export async function GET(req: NextRequest) {
           ],
         }
       : {};
+
+    // Filter by region if user is a coordinator
+    const regionId = (session?.user as any)?.regionId;
+    if (session?.user?.role === "COORDINATOR" && regionId) {
+      where = {
+        ...where,
+        regionId,
+      };
+    }
 
     const [items, total] = await prisma.$transaction([
       prisma.family.findMany({
