@@ -16,8 +16,6 @@ export default function RegionStat() {
   const { data, isLoading } = useMemberPerRegions();
   const regionMemberCounts = data?.data ?? [];
 
-  console.log("Region member counts:", data);
-
   return (
     <section className="space-y-4">
       <div>
