@@ -1,6 +1,6 @@
-import type { Attendance } from "@/app/generated/prisma/client";
 import type { AttendanceForm } from "@/types/attendance";
 import type { PaginatedResponse } from "@/types/shared";
+import { Attendance } from "@prisma/client";
 
 export async function getAttendances(
   page = 1,

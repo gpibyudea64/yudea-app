@@ -13,11 +13,11 @@ import {
   useCreateAttendance,
   useUpdateAttendance,
 } from "@/hooks/use-attendance";
-import type { Attendance } from "@/app/generated/prisma/client";
 import { AttendanceForm } from "@/types/attendance";
 import { Dispatch, SetStateAction, useEffect } from "react";
 import { toast } from "sonner";
 import { useForm, useWatch } from "react-hook-form";
+import { Attendance } from "@prisma/client";
 
 export default function AttendanceDialog({
   editing,

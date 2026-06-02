@@ -27,11 +27,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { usePageAccess } from "@/hooks/use-page-access";
 import { useAttendances, useDeleteAttendance } from "@/hooks/use-attendance";
-import type { Attendance } from "@/app/generated/prisma/client";
 import AttendanceDialog from "./attendance-dialog";
 import AttendanceCard from "./attendance-card";
 import { getServiceTypeColor } from "@/lib/client-helper";
 import { DataTableControls } from "../ui/data-table-controls";
+import { Attendance } from "@prisma/client";
 
 export default function AttendancePage() {
   const [page, setPage] = useState(1);
@@ -311,11 +311,7 @@ export default function AttendancePage() {
         </Card>
 
         {canEdit && (
-          <AttendanceDialog
-            editing={editing}
-            open={open}
-            setOpen={setOpen}
-          />
+          <AttendanceDialog editing={editing} open={open} setOpen={setOpen} />
         )}
       </div>
     </div>

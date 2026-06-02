@@ -1,16 +1,12 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
-  Gender,
-  MemberPelkat,
-  MemberRole,
-} from "@/app/generated/prisma/client";
-import {
   calculateAge,
   determinePelkat,
   getErrorMessage,
   toPaginatedResult,
   toTitleCase,
 } from "@/lib/helper";
+import { Gender, MemberPelkat, MemberRole } from "@prisma/client";
 
 describe("helper utilities", () => {
   afterEach(() => {
@@ -23,7 +19,9 @@ describe("helper utilities", () => {
 
   it("reads API-style error messages before falling back", () => {
     expect(
-      getErrorMessage({ response: { data: { message: "Email already used" } } }),
+      getErrorMessage({
+        response: { data: { message: "Email already used" } },
+      }),
     ).toBe("Email already used");
     expect(getErrorMessage(new Error("Boom"))).toBe("Boom");
     expect(getErrorMessage("unknown", "Fallback")).toBe("Fallback");
@@ -57,15 +55,14 @@ describe("helper utilities", () => {
         10,
       ),
     ).toEqual({
-        items: ["a"],
-        meta: {
-          page: 3,
-          limit: 5,
-          total: 11,
-          totalPages: 3,
-        },
+      items: ["a"],
+      meta: {
+        page: 3,
+        limit: 5,
+        total: 11,
+        totalPages: 3,
       },
-    );
+    });
   });
 
   it("calculates age around birthdays", () => {

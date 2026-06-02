@@ -1,7 +1,7 @@
-import type { Member } from "@/app/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { NextRequest, NextResponse } from "next/server";
+import { Member, Prisma, User } from "@prisma/client";
 
 // GET /api/family?page=1&limit=10
 export async function GET(req: NextRequest) {
@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
     const skip = (page - 1) * limit;
 
     // Build where clause for search
-    let where: any = search
+    let where: Prisma.FamilyWhereInput = search
       ? {
           OR: [
             { familyName: { contains: search, mode: "insensitive" as const } },
@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
       : {};
 
     // Filter by region if user is a coordinator
-    const regionId = (session?.user as any)?.regionId;
+    const regionId = (session?.user as User)?.regionId;
     if (session?.user?.role === "COORDINATOR" && regionId) {
       where = {
         ...where,

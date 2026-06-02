@@ -1,5 +1,5 @@
-import { Gender } from "@/app/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
+import { Gender } from "@prisma/client";
 import { NextResponse } from "next/server";
 
 export async function GET() {

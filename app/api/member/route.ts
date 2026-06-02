@@ -2,7 +2,7 @@ import { attachPelkat } from "@/lib/helper";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { NextRequest, NextResponse } from "next/server";
-import { Prisma, User } from "@/app/generated/prisma/client";
+import { Prisma, User } from "@prisma/client";
 
 // GET /api/member?page=1&limit=10
 export async function GET(req: NextRequest) {

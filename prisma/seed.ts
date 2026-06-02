@@ -1,5 +1,5 @@
-import { Gender, MemberRole } from "@/app/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
+import { Gender, MemberRole } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
 async function main() {
@@ -87,8 +87,7 @@ async function main() {
       regionId: region1.id,
     },
   });
-
-  const regionB_Coordinator = await prisma.user.create({
+  await prisma.user.create({
     data: {
       name: "Coordinator Region B",
       email: "coordinator-b@example.com",
@@ -97,8 +96,7 @@ async function main() {
       regionId: region2.id,
     },
   });
-
-  const regionC_Coordinator = await prisma.user.create({
+  await prisma.user.create({
     data: {
       name: "Coordinator Region C",
       email: "coordinator-c@example.com",

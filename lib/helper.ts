@@ -1,9 +1,10 @@
 import {
   Gender,
+  Member,
   MemberPelkat,
   MemberRole,
-} from "@/app/generated/prisma/client";
-import type { Member, Prisma } from "@/app/generated/prisma/client";
+  Prisma,
+} from "@prisma/client";
 
 export function toTitleCase(str: string): string {
   return str
