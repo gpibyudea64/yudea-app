@@ -1,4 +1,4 @@
-import { MemberPelkat } from "@/app/generated/prisma/enums";
+import { MemberPelkat } from "@prisma/client";
 import { buildPelkatWhere } from "@/lib/helper";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";

@@ -80,21 +80,22 @@ model Family {
 }
 
 model Member {
-  id                String     @id @default(uuid())
+  id                String        @id @default(uuid())
   name              String
   gender            Gender
   birthDate         DateTime
   phone             String?
   email             String?
   role              MemberRole
-  isActive          Boolean    @default(true)
-  isDeceased        Boolean    @default(false)
+  isActive          Boolean       @default(true)
+  isDeceased        Boolean       @default(false)
   deathDate         DateTime?
-  isPresbyter       Boolean    @default(false)
+  isPresbyter       Boolean       @default(false)
   bloodType         BloodType?
+  pelkat            MemberPelkat?
   familyId          String
-  family            Family     @relation(fields: [familyId], references: [id])
-  coordinatedRegion Region?    @relation("RegionCoordinator")
+  family            Family        @relation(fields: [familyId], references: [id])
+  coordinatedRegion Region?       @relation("RegionCoordinator")
 
   createdAt DateTime @default(now())
 }
