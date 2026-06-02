@@ -52,6 +52,11 @@ export const defaultProtectedRoutes: ProtectedRoute[] = [
     editRoles: ["ADMIN", "STAFF"],
   },
   {
+    path: "/dashboard/birthday",
+    roles: ["ADMIN", "STAFF", "COORDINATOR"],
+    editRoles: ["ADMIN", "STAFF", "COORDINATOR"],
+  },
+  {
     path: "/dashboard/families",
     roles: ["ADMIN", "STAFF", "COORDINATOR"],
     editRoles: ["ADMIN", "STAFF", "COORDINATOR"],

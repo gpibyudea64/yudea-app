@@ -1,6 +1,7 @@
 import { AppRole } from "@/lib/rbac";
 import {
   CalendarCheck,
+  Cake,
   Church,
   Compass,
   HeartHandshake,
@@ -18,26 +19,38 @@ export const menuItems = [
     roles: ["ADMIN", "STAFF", "COORDINATOR"] satisfies AppRole[],
   },
   {
-    title: "Branches",
+    title: "Wilayah Pelayanan",
     href: "/dashboard/branches",
     icon: Church,
     roles: ["ADMIN", "STAFF"] satisfies AppRole[],
   },
   {
-    title: "Regions",
+    title: "Sektor Pelayanan",
     href: "/dashboard/regions",
     icon: Compass,
     roles: ["ADMIN", "STAFF", "COORDINATOR"] satisfies AppRole[],
   },
   {
-    title: "Families",
+    title: "Keluarga",
     href: "/dashboard/families",
     icon: HeartHandshake,
     roles: ["ADMIN", "STAFF", "COORDINATOR"] satisfies AppRole[],
   },
   {
-    title: "Members",
+    title: "Warga Jemaat",
     href: "/dashboard/members",
+    icon: Users,
+    roles: ["ADMIN", "STAFF", "COORDINATOR", "MEMBER"] satisfies AppRole[],
+  },
+  {
+    title: "Ulang Tahun",
+    href: "/dashboard/birthday",
+    icon: Cake,
+    roles: ["ADMIN", "STAFF", "COORDINATOR"] satisfies AppRole[],
+  },
+  {
+    title: "Majelis Jemaat",
+    href: "/dashboard/presbytery",
     icon: Users,
     roles: ["ADMIN", "STAFF", "COORDINATOR", "MEMBER"] satisfies AppRole[],
   },
