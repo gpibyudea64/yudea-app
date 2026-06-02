@@ -3,6 +3,7 @@ import {
   deleteMember,
   getMember,
   getMembers,
+  getPresbyters,
   updateMember,
 } from "@/lib/api/member";
 import type { MemberForm } from "@/types/member";
@@ -56,5 +57,12 @@ export function useDeleteMember() {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
       queryClient.invalidateQueries({ queryKey: ["family"] });
     },
+  });
+}
+
+export function usePresbyters(page = 1, limit = 10, search = "") {
+  return useQuery({
+    queryKey: [QUERY_KEY, page, limit, search],
+    queryFn: () => getPresbyters(page, limit, search),
   });
 }

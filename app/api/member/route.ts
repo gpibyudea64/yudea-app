@@ -2,6 +2,7 @@ import { attachPelkat } from "@/lib/helper";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { NextRequest, NextResponse } from "next/server";
+import { Prisma, User } from "@/app/generated/prisma/client";
 
 // GET /api/member?page=1&limit=10
 export async function GET(req: NextRequest) {
@@ -14,26 +15,33 @@ export async function GET(req: NextRequest) {
     const skip = (page - 1) * limit;
 
     // Build where clause for search
-    let where: any = search
+    let where: Prisma.MemberWhereInput = search
       ? {
-          OR: [
-            { name: { contains: search, mode: "insensitive" as const } },
-            { email: { contains: search, mode: "insensitive" as const } },
-            { phone: { contains: search, mode: "insensitive" as const } },
+          AND: [
             {
-              family: {
-                familyName: {
-                  contains: search,
-                  mode: "insensitive" as const,
+              OR: [
+                { name: { contains: search, mode: "insensitive" as const } },
+                { email: { contains: search, mode: "insensitive" as const } },
+                { phone: { contains: search, mode: "insensitive" as const } },
+                {
+                  family: {
+                    familyName: {
+                      contains: search,
+                      mode: "insensitive" as const,
+                    },
+                  },
                 },
-              },
+              ],
+            },
+            {
+              isPresbyter: true,
             },
           ],
         }
       : {};
 
     // Filter by region if user is a coordinator
-    const regionId = (session?.user as any)?.regionId;
+    const regionId = (session?.user as User)?.regionId;
     if (session?.user?.role === "COORDINATOR" && regionId) {
       where = {
         ...where,
@@ -99,6 +107,7 @@ export async function POST(req: NextRequest) {
         role: body.role,
         isActive: body.isActive ?? true,
         isDeceased: body.isDeceased ?? false,
+        isPresbyter: body.isPresbyter ?? false,
         deathDate: body.deathDate ? new Date(body.deathDate) : null,
         family: { connect: { id: body.familyId } },
       },

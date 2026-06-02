@@ -17,6 +17,22 @@ export async function getMembers(
   return res.json();
 }
 
+export async function getPresbyters(
+  page = 1,
+  limit = 10,
+  search = "",
+): Promise<PaginatedResponse<Member>> {
+  const params = new URLSearchParams({
+    page: String(page),
+    limit: String(limit),
+  });
+  if (search) params.set("search", search);
+
+  const res = await fetch(`/api/member/presbyter?${params.toString()}`);
+  if (!res.ok) throw new Error("Failed to fetch presbyters");
+  return res.json();
+}
+
 export async function getMember(id: string): Promise<Member> {
   const res = await fetch(`/api/member/${id}`);
   if (!res.ok) throw new Error("Failed to fetch member");

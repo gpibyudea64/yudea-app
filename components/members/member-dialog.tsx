@@ -30,6 +30,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
+import { Switch } from "../ui/switch";
 
 function toDateInput(value: Date | string | null | undefined) {
   if (!value) return "";
@@ -72,6 +73,7 @@ export default function MemberDialog({
       isDeceased: false,
       deathDate: "",
       familyId: "",
+      isPresbyter: false,
     },
   });
 
@@ -303,6 +305,21 @@ export default function MemberDialog({
             <div className="space-y-2">
               <Label htmlFor="deathDate">Death date</Label>
               <Input id="deathDate" type="date" {...register("deathDate")} />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="isPresbyter">Is Presbyter</Label>
+              <Controller
+                control={control}
+                name="isPresbyter"
+                render={({ field }) => (
+                  <Switch
+                    id="isPresbyter"
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                )}
+              />
             </div>
           </div>
 

@@ -40,6 +40,7 @@ export type MemberForm = {
   isDeceased: boolean;
   deathDate: string;
   familyId?: string;
+  isPresbyter?: boolean;
 };
 
 export const genderOptions: Array<{ label: string; value: Gender }> = [
