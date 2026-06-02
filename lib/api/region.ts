@@ -1,4 +1,4 @@
-import type { Region, RegionForm } from "@/types/region";
+import type { Region, RegionForm, RegionMemberCount } from "@/types/region";
 import type { PaginatedResponse } from "@/types/shared";
 
 export async function getRegions(
@@ -49,4 +49,12 @@ export async function updateRegion(
 export async function deleteRegion(id: string): Promise<void> {
   const res = await fetch(`/api/region/${id}`, { method: "DELETE" });
   if (!res.ok) throw new Error("Failed to delete region");
+}
+
+export async function getRegionMemberCounts(): Promise<
+  PaginatedResponse<RegionMemberCount>
+> {
+  const res = await fetch(`/api/region/member-count`);
+  if (!res.ok) throw new Error("Failed to fetch region member counts");
+  return res.json();
 }

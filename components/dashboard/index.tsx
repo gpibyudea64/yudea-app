@@ -1,6 +1,8 @@
-import BranchStat from "./branch-stat";
+import OverviewStat from "./over-view-stat";
 import MemberStat from "./member-stat";
 import RegionStat from "./region-stat";
+import GenderStat from "./gender-stat";
+import BloodTypeStat from "./blood-type-stat";
 
 export default function Dashboard() {
   return (
@@ -15,9 +17,11 @@ export default function Dashboard() {
           </p>
         </div>
 
-        <BranchStat />
-        <RegionStat />
+        <OverviewStat />
+        <GenderStat />
+        <BloodTypeStat />
         <MemberStat />
+        <RegionStat />
       </div>
     </div>
   );

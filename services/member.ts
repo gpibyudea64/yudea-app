@@ -12,11 +12,11 @@ type PelkatCount = {
   total: number;
 };
 
-export function useMembersCount() {
+export function useMembersGenderCount() {
   return useQuery({
     queryKey: ["member", "count"],
     queryFn: async (): Promise<MemberCount> => {
-      const res = await fetch("/api/member/count");
+      const res = await fetch("/api/member/gender-count");
       if (!res.ok) throw new Error("Failed to fetch member counts");
       return res.json();
     },

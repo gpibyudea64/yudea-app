@@ -1,18 +1,15 @@
 "use client";
 
-import { useBranches } from "@/hooks/use-branch";
 import { GitBranch } from "lucide-react";
 import { StatCard } from "./stat-card";
 import { useMembers } from "@/hooks/use-member";
 import { useFamilies } from "@/hooks/use-family";
 import { useRegions } from "@/hooks/use-region";
 
-export default function BranchStat() {
-  const { data } = useBranches(1, 999);
+export default function OverviewStat() {
   const { data: membersData } = useMembers(1, 999);
   const { data: familiesData } = useFamilies(1, 999);
   const { data: regionsData } = useRegions(1, 999);
-  const branches = data?.data ?? [];
 
   return (
     <section className="space-y-4">

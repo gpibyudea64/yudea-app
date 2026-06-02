@@ -2,6 +2,7 @@ import {
   createRegion,
   deleteRegion,
   getRegion,
+  getRegionMemberCounts,
   getRegions,
   updateRegion,
 } from "@/lib/api/region";
@@ -24,6 +25,13 @@ export function useRegion(id: string) {
     queryKey: [QUERY_KEY, id],
     queryFn: () => getRegion(id),
     enabled: !!id,
+  });
+}
+
+export function useMemberPerRegions() {
+  return useQuery({
+    queryKey: [QUERY_KEY, "member-count"],
+    queryFn: () => getRegionMemberCounts(),
   });
 }
 

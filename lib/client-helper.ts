@@ -20,3 +20,11 @@ export const getServiceTypeColor = (type: string) => {
   };
   return types[type] || "default";
 };
+
+export function formatPelkatName(input: string): string {
+  return input
+    .toLowerCase() // Convert to lowercase first
+    .split("_") // Split by underscore
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1)) // Capitalize first letter
+    .join(" "); // Join with space
+}

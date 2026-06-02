@@ -6,7 +6,12 @@ import {
   getPresbyters,
   updateMember,
 } from "@/lib/api/member";
-import type { MemberForm } from "@/types/member";
+import type {
+  BloodTypeCount,
+  MemberCount,
+  MemberForm,
+  PelkatCount,
+} from "@/types/member";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 const QUERY_KEY = "member";
@@ -64,5 +69,38 @@ export function usePresbyters(page = 1, limit = 10, search = "") {
   return useQuery({
     queryKey: [QUERY_KEY, page, limit, search],
     queryFn: () => getPresbyters(page, limit, search),
+  });
+}
+
+export function useMembersGenderCount() {
+  return useQuery({
+    queryKey: [QUERY_KEY, "count"],
+    queryFn: async (): Promise<MemberCount> => {
+      const res = await fetch("/api/member/gender-count");
+      if (!res.ok) throw new Error("Failed to fetch member counts");
+      return res.json();
+    },
+  });
+}
+
+export function useMembersBloodTypeCount() {
+  return useQuery({
+    queryKey: [QUERY_KEY, "count"],
+    queryFn: async (): Promise<BloodTypeCount> => {
+      const res = await fetch("/api/member/blood-type-count");
+      if (!res.ok) throw new Error("Failed to fetch member blood type counts");
+      return res.json();
+    },
+  });
+}
+
+export function useAllPelkatCounts() {
+  return useQuery({
+    queryKey: [QUERY_KEY, "pelkat-count"],
+    queryFn: async (): Promise<PelkatCount[]> => {
+      const res = await fetch("/api/member/pelkat-count");
+      if (!res.ok) throw new Error("Failed to fetch pelkat counts");
+      return res.json();
+    },
   });
 }

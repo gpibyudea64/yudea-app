@@ -1,11 +1,10 @@
 "use client";
 
-import { useAllPelkatCounts, useMembersCount } from "@/services/member";
-import { Mars, Users, Venus } from "lucide-react";
+import { useAllPelkatCounts } from "@/services/member";
 import { StatCard } from "./stat-card";
+import { formatPelkatName } from "@/lib/client-helper";
 
 export default function MemberStat() {
-  const { data: dataMember } = useMembersCount();
   const { data: pelkatCounts } = useAllPelkatCounts();
 
   return (
@@ -19,34 +18,13 @@ export default function MemberStat() {
         </h2>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        <StatCard
-          description="Total Warga Jemaat across the church"
-          quantity={dataMember?.all ?? 0}
-          title="All Warga Jemaat"
-          icon={<Users className="h-5 w-5 text-blue-600" />}
-        />
-        <StatCard
-          description="Total female Warga Jemaat"
-          quantity={dataMember?.female ?? 0}
-          title="Female Warga Jemaat"
-          icon={<Venus className="h-5 w-5 text-pink-600" />}
-        />
-        <StatCard
-          description="Total male Warga Jemaat"
-          quantity={dataMember?.male ?? 0}
-          title="Male Warga Jemaat"
-          icon={<Mars className="h-5 w-5 text-blue-600" />}
-        />
-      </div>
-
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {pelkatCounts?.map((pelkat) => (
           <StatCard
             key={pelkat.pelkat}
             description="Warga Jemaat in this pelkat"
             quantity={pelkat.total}
-            title={pelkat.pelkat}
+            title={formatPelkatName(pelkat.pelkat)}
           />
         ))}
       </div>

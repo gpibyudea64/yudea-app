@@ -91,11 +91,19 @@ model Member {
   isDeceased        Boolean    @default(false)
   deathDate         DateTime?
   isPresbyter       Boolean    @default(false)
+  bloodType         BloodType?
   familyId          String
   family            Family     @relation(fields: [familyId], references: [id])
   coordinatedRegion Region?    @relation("RegionCoordinator")
 
   createdAt DateTime @default(now())
+}
+
+enum BloodType {
+  A
+  B
+  AB
+  O
 }
 
 enum MemberRole {

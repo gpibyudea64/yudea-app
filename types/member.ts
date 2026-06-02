@@ -54,3 +54,21 @@ export const memberRoleOptions: Array<{ label: string; value: MemberRole }> = [
   { label: "Child", value: "CHILD" },
   { label: "Other", value: "OTHER" },
 ];
+
+export type MemberCount = {
+  all: number;
+  female: number;
+  male: number;
+};
+
+export type BloodTypeCount = {
+  A: number;
+  B: number;
+  AB: number;
+  O: number;
+};
+
+export type PelkatCount = {
+  pelkat: MemberPelkat;
+  total: number;
+};

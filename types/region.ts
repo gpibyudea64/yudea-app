@@ -15,3 +15,9 @@ export type Region = {
   families?: unknown[];
   coordinator?: null;
 };
+
+export type RegionMemberCount = {
+  regionId: string;
+  regionName: string;
+  memberCount: number;
+};
