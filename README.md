@@ -44,10 +44,13 @@ Create a local `.env` file with at least:
 
 ```bash
 DATABASE_URL="postgresql://USER:PASSWORD@HOST:PORT/DATABASE"
-AUTH_SECRET="replace-with-a-secure-random-secret"
+NEXTAUTH_URL="https://your-site.netlify.app"
+NEXTAUTH_SECRET="replace-with-a-secure-random-secret"
 ```
 
-`DATABASE_URL` is used by Prisma, `lib/prisma.ts`, and `auth.ts`. `AUTH_SECRET` is used by NextAuth.
+`DATABASE_URL` is used by Prisma, `lib/prisma.ts`, and `auth.ts`. `NEXTAUTH_URL` and `NEXTAUTH_SECRET` are required by NextAuth in production.
+
+On Netlify, add the same variables in Site settings under Environment variables. If you still use `AUTH_SECRET`, the app will also read it as a fallback.
 
 ## Setup
 
