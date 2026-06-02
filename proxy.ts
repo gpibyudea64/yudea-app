@@ -1,17 +1,14 @@
-import authConfig from "@/auth.config";
-import NextAuth from "next-auth";
+import { auth } from "@/auth";
 import { NextResponse } from "next/server";
-
-const { auth } = NextAuth(authConfig);
 
 export default auth((req) => {
   const isLoggedIn = !!req.auth;
   const { pathname } = req.nextUrl;
-  const isApiRoute = pathname.startsWith("/api");
-  const isAuthRoute = pathname.startsWith("/api/auth");
+
   const isLoginPage = pathname.startsWith("/public/login");
 
-  if (isAuthRoute || isApiRoute) {
+  // ignore all api routes
+  if (pathname.startsWith("/api")) {
     return NextResponse.next();
   }
 
@@ -27,5 +24,5 @@ export default auth((req) => {
 });
 
 export const config = {
-  matcher: ["/((?!api/auth|_next/static|_next/image|favicon.ico).*)"],
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
 };
