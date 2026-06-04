@@ -3,8 +3,16 @@ import MemberStat from "./member-stat";
 import RegionStat from "./region-stat";
 import GenderStat from "./gender-stat";
 import BloodTypeStat from "./blood-type-stat";
+import { auth } from "@/auth";
+import { redirect } from "next/navigation";
 
-export default function Dashboard() {
+export default async function Dashboard() {
+  const session = await auth();
+
+  if (!session) {
+    redirect("/public/login");
+  }
+
   return (
     <div className="min-h-screen bg-linear-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900">
       <div className="container mx-auto space-y-8 px-4 py-8">
