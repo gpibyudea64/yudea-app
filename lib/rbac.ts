@@ -133,7 +133,9 @@ export const configToViewMap = (config: RoleAccessConfig): RoleAccessMap =>
 export const serializeRoleAccessConfig = (config: RoleAccessConfig) =>
   JSON.stringify(resolveRoleAccessConfig(config));
 
-export const parseRoleAccessConfig = (rawConfig?: string | null): RoleAccessConfig => {
+export const parseRoleAccessConfig = (
+  rawConfig?: string | null,
+): RoleAccessConfig => {
   if (!rawConfig) {
     return resolveRoleAccessConfig();
   }
@@ -167,7 +169,10 @@ export const serializeRoleAccessMap = (config: RoleAccessMap) =>
     Object.fromEntries(
       Object.entries(config).map(([path, roles]) => [
         path,
-        { view: roles, edit: roles.filter((r) => r === "ADMIN" || r === "STAFF") },
+        {
+          view: roles,
+          edit: roles.filter((r) => r === "ADMIN" || r === "STAFF"),
+        },
       ]),
     ),
   );
@@ -200,10 +205,12 @@ export const getRouteAccessForPath = (
 
   if (!match) return undefined;
 
-  return config[match.path] ?? {
-    view: match.roles,
-    edit: match.editRoles,
-  };
+  return (
+    config[match.path] ?? {
+      view: match.roles,
+      edit: match.editRoles,
+    }
+  );
 };
 
 export const getAllowedRolesForPathFromConfig = (
@@ -230,6 +237,7 @@ export const getProtectedRouteItems = (roleAccessConfig?: RoleAccessConfig) => {
 };
 
 export const getDefaultDashboardPath = (role?: string | null) => {
+  console.log("disini");
   const normalized = normalizeAppRole(role);
 
   if (normalized === "MEMBER") {

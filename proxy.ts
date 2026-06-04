@@ -1,22 +1,22 @@
 import { NextResponse } from "next/server";
+import { getToken } from "next-auth/jwt";
+import type { NextRequest } from "next/server";
 
-export default async function handler(req: Request) {
-  const url = new URL(req.url);
-  const pathname = url.pathname;
+export default async function middleware(req: NextRequest) {
+  const token = await getToken({ req, secret: process.env.AUTH_SECRET });
+  const pathname = req.nextUrl.pathname;
 
-  // read cookies manually (NO auth() here)
-  const cookie = req.headers.get("cookie") || "";
-  const isLoggedIn =
-    cookie.includes("next-auth.session-token") ||
-    cookie.includes("__Secure-next-auth.session-token");
-
-  if (!isLoggedIn && pathname.startsWith("/dashboard")) {
+  if (!token && pathname.startsWith("/dashboard")) {
     return NextResponse.redirect(new URL("/public/login", req.url));
   }
 
-  if (isLoggedIn && pathname === "/public/login") {
+  if (token && pathname === "/public/login") {
     return NextResponse.redirect(new URL("/dashboard", req.url));
   }
 
   return NextResponse.next();
 }
+
+export const config = {
+  matcher: ["/dashboard/:path*", "/public/login"],
+};
