@@ -52,7 +52,6 @@ export default function LoginForm() {
 
       const session = await getSession();
       if (session?.user) {
-        console.log("masuk");
         const role = normalizeAppRole(session.user.role);
         persistAuthSession({
           user: {
@@ -63,7 +62,6 @@ export default function LoginForm() {
           },
         });
         router.replace(getDefaultDashboardPath(role));
-        console.log("hello");
         return;
       }
 

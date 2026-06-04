@@ -237,7 +237,6 @@ export const getProtectedRouteItems = (roleAccessConfig?: RoleAccessConfig) => {
 };
 
 export const getDefaultDashboardPath = (role?: string | null) => {
-  console.log("disini");
   const normalized = normalizeAppRole(role);
 
   if (normalized === "MEMBER") {
