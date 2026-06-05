@@ -14,33 +14,37 @@ export async function GET(req: NextRequest) {
     const page = Math.max(1, Number(searchParams.get("page") ?? 1));
     const limit = Math.max(1, Number(searchParams.get("limit") ?? 10));
     const search = searchParams.get("search")?.trim() ?? "";
+    const region = searchParams.get("region")?.trim() ?? "";
+    const pelkat = searchParams.get("pelkat")?.trim() ?? "";
     const skip = (page - 1) * limit;
 
     // Build where clause for search
     let where: Prisma.MemberWhereInput = search
       ? {
-          AND: [
+          OR: [
+            { name: { contains: search, mode: "insensitive" as const } },
+            { email: { contains: search, mode: "insensitive" as const } },
+            { phone: { contains: search, mode: "insensitive" as const } },
             {
-              OR: [
-                { name: { contains: search, mode: "insensitive" as const } },
-                { email: { contains: search, mode: "insensitive" as const } },
-                { phone: { contains: search, mode: "insensitive" as const } },
-                {
-                  family: {
-                    familyName: {
-                      contains: search,
-                      mode: "insensitive" as const,
-                    },
-                  },
+              family: {
+                familyName: {
+                  contains: search,
+                  mode: "insensitive" as const,
                 },
-              ],
-            },
-            {
-              isPresbyter: true,
+              },
             },
           ],
         }
       : {};
+
+    if (region && region !== "all") {
+      where = {
+        ...where,
+        family: {
+          regionId: region,
+        },
+      };
+    }
 
     // Filter by region if user is a coordinator
     const regionId = (session?.user as User)?.regionId;
@@ -59,13 +63,26 @@ export async function GET(req: NextRequest) {
         skip,
         take: limit,
         orderBy: { createdAt: "desc" },
-        include: { family: true },
+        include: {
+          family: {
+            include: {
+              region: true,
+            },
+          },
+        },
       }),
       prisma.member.count({ where }),
     ]);
 
+    const membersWithPelkat = items.map(attachPelkat);
+
+    const filteredMembers =
+      pelkat && pelkat !== "all"
+        ? membersWithPelkat.filter((m) => m.pelkat === pelkat)
+        : membersWithPelkat;
+
     return NextResponse.json({
-      data: items.map(attachPelkat),
+      data: filteredMembers,
       meta: {
         total,
         page,

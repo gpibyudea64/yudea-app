@@ -16,10 +16,16 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 const QUERY_KEY = "member";
 
-export function useMembers(page = 1, limit = 10, search = "") {
+export function useMembers(
+  page = 1,
+  limit = 10,
+  search = "",
+  region = "all",
+  pelkat = "all",
+) {
   return useQuery({
-    queryKey: [QUERY_KEY, page, limit, search],
-    queryFn: () => getMembers(page, limit, search),
+    queryKey: [QUERY_KEY, page, limit, search, region, pelkat],
+    queryFn: () => getMembers(page, limit, search, region, pelkat),
   });
 }
 

@@ -5,12 +5,16 @@ export async function getMembers(
   page = 1,
   limit = 10,
   search = "",
+  region = "all",
+  pelkat = "all",
 ): Promise<PaginatedResponse<Member>> {
   const params = new URLSearchParams({
     page: String(page),
     limit: String(limit),
   });
   if (search) params.set("search", search);
+  if (region) params.set("region", region);
+  if (pelkat) params.set("pelkat", pelkat);
 
   const res = await fetch(`/api/member?${params.toString()}`);
   if (!res.ok) throw new Error("Failed to fetch members");

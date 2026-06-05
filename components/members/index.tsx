@@ -17,7 +17,7 @@ import {
   TableRow,
 } from "../ui/table";
 import MemberDialog from "./member-dialog";
-import { DataTableControls } from "../ui/data-table-controls";
+import { DataTableMemberControls } from "./data-table-member-control";
 
 function formatDate(value: Date | string) {
   return new Date(value).toLocaleDateString();
@@ -30,9 +30,20 @@ function formatLabel(value: string) {
 export default function MembersPage() {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
-  const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState({
+    search: "",
+    region: "all",
+    pelkat: "all",
+  });
+
   const { canEdit } = usePageAccess("/dashboard/members");
-  const { data, isLoading } = useMembers(page, limit, search);
+  const { data, isLoading } = useMembers(
+    page,
+    limit,
+    filter.search,
+    filter.region,
+    filter.pelkat,
+  );
   const deleteMutation = useDeleteMember();
   const members = data?.data ?? [];
 
@@ -86,9 +97,19 @@ export default function MembersPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
-            <DataTableControls
-              search={search}
-              onSearchChange={setSearch}
+            <DataTableMemberControls
+              search={filter.search}
+              onSearchChange={(value) =>
+                setFilter({ ...filter, search: value })
+              }
+              region={filter.region}
+              onRegionChange={(value) =>
+                setFilter({ ...filter, region: value })
+              }
+              pelkat={filter.pelkat}
+              onPelkatChange={(value) =>
+                setFilter({ ...filter, pelkat: value })
+              }
               searchPlaceholder="Search Warga Jemaat, Keluarga, email, or phone..."
               meta={data?.meta}
               onPageChange={setPage}
@@ -99,9 +120,9 @@ export default function MembersPage() {
                 <TableHeader>
                   <TableRow className="bg-muted/50">
                     <TableHead className="font-semibold">Name</TableHead>
-                    <TableHead className="font-semibold">Family</TableHead>
                     <TableHead className="font-semibold">Birth Date</TableHead>
                     <TableHead className="font-semibold">Role</TableHead>
+                    <TableHead className="font-semibold">Sektor</TableHead>
                     <TableHead className="font-semibold">Pelkat</TableHead>
                     <TableHead className="font-semibold">Status</TableHead>
                     {canEdit && (
@@ -162,9 +183,9 @@ export default function MembersPage() {
                             {item.name}
                           </span>
                         </TableCell>
-                        <TableCell>{item.family?.familyName ?? ""}</TableCell>
                         <TableCell>{formatDate(item.birthDate)}</TableCell>
                         <TableCell>{formatLabel(item.role)}</TableCell>
+                        <TableCell>{item.family?.region?.name ?? ""}</TableCell>
                         <TableCell>{formatLabel(item.pelkat ?? "")}</TableCell>
                         <TableCell>
                           <Badge

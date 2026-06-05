@@ -17,17 +17,24 @@ export async function GET(req: NextRequest) {
     // Build where clause for search
     let where: Prisma.MemberWhereInput = search
       ? {
-          OR: [
-            { name: { contains: search, mode: "insensitive" as const } },
-            { email: { contains: search, mode: "insensitive" as const } },
-            { phone: { contains: search, mode: "insensitive" as const } },
+          AND: [
             {
-              family: {
-                familyName: {
-                  contains: search,
-                  mode: "insensitive" as const,
+              OR: [
+                { name: { contains: search, mode: "insensitive" as const } },
+                { email: { contains: search, mode: "insensitive" as const } },
+                { phone: { contains: search, mode: "insensitive" as const } },
+                {
+                  family: {
+                    familyName: {
+                      contains: search,
+                      mode: "insensitive" as const,
+                    },
+                  },
                 },
-              },
+              ],
+            },
+            {
+              isPresbyter: true,
             },
           ],
         }
