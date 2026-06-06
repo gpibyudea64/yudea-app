@@ -1,4 +1,4 @@
-import PelkatMenu from "@/components/members/pelkat-menu";
+import PelkatMenu from "@/components/pelkat";
 
 export default function PelkatMembersPage() {
   return <PelkatMenu />;

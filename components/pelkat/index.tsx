@@ -3,7 +3,6 @@
 import { useMembers } from "@/hooks/use-member";
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { DataTableControls } from "../ui/data-table-controls";
 import {
   Table,
   TableBody,
@@ -12,6 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "../ui/table";
+import { DataTablePelkatControls } from "./data-table-pelkat-control";
 
 function formatLabel(value: string) {
   return value.replaceAll("_", " ");
@@ -20,8 +20,16 @@ function formatLabel(value: string) {
 export default function PelkatMenu() {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
-  const [search, setSearch] = useState("");
-  const { data, isLoading } = useMembers(page, limit, search);
+  const [filter, setFilter] = useState({
+    search: "",
+    pelkat: "all",
+  });
+  const { data, isLoading } = useMembers({
+    page,
+    limit,
+    pelkat: filter.pelkat,
+    search: filter.search,
+  });
   const members = data?.data ?? [];
 
   return (
@@ -41,13 +49,19 @@ export default function PelkatMenu() {
             <CardTitle>Pelkat Records</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
-            <DataTableControls
-              search={search}
-              onSearchChange={setSearch}
+            <DataTablePelkatControls
+              search={filter.search}
+              onSearchChange={(value) =>
+                setFilter({ ...filter, search: value })
+              }
               searchPlaceholder="Search members or Keluarga..."
               meta={data?.meta}
               onPageChange={setPage}
               onLimitChange={setLimit}
+              pelkat={filter.pelkat}
+              onPelkatChange={(value) =>
+                setFilter({ ...filter, pelkat: value })
+              }
             />
             <div className="overflow-x-auto">
               <Table>

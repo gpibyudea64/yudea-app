@@ -11,7 +11,6 @@ import {
 } from "../ui/select";
 import { Button } from "../ui/button";
 import { useRegions } from "@/hooks/use-region";
-import PelkatSelect from "../ui/pelkat-select";
 
 type PaginationMeta = {
   total: number;
@@ -20,7 +19,7 @@ type PaginationMeta = {
   totalPages: number;
 };
 
-export function DataTableMemberControls({
+export function DataTablePresbyterControls({
   search,
   onSearchChange,
   searchPlaceholder,
@@ -29,15 +28,11 @@ export function DataTableMemberControls({
   onLimitChange,
   region,
   onRegionChange,
-  pelkat,
-  onPelkatChange,
 }: {
   search: string;
   onSearchChange: (value: string) => void;
   region: string;
   onRegionChange: (value: string) => void;
-  pelkat: string;
-  onPelkatChange: (value: string) => void;
   searchPlaceholder: string;
   meta?: PaginationMeta;
   onPageChange: (page: number) => void;
@@ -144,11 +139,6 @@ export function DataTableMemberControls({
             ))}
           </SelectContent>
         </Select>
-        <PelkatSelect
-          onPageChange={onPageChange}
-          onPelkatChange={onPelkatChange}
-          pelkat={pelkat}
-        />
       </div>
     </div>
   );

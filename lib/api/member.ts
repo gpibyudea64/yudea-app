@@ -25,12 +25,14 @@ export async function getPresbyters(
   page = 1,
   limit = 10,
   search = "",
+  region = "all",
 ): Promise<PaginatedResponse<Member>> {
   const params = new URLSearchParams({
     page: String(page),
     limit: String(limit),
   });
   if (search) params.set("search", search);
+  if (region) params.set("region", region);
 
   const res = await fetch(`/api/member/presbyter?${params.toString()}`);
   if (!res.ok) throw new Error("Failed to fetch presbyters");

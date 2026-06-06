@@ -12,6 +12,7 @@ export async function GET(req: NextRequest) {
     const page = Math.max(1, Number(searchParams.get("page") ?? 1));
     const limit = Math.max(1, Number(searchParams.get("limit") ?? 10));
     const search = searchParams.get("search")?.trim() ?? "";
+    const region = searchParams.get("region")?.trim() ?? "";
     const skip = (page - 1) * limit;
 
     // Build where clause for search
@@ -40,6 +41,15 @@ export async function GET(req: NextRequest) {
         }
       : {};
 
+    if (region && region !== "all") {
+      where = {
+        ...where,
+        family: {
+          regionId: region,
+        },
+      };
+    }
+
     // Filter by region if user is a coordinator
     const regionId = (session?.user as User)?.regionId;
     if (session?.user?.role === "COORDINATOR" && regionId) {
@@ -57,7 +67,13 @@ export async function GET(req: NextRequest) {
         skip,
         take: limit,
         orderBy: { createdAt: "desc" },
-        include: { family: true },
+        include: {
+          family: {
+            include: {
+              region: true,
+            },
+          },
+        },
       }),
       prisma.member.count({ where }),
     ]);

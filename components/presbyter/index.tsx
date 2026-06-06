@@ -16,6 +16,7 @@ import {
 } from "../ui/table";
 import { DataTableControls } from "../ui/data-table-controls";
 import { usePresbyters } from "@/hooks/use-member";
+import { DataTablePresbyterControls } from "./data-table-presbyter-control";
 
 function formatDate(value: Date | string) {
   return new Date(value).toLocaleDateString();
@@ -28,9 +29,17 @@ function formatLabel(value: string) {
 export default function PresbyterPage() {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
-  const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState({
+    search: "",
+    region: "all",
+  });
   const { canEdit } = usePageAccess("/dashboard/presbytery");
-  const { data, isLoading } = usePresbyters(page, limit, search);
+  const { data, isLoading } = usePresbyters({
+    page,
+    limit,
+    search: filter.search,
+    region: filter.region,
+  });
   const members = data?.data ?? [];
 
   return (
@@ -55,13 +64,19 @@ export default function PresbyterPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
-            <DataTableControls
-              search={search}
-              onSearchChange={setSearch}
+            <DataTablePresbyterControls
+              search={filter.search}
+              onSearchChange={(value) =>
+                setFilter({ ...filter, search: value })
+              }
               searchPlaceholder="Search Presbyters"
               meta={data?.meta}
               onPageChange={setPage}
               onLimitChange={setLimit}
+              region={filter.region}
+              onRegionChange={(value) =>
+                setFilter({ ...filter, region: value })
+              }
             />
             <div className="overflow-x-auto">
               <Table>
@@ -115,10 +130,9 @@ export default function PresbyterPage() {
                             {item.name}
                           </span>
                         </TableCell>
-                        <TableCell>{item.family?.familyName ?? ""}</TableCell>
+                        <TableCell>{item.family?.region?.name ?? ""}</TableCell>
                         <TableCell>{formatDate(item.birthDate)}</TableCell>
                         <TableCell>{formatLabel(item.role)}</TableCell>
-                        <TableCell>{formatLabel(item.pelkat ?? "")}</TableCell>
                         <TableCell>
                           <Badge
                             variant={item.isActive ? "default" : "outline"}

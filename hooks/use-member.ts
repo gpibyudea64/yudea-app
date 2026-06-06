@@ -16,13 +16,19 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 const QUERY_KEY = "member";
 
-export function useMembers(
+export function useMembers({
   page = 1,
   limit = 10,
   search = "",
   region = "all",
   pelkat = "all",
-) {
+}: {
+  page: number;
+  limit: number;
+  search: string;
+  region?: string;
+  pelkat?: string;
+}) {
   return useQuery({
     queryKey: [QUERY_KEY, page, limit, search, region, pelkat],
     queryFn: () => getMembers(page, limit, search, region, pelkat),
@@ -71,10 +77,20 @@ export function useDeleteMember() {
   });
 }
 
-export function usePresbyters(page = 1, limit = 10, search = "") {
+export function usePresbyters({
+  page = 1,
+  limit = 10,
+  search = "",
+  region = "all",
+}: {
+  page: number;
+  limit: number;
+  search: string;
+  region: string;
+}) {
   return useQuery({
-    queryKey: [QUERY_KEY, page, limit, search],
-    queryFn: () => getPresbyters(page, limit, search),
+    queryKey: [QUERY_KEY, page, limit, search, region],
+    queryFn: () => getPresbyters(page, limit, search, region),
   });
 }
 

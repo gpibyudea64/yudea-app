@@ -37,13 +37,13 @@ export default function MembersPage() {
   });
 
   const { canEdit } = usePageAccess("/dashboard/members");
-  const { data, isLoading } = useMembers(
+  const { data, isLoading } = useMembers({
     page,
     limit,
-    filter.search,
-    filter.region,
-    filter.pelkat,
-  );
+    search: filter.search,
+    pelkat: filter.pelkat,
+    region: filter.region,
+  });
   const deleteMutation = useDeleteMember();
   const members = data?.data ?? [];
 

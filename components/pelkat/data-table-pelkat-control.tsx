@@ -20,22 +20,18 @@ type PaginationMeta = {
   totalPages: number;
 };
 
-export function DataTableMemberControls({
+export function DataTablePelkatControls({
   search,
   onSearchChange,
   searchPlaceholder,
   meta,
   onPageChange,
   onLimitChange,
-  region,
-  onRegionChange,
   pelkat,
   onPelkatChange,
 }: {
   search: string;
   onSearchChange: (value: string) => void;
-  region: string;
-  onRegionChange: (value: string) => void;
   pelkat: string;
   onPelkatChange: (value: string) => void;
   searchPlaceholder: string;
@@ -49,13 +45,6 @@ export function DataTableMemberControls({
   const totalPages = Math.max(1, meta?.totalPages ?? 1);
   const start = total === 0 ? 0 : (page - 1) * limit + 1;
   const end = Math.min(total, page * limit);
-  const { data } = useRegions(1, 999, "");
-
-  const regionOptions =
-    data?.data.map((region) => ({
-      label: region.name,
-      value: region.id,
-    })) ?? [];
 
   return (
     <div>
@@ -125,25 +114,6 @@ export function DataTableMemberControls({
         </div>
       </div>
       <div className="flex flex-col gap-3 border-b p-4 lg:flex-row lg:items-center">
-        <Select
-          value={region}
-          onValueChange={(value) => {
-            onRegionChange(value);
-            onPageChange(1);
-          }}
-        >
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Regions</SelectItem>
-            {regionOptions.map((item) => (
-              <SelectItem key={item.value} value={String(item.value)}>
-                {item.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
         <PelkatSelect
           onPageChange={onPageChange}
           onPelkatChange={onPelkatChange}
