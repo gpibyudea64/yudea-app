@@ -28,3 +28,11 @@ export function formatPelkatName(input: string): string {
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1)) // Capitalize first letter
     .join(" "); // Join with space
 }
+
+export function formatDate(value: Date | string) {
+  return new Date(value).toLocaleDateString();
+}
+
+export function formatLabel(value: string) {
+  return value.replaceAll("_", " ");
+}

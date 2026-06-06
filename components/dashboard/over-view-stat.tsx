@@ -7,7 +7,10 @@ import { useFamilies } from "@/hooks/use-family";
 import { useRegions } from "@/hooks/use-region";
 
 export default function OverviewStat() {
-  const { data: membersData } = useMembers(1, 999);
+  const { data: membersData } = useMembers({
+    page: 1,
+    limit: 999,
+  });
   const { data: familiesData } = useFamilies(1, 999);
   const { data: regionsData } = useRegions(1, 999);
 

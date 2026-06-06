@@ -18,21 +18,18 @@ import {
 } from "../ui/table";
 import MemberDialog from "./member-dialog";
 import { DataTableMemberControls } from "./data-table-member-control";
+import { formatDate, formatLabel } from "@/lib/client-helper";
 
-function formatDate(value: Date | string) {
-  return new Date(value).toLocaleDateString();
-}
+type MembersPageProps = {
+  initialRegion?: string;
+};
 
-function formatLabel(value: string) {
-  return value.replaceAll("_", " ");
-}
-
-export default function MembersPage() {
+export default function MembersPage({ initialRegion }: MembersPageProps) {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [filter, setFilter] = useState({
     search: "",
-    region: "all",
+    region: initialRegion ? initialRegion : "all",
     pelkat: "all",
   });
 

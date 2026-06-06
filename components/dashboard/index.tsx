@@ -1,10 +1,10 @@
 import OverviewStat from "./over-view-stat";
 import MemberStat from "./member-stat";
-import RegionStat from "./region-stat";
 import GenderStat from "./gender-stat";
 import BloodTypeStat from "./blood-type-stat";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
+import RegionTable from "./region-table";
 
 export default async function Dashboard() {
   const session = await auth();
@@ -29,7 +29,7 @@ export default async function Dashboard() {
         <GenderStat />
         <BloodTypeStat />
         <MemberStat />
-        <RegionStat />
+        <RegionTable />
       </div>
     </div>
   );

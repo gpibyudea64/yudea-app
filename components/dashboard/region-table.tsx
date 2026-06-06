@@ -1,8 +1,8 @@
 "use client";
 
 import { useMemberPerRegions } from "@/hooks/use-region";
-import { Calendar, Home } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { Home } from "lucide-react";
+import { Card, CardContent } from "../ui/card";
 import {
   Table,
   TableBody,
@@ -11,8 +11,10 @@ import {
   TableHeader,
   TableRow,
 } from "../ui/table";
+import { useRouter } from "next/navigation";
 
-export default function RegionStat() {
+export default function RegionTable() {
+  const router = useRouter();
   const { data, isLoading } = useMemberPerRegions();
   const regionMemberCounts = data?.data ?? [];
 
@@ -68,6 +70,11 @@ export default function RegionStat() {
                     <TableRow
                       key={item.regionId}
                       className="transition-colors hover:bg-muted/50"
+                      onClick={() =>
+                        router.push(
+                          `/dashboard/members?region=${item.regionId}`,
+                        )
+                      }
                     >
                       <TableCell className="font-medium">
                         {item.regionName}

@@ -25,7 +25,7 @@ export function useMembers({
 }: {
   page: number;
   limit: number;
-  search: string;
+  search?: string;
   region?: string;
   pelkat?: string;
 }) {
