@@ -81,13 +81,18 @@ export async function GET(req: NextRequest) {
         ? membersWithPelkat.filter((m) => m.pelkat === pelkat)
         : membersWithPelkat;
 
+    const filteredTotal =
+      pelkat && pelkat !== "all"
+        ? membersWithPelkat.filter((m) => m.pelkat === pelkat).length
+        : total;
+
     return NextResponse.json({
       data: filteredMembers,
       meta: {
-        total,
+        total: filteredTotal,
         page,
         limit,
-        totalPages: Math.ceil(total / limit),
+        totalPages: Math.ceil(filteredTotal / limit),
       },
     });
   } catch (error) {
