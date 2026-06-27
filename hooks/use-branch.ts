@@ -16,6 +16,7 @@ export function useBranches(page = 1, limit = 10, search = "") {
   return useQuery({
     queryKey: [QUERY_KEY, page, limit, search],
     queryFn: () => getBranches(page, limit, search),
+    staleTime: 30_000,
   });
 }
 
@@ -24,6 +25,7 @@ export function useBranch(id: string) {
     queryKey: [QUERY_KEY, id],
     queryFn: () => getBranch(id),
     enabled: !!id,
+    staleTime: 60_000,
   });
 }
 

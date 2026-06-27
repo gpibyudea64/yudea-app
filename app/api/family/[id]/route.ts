@@ -40,13 +40,17 @@ export async function PATCH(
   try {
     const { id } = await params;
     const body = await req.json();
-    const { familyName, address, regionId, members } = body;
+    const { familyName, address, provinsi, kotaKabupaten, kecamatan, kelurahan, regionId, members } = body;
 
     const family = await prisma.family.update({
       where: { id },
       data: {
         ...(familyName !== undefined && { familyName }),
         ...(address !== undefined && { address }),
+        ...(provinsi !== undefined && { provinsi: provinsi || null }),
+        ...(kotaKabupaten !== undefined && { kotaKabupaten: kotaKabupaten || null }),
+        ...(kecamatan !== undefined && { kecamatan: kecamatan || null }),
+        ...(kelurahan !== undefined && { kelurahan: kelurahan || null }),
         ...(regionId !== undefined && {
           region: { connect: { id: regionId } },
         }),
@@ -55,22 +59,28 @@ export async function PATCH(
               members: {
                 create: members.map(
                   (member: {
-                    name: string;
+                    firstName: string;
+                    lastName?: string;
+                    birthCity?: string;
                     gender: "MALE" | "FEMALE";
                     birthDate: string;
                     phone?: string;
                     email?: string;
-                    role: "FAMILY_HEAD" | "WIFE" | "CHILD" | "OTHER";
+                    role: string;
+                    childNumber?: number;
                     isActive?: boolean;
                     isDeceased?: boolean;
                     deathDate?: string;
                   }) => ({
-                    name: member.name,
+                    firstName: member.firstName,
+                    lastName: member.lastName || null,
+                    birthCity: member.birthCity || '',
                     gender: member.gender,
                     birthDate: new Date(member.birthDate),
                     phone: member.phone || null,
                     email: member.email || null,
                     role: member.role,
+                    childNumber: member.role === 'CHILD' ? (member.childNumber || null) : null,
                     isActive: member.isActive ?? true,
                     isDeceased: member.isDeceased ?? false,
                     deathDate: member.deathDate

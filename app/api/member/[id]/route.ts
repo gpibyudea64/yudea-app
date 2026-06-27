@@ -38,26 +38,91 @@ export async function PATCH(
   try {
     const { id } = await params;
     const body = await req.json();
-    const { name, gender, birthDate, phone, email, role, isActive, familyId } =
-      body;
+
+    const connectFamily = body.familyId !== undefined
+      ? { family: { connect: { id: body.familyId } } }
+      : {};
 
     const member = await prisma.member.update({
       where: { id },
       data: {
-        ...(name !== undefined && { name }),
-        ...(gender !== undefined && { gender }),
-        ...(birthDate !== undefined && { birthDate: new Date(birthDate) }),
-        ...(phone !== undefined && { phone: phone || null }),
-        ...(email !== undefined && { email: email || null }),
-        ...(role !== undefined && { role }),
-        ...(isActive !== undefined && { isActive }),
+        ...(body.firstName !== undefined && { firstName: body.firstName }),
+        ...(body.lastName !== undefined && { lastName: body.lastName || null }),
+        ...(body.birthCity !== undefined && { birthCity: body.birthCity }),
+        ...(body.gender !== undefined && { gender: body.gender }),
+        ...(body.birthDate !== undefined && { birthDate: new Date(body.birthDate) }),
+        ...(body.phone !== undefined && { phone: body.phone }),
+        ...(body.email !== undefined && { email: body.email || null }),
+        ...(body.role !== undefined && { role: body.role }),
+        ...(body.childNumber !== undefined && {
+          childNumber: body.role === "CHILD" ? (body.childNumber || null) : null,
+        }),
+        ...(body.sameAddressAsFamily !== undefined && {
+          sameAddressAsFamily: body.sameAddressAsFamily,
+          ...(body.sameAddressAsFamily
+            ? {
+                memberAddress: null,
+                memberProvinsi: null,
+                memberKotaKabupaten: null,
+                memberKecamatan: null,
+                memberKelurahan: null,
+              }
+            : {}),
+        }),
+        ...(body.memberAddress !== undefined && { memberAddress: body.memberAddress || null }),
+        ...(body.memberProvinsi !== undefined && { memberProvinsi: body.memberProvinsi || null }),
+        ...(body.memberKotaKabupaten !== undefined && { memberKotaKabupaten: body.memberKotaKabupaten || null }),
+        ...(body.memberKecamatan !== undefined && { memberKecamatan: body.memberKecamatan || null }),
+        ...(body.memberKelurahan !== undefined && { memberKelurahan: body.memberKelurahan || null }),
+        ...(body.isActive !== undefined && { isActive: body.isActive }),
+        ...(body.tanggalPindah !== undefined && {
+          tanggalPindah: body.tanggalPindah ? new Date(body.tanggalPindah) : null,
+        }),
         ...(body.isDeceased !== undefined && { isDeceased: body.isDeceased }),
         ...(body.deathDate !== undefined && {
           deathDate: body.deathDate ? new Date(body.deathDate) : null,
         }),
-        ...(familyId !== undefined && {
-          family: { connect: { id: familyId } },
+        ...(body.isPresbyter !== undefined && { isPresbyter: body.isPresbyter }),
+        ...(body.statusBaptis !== undefined && { statusBaptis: body.statusBaptis }),
+        ...(body.lokasiBaptis !== undefined && { lokasiBaptis: body.lokasiBaptis || null }),
+        ...(body.tanggalBaptis !== undefined && {
+          tanggalBaptis: body.tanggalBaptis ? new Date(body.tanggalBaptis) : null,
         }),
+        ...(body.statusSidi !== undefined && { statusSidi: body.statusSidi }),
+        ...(body.lokasiSidi !== undefined && { lokasiSidi: body.lokasiSidi || null }),
+        ...(body.tanggalSidi !== undefined && {
+          tanggalSidi: body.tanggalSidi ? new Date(body.tanggalSidi) : null,
+        }),
+        ...(body.statusPerkawinan !== undefined && { statusPerkawinan: body.statusPerkawinan }),
+        ...(body.lokasiPemberkatanGereja !== undefined && {
+          lokasiPemberkatanGereja: body.lokasiPemberkatanGereja || null,
+        }),
+        ...(body.tanggalPemberkatanGereja !== undefined && {
+          tanggalPemberkatanGereja: body.tanggalPemberkatanGereja ? new Date(body.tanggalPemberkatanGereja) : null,
+        }),
+        ...(body.lokasiPerkawinanSipil !== undefined && {
+          lokasiPerkawinanSipil: body.lokasiPerkawinanSipil || null,
+        }),
+        ...(body.tanggalPerkawinanSipil !== undefined && {
+          tanggalPerkawinanSipil: body.tanggalPerkawinanSipil ? new Date(body.tanggalPerkawinanSipil) : null,
+        }),
+        ...(body.jabatan !== undefined && { jabatan: body.jabatan || null }),
+        ...(body.gerejaAsal !== undefined && { gerejaAsal: body.gerejaAsal || null }),
+        ...(body.pendidikanTerakhir !== undefined && {
+          pendidikanTerakhir: body.pendidikanTerakhir || null,
+        }),
+        ...(body.pekerjaan !== undefined && { pekerjaan: body.pekerjaan || null }),
+        ...(body.tahunDaftar !== undefined && { tahunDaftar: body.tahunDaftar || null }),
+        ...(body.pengalamanGereja !== undefined && {
+          pengalamanGereja: body.pengalamanGereja || null,
+        }),
+        ...(body.pengalamanOrganisasi !== undefined && {
+          pengalamanOrganisasi: body.pengalamanOrganisasi || null,
+        }),
+        ...(body.keteranganLain !== undefined && {
+          keteranganLain: body.keteranganLain || null,
+        }),
+        ...connectFamily,
       },
       include: { family: true },
     });

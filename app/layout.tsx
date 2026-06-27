@@ -31,6 +31,7 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
+      {/* next/font/google handles preconnect/preload automatically */}
       <body className="min-h-full flex flex-col">
         <Providers>
           <SidebarProvider>

@@ -9,11 +9,12 @@ import {
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
-import { Dispatch, SetStateAction, useEffect } from "react";
+import { Dispatch, SetStateAction } from "react";
 import { toast } from "sonner";
 import { useBranches } from "@/hooks/use-branch";
 import { Region, RegionForm } from "@/types/region";
 import { useCreateRegion, useUpdateRegion } from "@/hooks/use-region";
+import { useDialogForm } from "@/hooks/use-dialog-form";
 import {
   Select,
   SelectContent,
@@ -56,12 +57,7 @@ export default function RegionDialog({
     },
   });
 
-  useEffect(() => {
-    reset({
-      name: editing?.name ?? "",
-      branchId: editing?.branchId ?? "",
-    });
-  }, [editing, open, reset]);
+  useDialogForm(reset, { name: "", branchId: "" }, { editing, open });
 
   async function onSubmit(values: RegionForm) {
     try {

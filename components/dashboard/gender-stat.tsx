@@ -1,11 +1,11 @@
-"use client";
-
-import { useMembersGenderCount } from "@/hooks/use-member";
 import { StatCard } from "./stat-card";
 import { GitBranch } from "lucide-react";
 
-export default function GenderStat() {
-  const { data: genderData } = useMembersGenderCount();
+export default function GenderStat({
+  genderCounts,
+}: {
+  genderCounts?: { female: number; male: number };
+}) {
 
   return (
     <section className="space-y-4">
@@ -19,13 +19,13 @@ export default function GenderStat() {
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-4">
         <StatCard
           description="Total Warga Jemaat"
-          quantity={genderData?.male ?? 0}
+          quantity={genderCounts?.male ?? 0}
           title="Laki-laki"
           icon={<GitBranch className="h-5 w-5 text-blue-600" />}
         />
         <StatCard
           description="Total Perempuan"
-          quantity={genderData?.female ?? 0}
+          quantity={genderCounts?.female ?? 0}
           title="Perempuan"
           icon={<GitBranch className="h-5 w-5 text-blue-600" />}
         />

@@ -2,12 +2,39 @@
 
 import { usePageAccess } from "@/hooks/use-page-access";
 import { useDeleteMember, useMembers } from "@/hooks/use-member";
-import type { Member } from "@/types/member";
+import type { Member, MemberForm } from "@/types/member";
 import { Badge } from "../ui/badge";
-import { Calendar, Edit, Plus, Trash2, User, Users } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
+  Calendar,
+  Edit,
+  Heart,
+  Plus,
+  Trash2,
+  User,
+  Users,
+} from "lucide-react";
 import { useState } from "react";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "../ui/dialog";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
 import {
   Table,
   TableBody,
@@ -19,6 +46,11 @@ import {
 import MemberDialog from "./member-dialog";
 import { DataTableMemberControls } from "./data-table-member-control";
 import { formatDate, formatLabel } from "@/lib/client-helper";
+import { useUpdateMember } from "@/hooks/use-member";
+import { toast } from "sonner";
+import SplitFamilyDialog, {
+  type SplitFamilyData,
+} from "../family/split-family-dialog";
 
 type MembersPageProps = {
   initialRegion?: string;
@@ -33,6 +65,9 @@ export default function MembersPage({ initialRegion }: MembersPageProps) {
     pelkat: "all",
   });
 
+  const [sortBy, setSortBy] = useState("firstName");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+
   const { canEdit } = usePageAccess("/dashboard/members");
   const { data, isLoading } = useMembers({
     page,
@@ -40,12 +75,111 @@ export default function MembersPage({ initialRegion }: MembersPageProps) {
     search: filter.search,
     pelkat: filter.pelkat,
     region: filter.region,
+    sortBy,
+    sortOrder,
   });
   const deleteMutation = useDeleteMember();
+  const updateMutation = useUpdateMember();
   const members = data?.data ?? [];
 
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Member | null>(null);
+
+  // Status Hidup quick-edit dialog
+  const [statusOpen, setStatusOpen] = useState(false);
+  const [statusMember, setStatusMember] = useState<Member | null>(null);
+  const [statusValue, setStatusValue] = useState<"HIDUP" | "MENINGGAL">("HIDUP");
+  const [tanggalMeninggal, setTanggalMeninggal] = useState("");
+
+  function openStatusEdit(item: Member) {
+    setStatusMember(item);
+    setStatusValue(item.isDeceased ? "MENINGGAL" : "HIDUP");
+    setTanggalMeninggal(
+      item.deathDate
+        ? new Date(item.deathDate).toISOString().slice(0, 10)
+        : "",
+    );
+    setStatusOpen(true);
+  }
+
+  async function handleStatusSave() {
+    if (!statusMember) return;
+    try {
+      await updateMutation.mutateAsync({
+        id: statusMember.id,
+        data: {
+          isDeceased: statusValue === "MENINGGAL",
+          deathDate: statusValue === "MENINGGAL" ? tanggalMeninggal : "",
+        } as Partial<MemberForm>,
+      });
+      toast.success("Status hidup diperbarui");
+      setStatusOpen(false);
+    } catch {
+      toast.error("Gagal memperbarui status hidup");
+    }
+  }
+
+  // Split family dialog
+  const [splitOpen, setSplitOpen] = useState(false);
+  const [splitData, setSplitData] = useState<SplitFamilyData | null>(null);
+
+  function openSplitFamily(item: Member) {
+    if (!item.family) return;
+    const newHeadName = `${item.firstName} ${item.lastName ?? ""}`.trim();
+    setSplitData({
+      originalFamilyId: item.family.id,
+      originalFamilyName: item.family.familyName,
+      newHeadMemberId: item.id,
+      newHeadName,
+      allMembers: (item.family.members ?? []).map((m) => ({
+        id: m.id,
+        firstName: m.firstName,
+        lastName: m.lastName,
+        role: m.role,
+      })),
+      defaultAddress: item.family.address ?? "",
+      defaultProvinsi: item.family.provinsi ?? "",
+      defaultKotaKabupaten: item.family.kotaKabupaten ?? "",
+      defaultKecamatan: item.family.kecamatan ?? "",
+      defaultKelurahan: item.family.kelurahan ?? "",
+      defaultRegionId: item.family.regionId ?? "",
+    });
+    setSplitOpen(true);
+  }
+
+  // Status Aktif quick-edit dialog
+  const [aktifOpen, setAktifOpen] = useState(false);
+  const [aktifMember, setAktifMember] = useState<Member | null>(null);
+  const [aktifValue, setAktifValue] = useState<"AKTIF" | "TIDAK_AKTIF">("AKTIF");
+  const [tanggalPindah, setTanggalPindah] = useState("");
+
+  function openAktifEdit(item: Member) {
+    setAktifMember(item);
+    setAktifValue(item.isActive ? "AKTIF" : "TIDAK_AKTIF");
+    setTanggalPindah(
+      item.tanggalPindah
+        ? new Date(item.tanggalPindah).toISOString().slice(0, 10)
+        : "",
+    );
+    setAktifOpen(true);
+  }
+
+  async function handleAktifSave() {
+    if (!aktifMember) return;
+    try {
+      await updateMutation.mutateAsync({
+        id: aktifMember.id,
+        data: {
+          isActive: aktifValue === "AKTIF",
+          tanggalPindah: aktifValue === "TIDAK_AKTIF" ? tanggalPindah : "",
+        } as Partial<MemberForm>,
+      });
+      toast.success("Status diperbarui");
+      setAktifOpen(false);
+    } catch {
+      toast.error("Gagal memperbarui status");
+    }
+  }
 
   function openCreate() {
     setEditing(null);
@@ -116,12 +250,138 @@ export default function MembersPage({ initialRegion }: MembersPageProps) {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/50">
-                    <TableHead className="font-semibold">Name</TableHead>
+                    <TableHead className="font-semibold">
+                      <button
+                        type="button"
+                        className="inline-flex items-center gap-1 hover:text-primary transition-colors cursor-pointer"
+                        onClick={() => {
+                          setSortBy("firstName");
+                          setSortOrder(
+                            sortBy === "firstName"
+                              ? sortOrder === "asc" ? "desc" : "asc"
+                              : "asc",
+                          );
+                          setPage(1);
+                        }}
+                      >
+                        Nama Lengkap
+                        {sortBy === "firstName" ? (
+                          sortOrder === "asc" ? (
+                            <ArrowUp className="h-3 w-3" />
+                          ) : (
+                            <ArrowDown className="h-3 w-3" />
+                          )
+                        ) : (
+                          <ArrowUpDown className="h-3 w-3 text-muted-foreground/50" />
+                        )}
+                      </button>
+                    </TableHead>
                     <TableHead className="font-semibold">Birth Date</TableHead>
-                    <TableHead className="font-semibold">Role</TableHead>
-                    <TableHead className="font-semibold">Sektor</TableHead>
-                    <TableHead className="font-semibold">Pelkat</TableHead>
-                    <TableHead className="font-semibold">Status</TableHead>
+                    <TableHead className="font-semibold">
+                      <button
+                        type="button"
+                        className="inline-flex items-center gap-1 hover:text-primary transition-colors cursor-pointer"
+                        onClick={() => {
+                          setSortBy("role");
+                          setSortOrder(
+                            sortBy === "role"
+                              ? sortOrder === "asc" ? "desc" : "asc"
+                              : "asc",
+                          );
+                          setPage(1);
+                        }}
+                      >
+                        Role
+                        {sortBy === "role" ? (
+                          sortOrder === "asc" ? (
+                            <ArrowUp className="h-3 w-3" />
+                          ) : (
+                            <ArrowDown className="h-3 w-3" />
+                          )
+                        ) : (
+                          <ArrowUpDown className="h-3 w-3 text-muted-foreground/50" />
+                        )}
+                      </button>
+                    </TableHead>
+                    <TableHead className="font-semibold">
+                      <button
+                        type="button"
+                        className="inline-flex items-center gap-1 hover:text-primary transition-colors cursor-pointer"
+                        onClick={() => {
+                          setSortBy("familyRegionName");
+                          setSortOrder(
+                            sortBy === "familyRegionName"
+                              ? sortOrder === "asc" ? "desc" : "asc"
+                              : "asc",
+                          );
+                          setPage(1);
+                        }}
+                      >
+                        Sektor
+                        {sortBy === "familyRegionName" ? (
+                          sortOrder === "asc" ? (
+                            <ArrowUp className="h-3 w-3" />
+                          ) : (
+                            <ArrowDown className="h-3 w-3" />
+                          )
+                        ) : (
+                          <ArrowUpDown className="h-3 w-3 text-muted-foreground/50" />
+                        )}
+                      </button>
+                    </TableHead>
+                    <TableHead className="font-semibold">
+                      <button
+                        type="button"
+                        className="inline-flex items-center gap-1 hover:text-primary transition-colors cursor-pointer"
+                        onClick={() => {
+                          setSortBy("pelkat");
+                          setSortOrder(
+                            sortBy === "pelkat"
+                              ? sortOrder === "asc" ? "desc" : "asc"
+                              : "asc",
+                          );
+                          setPage(1);
+                        }}
+                      >
+                        Pelkat
+                        {sortBy === "pelkat" ? (
+                          sortOrder === "asc" ? (
+                            <ArrowUp className="h-3 w-3" />
+                          ) : (
+                            <ArrowDown className="h-3 w-3" />
+                          )
+                        ) : (
+                          <ArrowUpDown className="h-3 w-3 text-muted-foreground/50" />
+                        )}
+                      </button>
+                    </TableHead>
+                    <TableHead className="font-semibold">
+                      <button
+                        type="button"
+                        className="inline-flex items-center gap-1 hover:text-primary transition-colors cursor-pointer"
+                        onClick={() => {
+                          setSortBy("isActive");
+                          setSortOrder(
+                            sortBy === "isActive"
+                              ? sortOrder === "asc" ? "desc" : "asc"
+                              : "asc",
+                          );
+                          setPage(1);
+                        }}
+                      >
+                        Status
+                        {sortBy === "isActive" ? (
+                          sortOrder === "asc" ? (
+                            <ArrowUp className="h-3 w-3" />
+                          ) : (
+                            <ArrowDown className="h-3 w-3" />
+                          )
+                        ) : (
+                          <ArrowUpDown className="h-3 w-3 text-muted-foreground/50" />
+                        )}
+                      </button>
+                    </TableHead>
+                    <TableHead className="font-semibold">Status Hidup</TableHead>
                     {canEdit && (
                       <TableHead className="w-40 text-center font-semibold">
                         Actions
@@ -133,7 +393,7 @@ export default function MembersPage({ initialRegion }: MembersPageProps) {
                   {isLoading ? (
                     <TableRow>
                       <TableCell
-                        colSpan={canEdit ? 7 : 6}
+                        colSpan={canEdit ? 8 : 7}
                         className="py-12 text-center"
                       >
                         <div className="flex flex-col items-center gap-2">
@@ -147,7 +407,7 @@ export default function MembersPage({ initialRegion }: MembersPageProps) {
                   ) : members.length === 0 ? (
                     <TableRow>
                       <TableCell
-                        colSpan={canEdit ? 7 : 6}
+                        colSpan={canEdit ? 8 : 7}
                         className="py-12 text-center"
                       >
                         <div className="flex flex-col items-center gap-2">
@@ -177,7 +437,7 @@ export default function MembersPage({ initialRegion }: MembersPageProps) {
                         <TableCell className="font-medium">
                           <span className="inline-flex items-center gap-2">
                             <User className="h-4 w-4 text-muted-foreground" />
-                            {item.name}
+                            {item.firstName} {item.lastName ?? ""}
                           </span>
                         </TableCell>
                         <TableCell>{formatDate(item.birthDate)}</TableCell>
@@ -185,11 +445,37 @@ export default function MembersPage({ initialRegion }: MembersPageProps) {
                         <TableCell>{item.family?.region?.name ?? ""}</TableCell>
                         <TableCell>{formatLabel(item.pelkat ?? "")}</TableCell>
                         <TableCell>
-                          <Badge
-                            variant={item.isActive ? "default" : "outline"}
+                          <button
+                            type="button"
+                            onClick={() => openAktifEdit(item)}
+                            className="cursor-pointer"
                           >
-                            {item.isActive ? "Active" : "Inactive"}
-                          </Badge>
+                            <Badge
+                              variant={
+                                item.isActive ? "default" : "outline"
+                              }
+                              className="cursor-pointer transition-colors hover:opacity-80"
+                            >
+                              {item.isActive ? "Aktif" : "Tidak Aktif"}
+                            </Badge>
+                          </button>
+                        </TableCell>
+                        <TableCell>
+                          <button
+                            type="button"
+                            onClick={() => openStatusEdit(item)}
+                            className="cursor-pointer"
+                          >
+                            <Badge
+                              variant={
+                                item.isDeceased ? "destructive" : "secondary"
+                              }
+                              className="cursor-pointer transition-colors hover:opacity-80"
+                            >
+                              <Heart className="mr-1 h-3 w-3" />
+                              {item.isDeceased ? "Meninggal" : "Hidup"}
+                            </Badge>
+                          </button>
                         </TableCell>
                         {canEdit && (
                           <TableCell>
@@ -203,6 +489,18 @@ export default function MembersPage({ initialRegion }: MembersPageProps) {
                                 <Edit className="mr-1 h-3 w-3" />
                                 Edit
                               </Button>
+                              {item.role !== "FAMILY_HEAD" && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => openSplitFamily(item)}
+                                  className="transition-colors hover:bg-amber-600 hover:text-white"
+                                  title="Jadi Kepala Keluarga"
+                                >
+                                  <Users className="mr-1 h-3 w-3" />
+                                  KK
+                                </Button>
+                              )}
                               <Button
                                 size="sm"
                                 variant="destructive"
@@ -227,6 +525,126 @@ export default function MembersPage({ initialRegion }: MembersPageProps) {
         {canEdit && (
           <MemberDialog editing={editing} open={open} setOpen={setOpen} />
         )}
+
+        <SplitFamilyDialog
+          open={splitOpen}
+          setOpen={setSplitOpen}
+          data={splitData}
+        />
+
+        {/* ── Status Aktif Quick-Edit Dialog ── */}
+        <Dialog open={aktifOpen} onOpenChange={setAktifOpen}>
+          <DialogContent className="sm:max-w-sm fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Update Status
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-2">
+              <p className="text-sm text-muted-foreground">
+                {aktifMember?.firstName} {aktifMember?.lastName ?? ""}
+              </p>
+              <div className="space-y-2">
+                <Label>Status</Label>
+                <Select
+                  value={aktifValue}
+                  onValueChange={(v) =>
+                    setAktifValue(v as "AKTIF" | "TIDAK_AKTIF")
+                  }
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="AKTIF">Aktif</SelectItem>
+                    <SelectItem value="TIDAK_AKTIF">Tidak Aktif</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              {aktifValue === "TIDAK_AKTIF" && (
+                <div className="space-y-2">
+                  <Label htmlFor="tanggalPindah">Tanggal Pindah</Label>
+                  <Input
+                    id="tanggalPindah"
+                    type="date"
+                    value={tanggalPindah}
+                    onChange={(e) => setTanggalPindah(e.target.value)}
+                  />
+                </div>
+              )}
+            </div>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setAktifOpen(false)}
+              >
+                Batal
+              </Button>
+              <Button type="button" onClick={handleAktifSave}>
+                Simpan
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* ── Status Hidup Quick-Edit Dialog ── */}
+        <Dialog open={statusOpen} onOpenChange={setStatusOpen}>
+          <DialogContent className="sm:max-w-sm fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Heart className="h-5 w-5" />
+                Update Status Hidup
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-2">
+              <p className="text-sm text-muted-foreground">
+                {statusMember?.firstName} {statusMember?.lastName ?? ""}
+              </p>
+              <div className="space-y-2">
+                <Label>Status Hidup</Label>
+                <Select
+                  value={statusValue}
+                  onValueChange={(v) =>
+                    setStatusValue(v as "HIDUP" | "MENINGGAL")
+                  }
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="HIDUP">Hidup</SelectItem>
+                    <SelectItem value="MENINGGAL">Meninggal</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              {statusValue === "MENINGGAL" && (
+                <div className="space-y-2">
+                  <Label htmlFor="deathDate">Tanggal Meninggal</Label>
+                  <Input
+                    id="deathDate"
+                    type="date"
+                    value={tanggalMeninggal}
+                    onChange={(e) => setTanggalMeninggal(e.target.value)}
+                  />
+                </div>
+              )}
+            </div>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setStatusOpen(false)}
+              >
+                Batal
+              </Button>
+              <Button type="button" onClick={handleStatusSave}>
+                Simpan
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

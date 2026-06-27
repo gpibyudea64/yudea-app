@@ -23,6 +23,10 @@ model User {
   region   Region?   @relation(fields: [regionId], references: [id])
   sessions Session[]
   accounts Account[]
+
+  @@index([email])
+  @@index([role])
+  @@index([regionId])
 }
 
 model AppSetting {
@@ -56,6 +60,8 @@ model Branch {
   name      String
   regions   Region[]
   createdAt DateTime @default(now())
+
+  @@index([name])
 }
 
 model Region {
@@ -68,37 +74,116 @@ model Region {
   coordinatorMemberId String?  @unique
   coordinator         Member?  @relation("RegionCoordinator", fields: [coordinatorMemberId], references: [id])
   createdAt           DateTime @default(now())
+
+  @@index([branchId])
+  @@index([name])
 }
 
 model Family {
-  id         String   @id @default(uuid())
-  familyName String
-  address    String?
-  regionId   String
-  region     Region   @relation(fields: [regionId], references: [id])
-  members    Member[]
-  createdAt  DateTime @default(now())
+  id             String   @id @default(uuid())
+  familyName     String
+  address        String?
+  provinsi       String?
+  kotaKabupaten  String?
+  kecamatan      String?
+  kelurahan      String?
+  regionId       String
+  region         Region   @relation(fields: [regionId], references: [id])
+  members        Member[]
+  createdAt      DateTime @default(now())
+
+  @@index([regionId])
+  @@index([familyName])
+  @@index([kotaKabupaten])
+  @@index([kecamatan])
 }
 
 model Member {
-  id                String        @id @default(uuid())
-  name              String
-  gender            Gender
-  birthDate         DateTime
-  phone             String?
-  email             String?
-  role              MemberRole
-  isActive          Boolean       @default(true)
-  isDeceased        Boolean       @default(false)
-  deathDate         DateTime?
-  isPresbyter       Boolean       @default(false)
-  bloodType         BloodType?
-  pelkat            MemberPelkat?
-  familyId          String
-  family            Family        @relation(fields: [familyId], references: [id])
-  coordinatedRegion Region?       @relation("RegionCoordinator")
+  id                 String        @id @default(uuid())
+  firstName          String
+  lastName           String?
+  birthCity          String
+  gender             Gender
+  birthDate          DateTime
+  phone              String
+  email              String?
+  role               MemberRole
+  childNumber        Int?
+  sameAddressAsFamily Boolean      @default(true)
+  memberAddress      String?
+  memberProvinsi     String?
+  memberKotaKabupaten String?
+  memberKecamatan    String?
+  memberKelurahan    String?
+  isActive           Boolean       @default(true)
+  isDeceased         Boolean       @default(false)
+  deathDate          DateTime?
+  isPresbyter        Boolean       @default(false)
+  bloodType          BloodType?
+  pelkat             MemberPelkat?
+  // ── Baptis ──
+  statusBaptis       BaptisStatus?  @default(BELUM)
+  lokasiBaptis       String?
+  tanggalBaptis      DateTime?
+  // ── Sidi ──
+  statusSidi         SidiStatus?    @default(BELUM)
+  lokasiSidi         String?
+  tanggalSidi        DateTime?
+  // ── Status Keaktifan ──
+  tanggalPindah      DateTime?
+  // ── Perkawinan ──
+  statusPerkawinan   PerkawinanStatus? @default(BELUM_MENIKAH)
+  lokasiPemberkatanGereja  String?
+  tanggalPemberkatanGereja DateTime?
+  lokasiPerkawinanSipil    String?
+  tanggalPerkawinanSipil   DateTime?
+  // ── Jabatan, pendidikan, dsb. ──
+  jabatan            Jabatan?
+  gerejaAsal         String?
+  pendidikanTerakhir String?
+  pekerjaan          String?
+  tahunDaftar        String?
+  pengalamanGereja    String?
+  pengalamanOrganisasi String?
+  keteranganLain      String?
+  familyId           String
+  family             Family        @relation(fields: [familyId], references: [id])
+  coordinatedRegion  Region?       @relation("RegionCoordinator")
 
   createdAt DateTime @default(now())
+
+  @@index([familyId])
+  @@index([firstName])
+  @@index([lastName])
+  @@index([isActive])
+  @@index([isPresbyter])
+  @@index([gender])
+  @@index([pelkat])
+  @@index([birthDate])
+}
+
+enum BaptisStatus {
+  SUDAH
+  BELUM
+}
+
+enum SidiStatus {
+  SUDAH
+  BELUM
+}
+
+enum PerkawinanStatus {
+  BELUM_MENIKAH
+  JANDA
+  DUDA
+  MENIKAH
+}
+
+enum Jabatan {
+  DIAKEN
+  PENATUA
+  PENGURUS_PELKAT
+  PENGURUS_KOMISI
 }
 
 enum BloodType {
@@ -113,6 +198,10 @@ enum MemberRole {
   WIFE
   CHILD
   OTHER
+  ORANG_TUA
+  CUCU
+  KAKAK_ADIK_KANDUNG
+  FAMILI_LAIN
 }
 
 model Attendance {
@@ -127,6 +216,8 @@ model Attendance {
   createdAt DateTime @default(now())
 
   @@unique([serviceDate, serviceType])
+  @@index([serviceDate])
+  @@index([serviceType])
 }
 
 enum Gender {

@@ -1,6 +1,6 @@
 import { Users } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { ReactNode } from "react";
+import { memo, type ReactNode } from "react";
 
 interface StatCardProps {
   title: string;
@@ -9,7 +9,7 @@ interface StatCardProps {
   quantity: number;
 }
 
-export function StatCard({
+export const StatCard = memo(function StatCard({
   title,
   icon,
   description,
@@ -33,4 +33,4 @@ export function StatCard({
       </CardContent>
     </Card>
   );
-}
+});

@@ -5,10 +5,14 @@ export async function getFamilies(
   page = 1,
   limit = 10,
   search = "",
+  sortBy = "familyName",
+  sortOrder: "asc" | "desc" = "asc",
 ): Promise<PaginatedResponse<Family>> {
   const params = new URLSearchParams({
     page: String(page),
     limit: String(limit),
+    sortBy,
+    sortOrder,
   });
   if (search) params.set("search", search);
 

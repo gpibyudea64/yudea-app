@@ -1,17 +1,43 @@
+"use client";
+
+import { useQuery } from "@tanstack/react-query";
 import OverviewStat from "./over-view-stat";
 import MemberStat from "./member-stat";
 import GenderStat from "./gender-stat";
 import BloodTypeStat from "./blood-type-stat";
-import { auth } from "@/auth";
-import { redirect } from "next/navigation";
 import RegionTable from "./region-table";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 
-export default async function Dashboard() {
-  const session = await auth();
+interface DashboardData {
+  totalMembers: number;
+  totalFamilies: number;
+  totalRegions: number;
+  totalBranches: number;
+  genderCounts: { female: number; male: number };
+  bloodTypeCounts: { A: number; B: number; AB: number; O: number };
+  pelkatCounts: Array<{ pelkat: string; total: number }>;
+}
 
-  if (!session) {
-    redirect("/public/login");
-  }
+export default function Dashboard() {
+  const router = useRouter();
+  const { data: session, status } = useSession();
+
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/public/login");
+    }
+  }, [status, router]);
+
+  const { data } = useQuery<DashboardData>({
+    queryKey: ["dashboard", "counts"],
+    queryFn: () => fetch("/api/dashboard/counts").then((r) => r.json()),
+    staleTime: 60_000,
+    enabled: status === "authenticated",
+  });
+
+  if (status === "loading" || status === "unauthenticated") return null;
 
   return (
     <div className="min-h-screen bg-linear-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900">
@@ -25,10 +51,10 @@ export default async function Dashboard() {
           </p>
         </div>
 
-        <OverviewStat />
-        <GenderStat />
-        <BloodTypeStat />
-        <MemberStat />
+        <OverviewStat counts={data} />
+        <GenderStat genderCounts={data?.genderCounts} />
+        <BloodTypeStat bloodTypeCounts={data?.bloodTypeCounts} />
+        <MemberStat pelkatCounts={data?.pelkatCounts} />
         <RegionTable />
       </div>
     </div>

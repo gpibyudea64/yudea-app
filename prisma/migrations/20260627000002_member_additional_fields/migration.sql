@@ -1,0 +1,48 @@
+-- Create new enums
+DO $$ BEGIN
+  CREATE TYPE "BaptisStatus" AS ENUM ('SUDAH', 'BELUM');
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  CREATE TYPE "SidiStatus" AS ENUM ('SUDAH', 'BELUM');
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  CREATE TYPE "PerkawinanStatus" AS ENUM ('BELUM_MENIKAH', 'JANDA', 'DUDA', 'MENIKAH');
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  CREATE TYPE "Jabatan" AS ENUM ('DIAKEN', 'PENATUA', 'PENGURUS_PELKAT', 'PENGURUS_KOMISI');
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
+
+-- Add new columns to Member table
+ALTER TABLE "Member" ADD COLUMN IF NOT EXISTS "statusBaptis" "BaptisStatus" NOT NULL DEFAULT 'BELUM';
+ALTER TABLE "Member" ADD COLUMN IF NOT EXISTS "lokasiBaptis" TEXT;
+ALTER TABLE "Member" ADD COLUMN IF NOT EXISTS "tanggalBaptis" TIMESTAMP(3);
+
+ALTER TABLE "Member" ADD COLUMN IF NOT EXISTS "statusSidi" "SidiStatus" NOT NULL DEFAULT 'BELUM';
+ALTER TABLE "Member" ADD COLUMN IF NOT EXISTS "lokasiSidi" TEXT;
+ALTER TABLE "Member" ADD COLUMN IF NOT EXISTS "tanggalSidi" TIMESTAMP(3);
+
+ALTER TABLE "Member" ADD COLUMN IF NOT EXISTS "statusPerkawinan" "PerkawinanStatus" NOT NULL DEFAULT 'BELUM_MENIKAH';
+ALTER TABLE "Member" ADD COLUMN IF NOT EXISTS "lokasiPemberkatanGereja" TEXT;
+ALTER TABLE "Member" ADD COLUMN IF NOT EXISTS "tanggalPemberkatanGereja" TIMESTAMP(3);
+ALTER TABLE "Member" ADD COLUMN IF NOT EXISTS "lokasiPerkawinanSipil" TEXT;
+ALTER TABLE "Member" ADD COLUMN IF NOT EXISTS "tanggalPerkawinanSipil" TIMESTAMP(3);
+
+ALTER TABLE "Member" ADD COLUMN IF NOT EXISTS "jabatan" "Jabatan";
+ALTER TABLE "Member" ADD COLUMN IF NOT EXISTS "gerejaAsal" TEXT;
+ALTER TABLE "Member" ADD COLUMN IF NOT EXISTS "pendidikanTerakhir" TEXT;
+ALTER TABLE "Member" ADD COLUMN IF NOT EXISTS "pekerjaan" TEXT;
+ALTER TABLE "Member" ADD COLUMN IF NOT EXISTS "tahunDaftar" TEXT;
+ALTER TABLE "Member" ADD COLUMN IF NOT EXISTS "pengalamanGereja" TEXT;
+ALTER TABLE "Member" ADD COLUMN IF NOT EXISTS "pengalamanOrganisasi" TEXT;
+ALTER TABLE "Member" ADD COLUMN IF NOT EXISTS "keteranganLain" TEXT;

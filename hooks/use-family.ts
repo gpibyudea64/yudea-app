@@ -12,10 +12,17 @@ const QUERY_KEY = "family";
 
 // ── queries ───────────────────────────────────────────────
 
-export function useFamilies(page = 1, limit = 10, search = "") {
+export function useFamilies(
+  page = 1,
+  limit = 10,
+  search = "",
+  sortBy = "familyName",
+  sortOrder: "asc" | "desc" = "asc",
+) {
   return useQuery({
-    queryKey: [QUERY_KEY, page, limit, search],
-    queryFn: () => getFamilies(page, limit, search),
+    queryKey: [QUERY_KEY, page, limit, search, sortBy, sortOrder],
+    queryFn: () => getFamilies(page, limit, search, sortBy, sortOrder),
+    staleTime: 30_000,
   });
 }
 
@@ -24,6 +31,7 @@ export function useFamily(id: string) {
     queryKey: [QUERY_KEY, id],
     queryFn: () => getFamily(id),
     enabled: !!id,
+    staleTime: 60_000,
   });
 }
 

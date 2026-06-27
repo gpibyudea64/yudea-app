@@ -13,6 +13,8 @@ export async function GET(req: NextRequest) {
     const page = Math.max(1, Number(searchParams.get("page") ?? 1));
     const limit = Math.max(1, Number(searchParams.get("limit") ?? 10));
     const search = searchParams.get("search")?.trim() ?? "";
+    const sortBy = searchParams.get("sortBy")?.trim() || "familyName";
+    const sortOrder = searchParams.get("sortOrder")?.trim() === "asc" ? "asc" : "desc";
     const skip = (page - 1) * limit;
 
     // Build where clause for search
@@ -20,7 +22,6 @@ export async function GET(req: NextRequest) {
       ? {
           OR: [
             { familyName: { contains: search, mode: "insensitive" as const } },
-            { address: { contains: search, mode: "insensitive" as const } },
             {
               region: {
                 name: { contains: search, mode: "insensitive" as const },
@@ -44,7 +45,10 @@ export async function GET(req: NextRequest) {
         where,
         skip,
         take: limit,
-        orderBy: { createdAt: "desc" },
+        orderBy:
+          sortBy === "regionName"
+            ? { region: { name: sortOrder } }
+            : { [sortBy]: sortOrder },
         include: {
           region: true,
           members: true,
@@ -74,11 +78,11 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { familyName, address, regionId, members } = body;
+    const { familyName, address, provinsi, kotaKabupaten, kecamatan, kelurahan, regionId, members } = body;
 
-    if (!familyName || !regionId) {
+    if (!familyName || !address || !provinsi || !kotaKabupaten || !kecamatan || !kelurahan || !regionId) {
       return NextResponse.json(
-        { error: "Missing required fields" },
+        { error: "Missing required fields: familyName, address, provinsi, kotaKabupaten, kecamatan, kelurahan, regionId" },
         { status: 400 },
       );
     }
@@ -87,22 +91,63 @@ export async function POST(req: NextRequest) {
       data: {
         familyName,
         address,
+        provinsi,
+        kotaKabupaten,
+        kecamatan,
+        kelurahan,
         region: { connect: { id: regionId } },
         ...(members?.length
           ? {
               members: {
                 create: members.map((member: Member) => ({
-                  name: member.name,
+                  firstName: member.firstName,
+                  lastName: member.lastName || null,
+                  birthCity: member.birthCity || '',
                   gender: member.gender,
                   birthDate: new Date(member.birthDate),
                   phone: member.phone || null,
                   email: member.email || null,
-                  role: member.role,
+                  role: member.role as any,
+                  childNumber: member.role === 'CHILD' ? (member as any).childNumber || null : null,
+                  sameAddressAsFamily: (member as any).sameAddressAsFamily ?? true,
+                  memberAddress: (member as any).sameAddressAsFamily ? null : ((member as any).memberAddress || null),
+                  memberProvinsi: (member as any).sameAddressAsFamily ? null : ((member as any).memberProvinsi || null),
+                  memberKotaKabupaten: (member as any).sameAddressAsFamily ? null : ((member as any).memberKotaKabupaten || null),
+                  memberKecamatan: (member as any).sameAddressAsFamily ? null : ((member as any).memberKecamatan || null),
+                  memberKelurahan: (member as any).sameAddressAsFamily ? null : ((member as any).memberKelurahan || null),
                   isActive: member.isActive ?? true,
                   isDeceased: member.isDeceased ?? false,
+                  isPresbyter: (member as any).isPresbyter ?? false,
                   deathDate: member.deathDate
                     ? new Date(member.deathDate)
                     : null,
+                  statusBaptis: (member as any).statusBaptis || 'BELUM',
+                  lokasiBaptis: (member as any).statusBaptis === 'SUDAH' ? ((member as any).lokasiBaptis || null) : null,
+                  tanggalBaptis: (member as any).statusBaptis === 'SUDAH' && (member as any).tanggalBaptis
+                    ? new Date((member as any).tanggalBaptis)
+                    : null,
+                  statusSidi: (member as any).statusSidi || 'BELUM',
+                  lokasiSidi: (member as any).statusSidi === 'SUDAH' ? ((member as any).lokasiSidi || null) : null,
+                  tanggalSidi: (member as any).statusSidi === 'SUDAH' && (member as any).tanggalSidi
+                    ? new Date((member as any).tanggalSidi)
+                    : null,
+                  statusPerkawinan: (member as any).statusPerkawinan || 'BELUM_MENIKAH',
+                  lokasiPemberkatanGereja: (member as any).statusPerkawinan === 'MENIKAH' ? ((member as any).lokasiPemberkatanGereja || null) : null,
+                  tanggalPemberkatanGereja: (member as any).statusPerkawinan === 'MENIKAH' && (member as any).tanggalPemberkatanGereja
+                    ? new Date((member as any).tanggalPemberkatanGereja)
+                    : null,
+                  lokasiPerkawinanSipil: (member as any).statusPerkawinan === 'MENIKAH' ? ((member as any).lokasiPerkawinanSipil || null) : null,
+                  tanggalPerkawinanSipil: (member as any).statusPerkawinan === 'MENIKAH' && (member as any).tanggalPerkawinanSipil
+                    ? new Date((member as any).tanggalPerkawinanSipil)
+                    : null,
+                  jabatan: (member as any).jabatan || null,
+                  gerejaAsal: (member as any).gerejaAsal || null,
+                  pendidikanTerakhir: (member as any).pendidikanTerakhir || null,
+                  pekerjaan: (member as any).pekerjaan || null,
+                  tahunDaftar: (member as any).tahunDaftar || null,
+                  pengalamanGereja: (member as any).pengalamanGereja || null,
+                  pengalamanOrganisasi: (member as any).pengalamanOrganisasi || null,
+                  keteranganLain: (member as any).keteranganLain || null,
                 })),
               },
             }

@@ -7,5 +7,6 @@ export function useBirthdayMembers(date?: string) {
   return useQuery({
     queryKey: [QUERY_KEY, date],
     queryFn: () => getBirthdayMembers(date),
+    staleTime: 60_000,
   });
 }

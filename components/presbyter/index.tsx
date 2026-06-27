@@ -82,7 +82,7 @@ export default function PresbyterPage() {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/50">
-                    <TableHead className="font-semibold">Name</TableHead>
+                    <TableHead className="font-semibold">Nama</TableHead>
                     <TableHead className="font-semibold">Family</TableHead>
                     <TableHead className="font-semibold">Birth Date</TableHead>
                     <TableHead className="font-semibold">Role</TableHead>
@@ -127,7 +127,7 @@ export default function PresbyterPage() {
                         <TableCell className="font-medium">
                           <span className="inline-flex items-center gap-2">
                             <User className="h-4 w-4 text-muted-foreground" />
-                            {item.name}
+                            {item.firstName} {item.lastName ?? ""}
                           </span>
                         </TableCell>
                         <TableCell>{item.family?.region?.name ?? ""}</TableCell>

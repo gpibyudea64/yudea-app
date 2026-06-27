@@ -17,6 +17,7 @@ export function useRegions(page = 1, limit = 10, search = "") {
   return useQuery({
     queryKey: [QUERY_KEY, page, limit, search],
     queryFn: () => getRegions(page, limit, search),
+    staleTime: 30_000,
   });
 }
 
@@ -25,6 +26,7 @@ export function useRegion(id: string) {
     queryKey: [QUERY_KEY, id],
     queryFn: () => getRegion(id),
     enabled: !!id,
+    staleTime: 60_000,
   });
 }
 
@@ -32,6 +34,7 @@ export function useMemberPerRegions() {
   return useQuery({
     queryKey: [QUERY_KEY, "member-count"],
     queryFn: () => getRegionMemberCounts(),
+    staleTime: 60_000,
   });
 }
 

@@ -1,18 +1,14 @@
-"use client";
-
 import { GitBranch } from "lucide-react";
 import { StatCard } from "./stat-card";
-import { useMembers } from "@/hooks/use-member";
-import { useFamilies } from "@/hooks/use-family";
-import { useRegions } from "@/hooks/use-region";
 
-export default function OverviewStat() {
-  const { data: membersData } = useMembers({
-    page: 1,
-    limit: 999,
-  });
-  const { data: familiesData } = useFamilies(1, 999);
-  const { data: regionsData } = useRegions(1, 999);
+interface OverviewCounts {
+  totalMembers: number;
+  totalFamilies: number;
+  totalRegions: number;
+  totalBranches: number;
+}
+
+export default function OverviewStat({ counts }: { counts?: OverviewCounts }) {
 
   return (
     <section className="space-y-4">
@@ -28,19 +24,19 @@ export default function OverviewStat() {
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-4">
         <StatCard
           description="Total Warga Jemaat"
-          quantity={membersData?.meta.total ?? 0}
-          title="Total Warga Jemaat "
+          quantity={counts?.totalMembers ?? 0}
+          title="Total Warga Jemaat"
           icon={<GitBranch className="h-5 w-5 text-blue-600" />}
         />
         <StatCard
           description="Total Kepala Keluarga"
-          quantity={familiesData?.meta.total ?? 0}
-          title="Total kepala Keluarga"
+          quantity={counts?.totalFamilies ?? 0}
+          title="Total Kepala Keluarga"
           icon={<GitBranch className="h-5 w-5 text-blue-600" />}
         />
         <StatCard
           description="Total Sektor Pelayanan"
-          quantity={regionsData?.meta.total ?? 0}
+          quantity={counts?.totalRegions ?? 0}
           title="Total Sektor Pelayanan"
           icon={<GitBranch className="h-5 w-5 text-blue-600" />}
         />

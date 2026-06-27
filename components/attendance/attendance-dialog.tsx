@@ -1,35 +1,36 @@
-import { Calendar, Church, Edit, Plus, UserCheck, UserX } from "lucide-react";
+import { Calendar, Church, Edit, Plus, UserCheck, UserX } from "lucide-react"
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "../ui/dialog";
-import { Label } from "../ui/label";
-import { Input } from "../ui/input";
-import { Button } from "../ui/button";
+} from "../ui/dialog"
+import { Label } from "../ui/label"
+import { Input } from "../ui/input"
+import { Button } from "../ui/button"
 import {
   useCreateAttendance,
   useUpdateAttendance,
-} from "@/hooks/use-attendance";
-import { AttendanceForm } from "@/types/attendance";
-import { Dispatch, SetStateAction, useEffect } from "react";
-import { toast } from "sonner";
-import { useForm, useWatch } from "react-hook-form";
-import { Attendance } from "@prisma/client";
+} from "@/hooks/use-attendance"
+import { AttendanceForm } from "@/types/attendance"
+import { Dispatch, SetStateAction, useRef } from "react"
+import { toast } from "sonner"
+import { useForm, useWatch } from "react-hook-form"
+import { Attendance } from "@prisma/client"
 
 export default function AttendanceDialog({
   editing,
   open,
   setOpen,
 }: {
-  editing: Attendance | null;
-  open: boolean;
-  setOpen: Dispatch<SetStateAction<boolean>>;
+  editing: Attendance | null
+  open: boolean
+  setOpen: Dispatch<SetStateAction<boolean>>
 }) {
-  const createMutation = useCreateAttendance();
-  const updateMutation = useUpdateAttendance();
+  const createMutation = useCreateAttendance()
+  const updateMutation = useUpdateAttendance()
+  const prevOpen = useRef(false)
 
   const {
     register,
@@ -44,55 +45,57 @@ export default function AttendanceDialog({
       maleCount: 0,
       femaleCount: 0,
     },
-  });
+  })
 
   const [maleCount, femaleCount] = useWatch({
     control,
     name: ["maleCount", "femaleCount"],
-  });
+  })
 
-  useEffect(() => {
-    if (!editing) {
-      reset({
-        serviceDate: "",
-        serviceType: "",
-        maleCount: 0,
-        femaleCount: 0,
-      });
-      return;
+  // Reset form when dialog opens with editing data
+  if (open !== prevOpen.current) {
+    prevOpen.current = open
+    if (open) {
+      if (editing) {
+        const date = new Date(editing.serviceDate)
+        reset({
+          serviceDate: date.toISOString().slice(0, 16), // datetime-local format
+          serviceType: editing.serviceType,
+          maleCount: editing.maleCount,
+          femaleCount: editing.femaleCount,
+        })
+      } else {
+        reset({
+          serviceDate: "",
+          serviceType: "",
+          maleCount: 0,
+          femaleCount: 0,
+        })
+      }
     }
-
-    const date = new Date(editing.serviceDate);
-
-    reset({
-      serviceDate: date.toISOString().slice(0, 16),
-      serviceType: editing.serviceType,
-      maleCount: editing.maleCount,
-      femaleCount: editing.femaleCount,
-    });
-  }, [editing, open, reset]);
+  }
 
   async function onSubmit(values: AttendanceForm) {
     try {
       const payload = {
         ...values,
         totalCount: Number(values.maleCount) + Number(values.femaleCount),
-      };
+      }
 
       if (editing) {
         await updateMutation.mutateAsync({
           id: editing.id,
           data: payload,
-        });
+        })
       } else {
-        await createMutation.mutateAsync(payload);
+        await createMutation.mutateAsync(payload)
       }
 
-      toast.success("Successfull");
+      toast.success("Successfull")
 
-      setOpen(false);
+      setOpen(false)
     } catch {
-      toast.error("Error");
+      toast.error("Error")
     }
   }
 
@@ -262,5 +265,5 @@ export default function AttendanceDialog({
         </form>
       </DialogContent>
     </Dialog>
-  );
+  )
 }

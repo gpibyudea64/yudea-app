@@ -151,7 +151,9 @@ async function main() {
     for (let i = 0; i < 10; i++) {
       const member = await prisma.member.create({
         data: {
-          name: `testing fullname member ${i}`,
+          firstName: `NamaDepan${i}`,
+          lastName: `NamaBelakang${i}`,
+          birthCity: "Jakarta",
           gender: i % 2 === 0 ? Gender.MALE : Gender.FEMALE,
           birthDate: new Date("2026-02-21T19:03:24.480Z"),
           phone: "12390231021",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { format } from "date-fns";
 import {
   Plus,
@@ -51,20 +51,24 @@ export default function AttendancePage() {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Attendance | null>(null);
 
-  // Calculate statistics
-  const totalAttendances = attendances.reduce(
-    (sum, item) => sum + item.totalCount,
-    0,
-  );
-  const totalMales = attendances.reduce((sum, item) => sum + item.maleCount, 0);
-  const totalFemales = attendances.reduce(
-    (sum, item) => sum + item.femaleCount,
-    0,
-  );
-  const averageAttendance =
-    attendances.length > 0
-      ? Math.round(totalAttendances / attendances.length)
-      : 0;
+  // Memoize statistics calculations to avoid recomputation on every render
+  const stats = useMemo(() => {
+    const totalAttendances = attendances.reduce(
+      (sum, item) => sum + item.totalCount,
+      0,
+    );
+    const totalMales = attendances.reduce((sum, item) => sum + item.maleCount, 0);
+    const totalFemales = attendances.reduce(
+      (sum, item) => sum + item.femaleCount,
+      0,
+    );
+    const averageAttendance =
+      attendances.length > 0
+        ? Math.round(totalAttendances / attendances.length)
+        : 0;
+
+    return { totalAttendances, totalMales, totalFemales, averageAttendance };
+  }, [attendances]);
 
   function openCreate() {
     setEditing(null);
@@ -110,7 +114,7 @@ export default function AttendancePage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <AttendanceCard
             cardTitle="Total Attendances"
-            contentNumber={totalAttendances}
+            contentNumber={stats.totalAttendances}
             contentText="All time attendance"
             titleIcon={<Users className="h-4 w-4 opacity-80" />}
             backgroundClass="bg-linear-to-br from-blue-500 to-blue-600"
@@ -118,7 +122,7 @@ export default function AttendancePage() {
 
           <AttendanceCard
             cardTitle="Average Attendance"
-            contentNumber={averageAttendance}
+            contentNumber={stats.averageAttendance}
             contentText="Per service"
             titleIcon={<TrendingUp className="h-4 w-4 opacity-80" />}
             backgroundClass="bg-linear-to-br from-emerald-500 to-emerald-600"
@@ -126,10 +130,10 @@ export default function AttendancePage() {
 
           <AttendanceCard
             cardTitle="Male Attendance"
-            contentNumber={totalMales}
+            contentNumber={stats.totalMales}
             contentText={`${
-              totalAttendances > 0
-                ? Math.round((totalMales / totalAttendances) * 100)
+              stats.totalAttendances > 0
+                ? Math.round((stats.totalMales / stats.totalAttendances) * 100)
                 : 0
             } % of total`}
             titleIcon={<UserCheck className="h-4 w-4 opacity-80" />}
@@ -138,10 +142,10 @@ export default function AttendancePage() {
 
           <AttendanceCard
             cardTitle="Female Attendance"
-            contentNumber={totalFemales}
+            contentNumber={stats.totalFemales}
             contentText={`${
-              totalAttendances > 0
-                ? Math.round((totalFemales / totalAttendances) * 100)
+              stats.totalAttendances > 0
+                ? Math.round((stats.totalFemales / stats.totalAttendances) * 100)
                 : 0
             }
                 % of total`}

@@ -10,9 +10,10 @@ import { Label } from "../ui/label";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import { Branch } from "@/types/branch";
-import { Dispatch, SetStateAction, useEffect } from "react";
+import { Dispatch, SetStateAction } from "react";
 import { toast } from "sonner";
 import { useCreateBranch, useUpdateBranch } from "@/hooks/use-branch";
+import { useDialogForm } from "@/hooks/use-dialog-form";
 import { BranchForm } from "@/types/branch";
 import { useForm } from "react-hook-form";
 
@@ -39,11 +40,7 @@ export default function BranchDialog({
     },
   });
 
-  useEffect(() => {
-    reset({
-      name: editing?.name ?? "",
-    });
-  }, [editing, open, reset]);
+  useDialogForm(reset, { name: "" }, { editing, open });
 
   async function onSubmit(values: BranchForm) {
     try {

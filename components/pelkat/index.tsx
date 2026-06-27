@@ -67,7 +67,7 @@ export default function PelkatMenu() {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/50">
-                    <TableHead>Name</TableHead>
+                    <TableHead>Nama</TableHead>
                     <TableHead>Family</TableHead>
                     <TableHead>Pelkat</TableHead>
                   </TableRow>
@@ -89,7 +89,7 @@ export default function PelkatMenu() {
                     members.map((member) => (
                       <TableRow key={member.id}>
                         <TableCell className="font-medium">
-                          {member.name}
+                          {member.firstName} {member.lastName ?? ""}
                         </TableCell>
                         <TableCell>{member.family?.familyName ?? ""}</TableCell>
                         <TableCell>

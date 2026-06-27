@@ -22,16 +22,21 @@ export function useMembers({
   search = "",
   region = "all",
   pelkat = "all",
+  sortBy = "firstName",
+  sortOrder = "asc",
 }: {
   page: number;
   limit: number;
   search?: string;
   region?: string;
   pelkat?: string;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
 }) {
   return useQuery({
-    queryKey: [QUERY_KEY, page, limit, search, region, pelkat],
-    queryFn: () => getMembers(page, limit, search, region, pelkat),
+    queryKey: [QUERY_KEY, page, limit, search, region, pelkat, sortBy, sortOrder],
+    queryFn: () => getMembers(page, limit, search, region, pelkat, sortBy, sortOrder),
+    staleTime: 30_000,
   });
 }
 
@@ -40,6 +45,7 @@ export function useMember(id: string) {
     queryKey: [QUERY_KEY, id],
     queryFn: () => getMember(id),
     enabled: !!id,
+    staleTime: 60_000,
   });
 }
 
@@ -91,38 +97,42 @@ export function usePresbyters({
   return useQuery({
     queryKey: [QUERY_KEY, page, limit, search, region],
     queryFn: () => getPresbyters(page, limit, search, region),
+    staleTime: 30_000,
   });
 }
 
 export function useMembersGenderCount() {
   return useQuery({
-    queryKey: [QUERY_KEY, "count"],
+    queryKey: ["member", "count", "gender"],
     queryFn: async (): Promise<MemberCount> => {
       const res = await fetch("/api/member/gender-count");
       if (!res.ok) throw new Error("Failed to fetch member counts");
       return res.json();
     },
+    staleTime: 60_000,
   });
 }
 
 export function useMembersBloodTypeCount() {
   return useQuery({
-    queryKey: [QUERY_KEY, "count"],
+    queryKey: ["member", "count", "blood-type"],
     queryFn: async (): Promise<BloodTypeCount> => {
       const res = await fetch("/api/member/blood-type-count");
       if (!res.ok) throw new Error("Failed to fetch member blood type counts");
       return res.json();
     },
+    staleTime: 60_000,
   });
 }
 
 export function useAllPelkatCounts() {
   return useQuery({
-    queryKey: [QUERY_KEY, "pelkat-count"],
+    queryKey: ["member", "pelkat-count"],
     queryFn: async (): Promise<PelkatCount[]> => {
       const res = await fetch("/api/member/pelkat-count");
       if (!res.ok) throw new Error("Failed to fetch pelkat counts");
       return res.json();
     },
+    staleTime: 60_000,
   });
 }

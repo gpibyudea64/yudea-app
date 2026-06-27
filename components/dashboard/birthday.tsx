@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import * as XLSX from "xlsx";
+import { useState, memo } from "react";
 import { useBirthdayMembers } from "@/hooks/use-birthday";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -36,13 +35,62 @@ function formatRange(start: string, end: string) {
   return `${startLabel} - ${endLabel}`;
 }
 
-function formatExcelDate(value: string) {
-  return new Date(value).toLocaleDateString("id-ID", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
-}
+// Dynamically import the export button to avoid loading xlsx on page mount
+const ExportButton = memo(function ExportButton({
+  members,
+  selectedDate,
+}: {
+  members: { name: string; regionName: string; birthDate: string }[];
+  selectedDate: string;
+}) {
+  function formatExcelDate(value: string) {
+    return new Date(value).toLocaleDateString("id-ID", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
+  }
+
+  return (
+    <Button
+      onClick={async () => {
+        if (!members.length) return;
+
+        // Dynamically import xlsx only when user clicks export
+        const XLSX = await import("xlsx");
+
+        const worksheetData = members.map((member) => ({
+          "Nama Lengkap": member.name,
+          "Sektor Pelayanan": member.regionName,
+          "Tanggal Lahir": formatExcelDate(member.birthDate),
+        }));
+
+        const worksheet = XLSX.utils.json_to_sheet(worksheetData);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Ulang Tahun");
+
+        const fileData = XLSX.write(workbook, {
+          bookType: "xlsx",
+          type: "array",
+        });
+        const blob = new Blob([fileData], {
+          type: "application/octet-stream",
+        });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `ulang-tahun-${selectedDate}.xlsx`;
+        link.click();
+        URL.revokeObjectURL(url);
+      }}
+      disabled={members.length === 0}
+      variant="outline"
+      size="sm"
+    >
+      Export ke Excel
+    </Button>
+  );
+});
 
 export default function BirthdayDashboard() {
   const [selectedDate, setSelectedDate] = useState(() => {
@@ -89,44 +137,7 @@ export default function BirthdayDashboard() {
         <Card className="shadow-xl">
           <CardHeader className="flex flex-col gap-3 border-b px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
             <CardTitle>Daftar Ulang Tahun</CardTitle>
-            <Button
-              onClick={() => {
-                if (!members.length) return;
-
-                const worksheetData = members.map((member) => ({
-                  "Nama Lengkap": member.name,
-                  "Sektor Pelayanan": member.regionName,
-                  "Tanggal Lahir": formatExcelDate(member.birthDate),
-                }));
-
-                const worksheet = XLSX.utils.json_to_sheet(worksheetData);
-                const workbook = XLSX.utils.book_new();
-                XLSX.utils.book_append_sheet(
-                  workbook,
-                  worksheet,
-                  "Ulang Tahun",
-                );
-
-                const fileData = XLSX.write(workbook, {
-                  bookType: "xlsx",
-                  type: "array",
-                });
-                const blob = new Blob([fileData], {
-                  type: "application/octet-stream",
-                });
-                const url = URL.createObjectURL(blob);
-                const link = document.createElement("a");
-                link.href = url;
-                link.download = `ulang-tahun-${selectedDate}.xlsx`;
-                link.click();
-                URL.revokeObjectURL(url);
-              }}
-              disabled={members.length === 0}
-              variant="outline"
-              size="sm"
-            >
-              Export ke Excel
-            </Button>
+            <ExportButton members={members} selectedDate={selectedDate} />
           </CardHeader>
           <CardContent className="p-0">
             <div className="overflow-x-auto">

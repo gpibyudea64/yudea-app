@@ -2,9 +2,10 @@ import { APP_ROLES } from "@/lib/rbac";
 import type { UserForm, UserListItem } from "@/types/user";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Edit, Plus, ShieldUser } from "lucide-react";
-import { Dispatch, SetStateAction, useEffect } from "react";
+import { Dispatch, SetStateAction } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { useDialogForm } from "@/hooks/use-dialog-form";
 import { userFormSchema, type UserFormValues } from "@/schemas/user.schema";
 import { useCreateUser, useUpdateUser } from "@/hooks/use-user";
 import { useRegions } from "@/hooks/use-region";
@@ -59,15 +60,13 @@ export default function UserDialog({
   const role = watch("role");
   const { data: regionsData } = useRegions(1, 999);
 
-  useEffect(() => {
-    reset({
-      name: editing?.name ?? "",
-      email: editing?.email ?? "",
-      password: "",
-      role: (editing?.role as UserFormValues["role"]) ?? "STAFF",
-      regionId: editing?.regionId ?? "",
-    });
-  }, [editing, open, reset]);
+  useDialogForm(reset, {
+    name: "",
+    email: "",
+    password: "",
+    role: "STAFF" as UserFormValues["role"],
+    regionId: "",
+  }, { editing, open });
 
   async function onSubmit(values: UserFormValues) {
     try {

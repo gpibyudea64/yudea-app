@@ -4,6 +4,7 @@ import {
   Cake,
   Church,
   Compass,
+  FileSpreadsheet,
   HeartHandshake,
   LayoutDashboard,
   Settings,
@@ -47,6 +48,12 @@ export const menuItems = [
     href: "/dashboard/members",
     icon: Users,
     roles: ["ADMIN", "STAFF", "COORDINATOR", "MEMBER"] satisfies AppRole[],
+  },
+  {
+    title: "Laporan",
+    href: "/dashboard/report",
+    icon: FileSpreadsheet,
+    roles: ["ADMIN", "STAFF", "COORDINATOR"] satisfies AppRole[],
   },
   {
     title: "Majelis Jemaat",

@@ -1,11 +1,11 @@
-"use client";
-
-import { useAllPelkatCounts } from "@/services/member";
 import { StatCard } from "./stat-card";
 import { formatPelkatName } from "@/lib/client-helper";
 
-export default function MemberStat() {
-  const { data: pelkatCounts } = useAllPelkatCounts();
+export default function MemberStat({
+  pelkatCounts,
+}: {
+  pelkatCounts?: Array<{ pelkat: string; total: number }>;
+}) {
 
   return (
     <section className="space-y-4">

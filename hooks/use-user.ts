@@ -13,6 +13,7 @@ export function useUsers(page = 1, limit = 10, search = "") {
   return useQuery({
     queryKey: [QUERY_KEY, page, limit, search],
     queryFn: () => getUsers(page, limit, search),
+    staleTime: 30_000,
   });
 }
 

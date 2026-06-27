@@ -21,7 +21,8 @@ export async function GET(req: NextRequest) {
           AND: [
             {
               OR: [
-                { name: { contains: search, mode: "insensitive" as const } },
+                { firstName: { contains: search, mode: "insensitive" as const } },
+                { lastName: { contains: search, mode: "insensitive" as const } },
                 { email: { contains: search, mode: "insensitive" as const } },
                 { phone: { contains: search, mode: "insensitive" as const } },
                 {
