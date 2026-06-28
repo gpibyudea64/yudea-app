@@ -2,10 +2,21 @@
 
 import { usePageAccess } from "@/hooks/use-page-access";
 import { useDeleteRegion, useRegions } from "@/hooks/use-region";
+import { useMembers } from "@/hooks/use-member";
 import { Region } from "@/types/region";
-import { useState } from "react";
+import { memo, useState } from "react";
 import { Button } from "../ui/button";
-import { Calendar, Church, Edit, Plus, Trash2 } from "lucide-react";
+import {
+  Calendar,
+  Church,
+  Download,
+  Edit,
+  FileSpreadsheet,
+  FileText,
+  Plus,
+  Printer,
+  Trash2,
+} from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import {
   Table,
@@ -15,8 +26,106 @@ import {
   TableHeader,
   TableRow,
 } from "../ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
 import RegionDialog from "./region-dialog";
 import { DataTableControls } from "../ui/data-table-controls";
+
+function formatDate(value: string | Date) {
+  return new Date(value).toLocaleDateString("id-ID", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+}
+
+function buildMemberAddress(member: {
+  family?: {
+    address?: string | null;
+    kotaKabupaten?: string | null;
+    kecamatan?: string | null;
+  } | null;
+}): string {
+  const f = member.family;
+  if (!f) return "";
+  return [f.address, f.kotaKabupaten, f.kecamatan].filter(Boolean).join(", ");
+}
+
+type ExportRow = {
+  familyName: string;
+  fullName: string;
+  address: string;
+  birthDate: string;
+  regionName: string;
+};
+
+const ExportXLSButton = memo(function ExportXLSButton({
+  rows,
+  region,
+}: {
+  rows: ExportRow[];
+  region: string;
+}) {
+  return (
+    <Button
+      onClick={async () => {
+        if (!rows.length) return;
+
+        const XLSX = await import("xlsx");
+
+        const worksheetData = rows.map((row) => ({
+          "Nama Keluarga": row.familyName,
+          "Nama Jemaat": row.fullName,
+          Alamat: row.address,
+          "Tanggal Lahir": formatDate(row.birthDate),
+          "Sektor Pelayanan": row.regionName,
+        }));
+
+        const worksheet = XLSX.utils.json_to_sheet(worksheetData);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Warga Jemaat");
+
+        // Auto-fit column widths
+        const colWidths = Object.keys(worksheetData[0] || {}).map((key) => ({
+          wch: Math.max(
+            key.length,
+            ...worksheetData.map((row) =>
+              String(row[key as keyof typeof row]).length,
+            ),
+          ) + 2,
+        }));
+        worksheet["!cols"] = colWidths;
+
+        const fileData = XLSX.write(workbook, {
+          bookType: "xlsx",
+          type: "array",
+        });
+        const blob = new Blob([fileData], {
+          type: "application/octet-stream",
+        });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        const regionSuffix = region !== "all" ? `sektor-${region.slice(0, 8)}` : "all-sektor";
+        link.download = `warga-jemaat-${regionSuffix}.xlsx`;
+        link.click();
+        URL.revokeObjectURL(url);
+      }}
+      disabled={rows.length === 0}
+      variant="outline"
+      size="sm"
+      className="gap-2"
+    >
+      <Download className="h-4 w-4" />
+      Export XLS
+    </Button>
+  );
+});
 
 export default function Regions() {
   const [page, setPage] = useState(1);
@@ -26,11 +135,38 @@ export default function Regions() {
   const { canEdit } = usePageAccess("/dashboard/regions");
   const { data, isLoading } = useRegions(page, limit, search);
   const deleteMutation = useDeleteRegion();
+  const { data: allRegionsData } = useRegions(1, 999);
+
+  const regionOptions =
+    allRegionsData?.data?.map((r) => ({ label: r.name, value: r.id })) ?? [];
 
   const regions = data?.data ?? [];
 
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Region | null>(null);
+
+  // Export state
+  const [exportRegion, setExportRegion] = useState("all");
+  const { data: membersData, isLoading: membersLoading } = useMembers({
+    page: 1,
+    limit: 9999,
+    region: exportRegion,
+  });
+  const members = membersData?.data ?? [];
+  const enrichedMembers: (ExportRow & { id: string })[] = members.map(
+    (member: any) => ({
+      id: member.id,
+      familyName: member.family?.familyName ?? "",
+      fullName:
+        [member.firstName, member.lastName ?? ""].filter(Boolean).join(" "),
+      address: buildMemberAddress(member),
+      birthDate:
+        member.birthDate instanceof Date
+          ? member.birthDate.toISOString()
+          : member.birthDate,
+      regionName: member.family?.region?.name ?? "",
+    }),
+  );
 
   function openCreate() {
     setEditing(null);
@@ -58,7 +194,7 @@ export default function Regions() {
               Sektor Pelayanan Management
             </h1>
             <p className="text-muted-foreground">
-              Track and manage church branch
+              Track and manage Sektor Pelayanan and export Warga Jemaat data
             </p>
           </div>
           {canEdit && (
@@ -72,7 +208,7 @@ export default function Regions() {
           )}
         </div>
 
-        {/* Table Section */}
+        {/* Region List Table */}
         <Card className="shadow-xl">
           <CardHeader className="border-b">
             <CardTitle className="flex items-center gap-2">
@@ -127,7 +263,7 @@ export default function Regions() {
                         <div className="flex flex-col items-center gap-2">
                           <Church className="h-12 w-12 text-muted-foreground/50" />
                           <p className="text-muted-foreground">
-                            No regions records found
+                            No Sektor Pelayanan records found
                           </p>
                           {canEdit && (
                             <Button
@@ -181,6 +317,144 @@ export default function Regions() {
                             </div>
                           </TableCell>
                         )}
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Export Data Section */}
+        <Card className="shadow-xl print:shadow-none print:border-0">
+          <CardHeader className="flex flex-col gap-3 border-b px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <FileSpreadsheet className="h-5 w-5" />
+              Export Data Warga Jemaat
+            </CardTitle>
+            <div className="flex items-center gap-2">
+              <ExportXLSButton rows={enrichedMembers} region={exportRegion} />
+              <Button
+                onClick={() => window.print()}
+                disabled={enrichedMembers.length === 0}
+                variant="outline"
+                size="sm"
+                className="gap-2"
+              >
+                <Printer className="h-4 w-4" />
+                Cetak PDF
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="p-4">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-muted-foreground">
+                  Sektor Pelayanan
+                </label>
+                <Select
+                  value={exportRegion}
+                  onValueChange={(value) => {
+                    setExportRegion(value);
+                  }}
+                >
+                  <SelectTrigger className="w-full sm:w-64">
+                    <SelectValue placeholder="Pilih Sektor" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Semua Sektor</SelectItem>
+                    {regionOptions.map((r) => (
+                      <SelectItem key={r.value} value={r.value}>
+                        {r.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="mt-3 text-sm text-muted-foreground">
+              {membersLoading ? (
+                <span>Memuat data...</span>
+              ) : (
+                <span>
+                  Menampilkan <strong>{enrichedMembers.length}</strong> warga
+                  jemaat
+                  {exportRegion !== "all" && (
+                    <>
+                      {" "}di Sektor{" "}
+                      <strong>
+                        {regionOptions.find((r) => r.value === exportRegion)
+                          ?.label ?? exportRegion}
+                      </strong>
+                    </>
+                  )}
+                </span>
+              )}
+            </div>
+
+            <div className="overflow-x-auto mt-3">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/50">
+                    <TableHead className="font-semibold">No</TableHead>
+                    <TableHead className="font-semibold">
+                      Nama Keluarga
+                    </TableHead>
+                    <TableHead className="font-semibold">
+                      Nama Jemaat
+                    </TableHead>
+                    <TableHead className="font-semibold">Alamat</TableHead>
+                    <TableHead className="font-semibold">
+                      Tanggal Lahir
+                    </TableHead>
+                    <TableHead className="font-semibold">
+                      Sektor Pelayanan
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {membersLoading ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="py-12 text-center">
+                        <div className="flex flex-col items-center gap-2">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+                          <p className="text-muted-foreground">
+                            Loading warga jemaat data...
+                          </p>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ) : enrichedMembers.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="py-12 text-center">
+                        <div className="flex flex-col items-center gap-2">
+                          <FileText className="h-12 w-12 text-muted-foreground/50" />
+                          <p className="text-muted-foreground">
+                            Pilih Sektor untuk menampilkan data warga jemaat
+                          </p>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    enrichedMembers.map((member, index) => (
+                      <TableRow
+                        key={member.id}
+                        className="transition-colors hover:bg-muted/50"
+                      >
+                        <TableCell className="text-muted-foreground">
+                          {index + 1}
+                        </TableCell>
+                        <TableCell className="font-medium">
+                          {member.familyName}
+                        </TableCell>
+                        <TableCell>{member.fullName}</TableCell>
+                        <TableCell className="max-w-xs truncate">
+                          {member.address}
+                        </TableCell>
+                        <TableCell>{formatDate(member.birthDate)}</TableCell>
+                        <TableCell>{member.regionName}</TableCell>
                       </TableRow>
                     ))
                   )}

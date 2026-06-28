@@ -1,8 +1,13 @@
 export type BirthdayMember = {
   id: string;
-  name: string;
+  firstName: string;
+  lastName: string | null;
+  fullName: string;
   birthDate: string;
   regionName: string;
+  familyName: string;
+  address: string;
+  pelkat: string | null;
 };
 
 export type BirthdayMemberResponse = {

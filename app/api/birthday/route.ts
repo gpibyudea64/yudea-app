@@ -22,6 +22,19 @@ function getWeekRange(date: Date) {
   return { sunday, saturday };
 }
 
+type BirthdayRow = {
+  id: string;
+  firstName: string;
+  lastName: string | null;
+  birthDate: Date;
+  regionName: string;
+  familyName: string;
+  address: string | null;
+  kotaKabupaten: string | null;
+  kecamatan: string | null;
+  pelkat: string | null;
+};
+
 export async function GET(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) {
@@ -45,26 +58,25 @@ export async function GET(req: NextRequest) {
       ? `AND r.id = '${session.user.regionId}'`
       : "";
 
-  const members = await prisma.$queryRawUnsafe<
-    {
-      id: string;
-      name: string;
-      birthDate: Date;
-      regionName: string;
-    }[]
-  >(
+  const members = await prisma.$queryRawUnsafe<BirthdayRow[]>(
     `
       SELECT
         m.id,
-        m.name,
+        m."firstName",
+        m."lastName",
         m."birthDate",
-        r.name AS "regionName"
+        r.name AS "regionName",
+        f."familyName",
+        f.address,
+        f."kotaKabupaten",
+        f."kecamatan",
+        m."pelkat"
       FROM "Member" m
       JOIN "Family" f ON f.id = m."familyId"
       JOIN "Region" r ON r.id = f."regionId"
       WHERE (${birthdayFilter})
       ${regionFilter}
-      ORDER BY to_char(m."birthDate", 'MM-DD') ASC, m.name ASC
+      ORDER BY to_char(m."birthDate", 'MM-DD') ASC, m."firstName" ASC
     `,
   );
 

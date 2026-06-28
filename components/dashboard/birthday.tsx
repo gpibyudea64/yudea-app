@@ -12,10 +12,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Download,
+  Printer,
+  FileText,
+} from "lucide-react";
 
 function formatDate(value: string) {
   return new Date(value).toLocaleDateString("id-ID", {
-    day: "numeric",
+    day: "2-digit",
     month: "short",
     year: "numeric",
   });
@@ -35,12 +40,34 @@ function formatRange(start: string, end: string) {
   return `${startLabel} - ${endLabel}`;
 }
 
+function buildAddress(member: {
+  address?: string | null;
+  kotaKabupaten?: string | null;
+  kecamatan?: string | null;
+  memberAddress?: string | null;
+  memberKotaKabupaten?: string | null;
+  memberKecamatan?: string | null;
+  sameAddressAsFamily?: boolean;
+  family?: { address?: string | null; kotaKabupaten?: string | null; kecamatan?: string | null };
+}): string {
+  // Use family address by default
+  return [member.address, member.kotaKabupaten, member.kecamatan]
+    .filter(Boolean)
+    .join(", ");
+}
+
 // Dynamically import the export button to avoid loading xlsx on page mount
-const ExportButton = memo(function ExportButton({
+const ExportXLSButton = memo(function ExportXLSButton({
   members,
   selectedDate,
 }: {
-  members: { name: string; regionName: string; birthDate: string }[];
+  members: {
+    familyName: string;
+    fullName: string;
+    address: string;
+    birthDate: string;
+    regionName: string;
+  }[];
   selectedDate: string;
 }) {
   function formatExcelDate(value: string) {
@@ -60,14 +87,25 @@ const ExportButton = memo(function ExportButton({
         const XLSX = await import("xlsx");
 
         const worksheetData = members.map((member) => ({
-          "Nama Lengkap": member.name,
-          "Sektor Pelayanan": member.regionName,
+          "Nama Keluarga": member.familyName,
+          "Nama Jemaat": member.fullName,
+          Alamat: member.address,
           "Tanggal Lahir": formatExcelDate(member.birthDate),
+          "Sektor Pelayanan": member.regionName,
         }));
 
         const worksheet = XLSX.utils.json_to_sheet(worksheetData);
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, "Ulang Tahun");
+
+        // Auto-fit column widths
+        const colWidths = Object.keys(worksheetData[0] || {}).map((key) => ({
+          wch: Math.max(
+            key.length,
+            ...worksheetData.map((row) => String(row[key as keyof typeof row]).length),
+          ) + 2,
+        }));
+        worksheet["!cols"] = colWidths;
 
         const fileData = XLSX.write(workbook, {
           bookType: "xlsx",
@@ -86,8 +124,10 @@ const ExportButton = memo(function ExportButton({
       disabled={members.length === 0}
       variant="outline"
       size="sm"
+      className="gap-2"
     >
-      Export ke Excel
+      <Download className="h-4 w-4" />
+      Export XLS
     </Button>
   );
 });
@@ -102,6 +142,15 @@ export default function BirthdayDashboard() {
 
   const { data, isLoading, error } = useBirthdayMembers(selectedDate);
   const members = data?.data ?? [];
+
+  // Compute fullName from firstName + lastName
+  const enrichedMembers = members.map((member) => ({
+    ...member,
+    fullName: [member.firstName, member.lastName ?? ""].filter(Boolean).join(" "),
+    address: buildAddress(member),
+  }));
+
+  const totalCount = enrichedMembers.length;
 
   return (
     <div className="min-h-screen bg-linear-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900">
@@ -134,61 +183,101 @@ export default function BirthdayDashboard() {
           </div>
         </div>
 
+        {/* Filters + Export Buttons */}
         <Card className="shadow-xl">
           <CardHeader className="flex flex-col gap-3 border-b px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
             <CardTitle>Daftar Ulang Tahun</CardTitle>
-            <ExportButton members={members} selectedDate={selectedDate} />
+            <div className="flex items-center gap-2">
+              <ExportXLSButton members={enrichedMembers} selectedDate={selectedDate} />
+              <Button
+                onClick={() => window.print()}
+                disabled={enrichedMembers.length === 0}
+                variant="outline"
+                size="sm"
+                className="gap-2"
+              >
+                <Printer className="h-4 w-4" />
+                Cetak PDF
+              </Button>
+            </div>
           </CardHeader>
-          <CardContent className="p-0">
+          <CardContent>
+            <div className="mb-3 text-sm text-muted-foreground">
+              {isLoading ? (
+                <span>Memuat data...</span>
+              ) : (
+                <span>
+                  Menampilkan <strong>{totalCount}</strong> ulang tahun
+                </span>
+              )}
+            </div>
+
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/50">
+                    <TableHead className="font-semibold">No</TableHead>
                     <TableHead className="font-semibold">
-                      Nama Lengkap
+                      Nama Keluarga
+                    </TableHead>
+                    <TableHead className="font-semibold">Nama Jemaat</TableHead>
+                    <TableHead className="font-semibold">Alamat</TableHead>
+                    <TableHead className="font-semibold">
+                      Tanggal Lahir
                     </TableHead>
                     <TableHead className="font-semibold">
                       Sektor Pelayanan
-                    </TableHead>
-                    <TableHead className="font-semibold">
-                      Tanggal Lahir
                     </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {isLoading ? (
                     <TableRow>
-                      <TableCell colSpan={3} className="py-12 text-center">
+                      <TableCell colSpan={6} className="py-12 text-center">
                         Loading data ulang tahun...
                       </TableCell>
                     </TableRow>
                   ) : error ? (
                     <TableRow>
                       <TableCell
-                        colSpan={3}
+                        colSpan={6}
                         className="py-12 text-center text-destructive"
                       >
                         Gagal memuat data ulang tahun.
                       </TableCell>
                     </TableRow>
-                  ) : members.length === 0 ? (
+                  ) : enrichedMembers.length === 0 ? (
                     <TableRow>
                       <TableCell
-                        colSpan={3}
-                        className="py-12 text-center text-muted-foreground"
+                        colSpan={6}
+                        className="py-12 text-center"
                       >
-                        Tidak ada ulang tahun di periode ini.
+                        <div className="flex flex-col items-center gap-2">
+                          <FileText className="h-12 w-12 text-muted-foreground/50" />
+                          <p className="text-muted-foreground">
+                            Tidak ada ulang tahun di periode ini.
+                          </p>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ) : (
-                    members.map((member) => (
+                    enrichedMembers.map((member, index) => (
                       <TableRow
                         key={member.id}
                         className="transition-colors hover:bg-muted/50"
                       >
-                        <TableCell>{member.name}</TableCell>
-                        <TableCell>{member.regionName}</TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {index + 1}
+                        </TableCell>
+                        <TableCell className="font-medium">
+                          {member.familyName}
+                        </TableCell>
+                        <TableCell>{member.fullName}</TableCell>
+                        <TableCell className="max-w-xs truncate">
+                          {member.address}
+                        </TableCell>
                         <TableCell>{formatDate(member.birthDate)}</TableCell>
+                        <TableCell>{member.regionName}</TableCell>
                       </TableRow>
                     ))
                   )}
