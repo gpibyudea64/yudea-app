@@ -14,30 +14,7 @@ import {
 import { DataTablePelkatControls } from "./data-table-pelkat-control";
 import { Button } from "../ui/button";
 import { Download, FileText, Printer } from "lucide-react";
-
-function formatLabel(value: string) {
-  return value.replaceAll("_", " ");
-}
-
-function formatDate(value: string | Date) {
-  return new Date(value).toLocaleDateString("id-ID", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
-}
-
-function buildMemberAddress(member: {
-  family?: {
-    address?: string | null;
-    kotaKabupaten?: string | null;
-    kecamatan?: string | null;
-  } | null;
-}): string {
-  const f = member.family;
-  if (!f) return "";
-  return [f.address, f.kotaKabupaten, f.kecamatan].filter(Boolean).join(", ");
-}
+import { buildMemberAddress, formatLabel, formatDate } from "@/lib/client-helper";
 
 type ExportRow = {
   familyName: string;
@@ -161,7 +138,7 @@ export default function PelkatMenu() {
     search: filter.search,
   });
   const members = data?.data ?? [];
-  const enrichedMembers = enrichMembers(members as any);
+  const enrichedMembers = enrichMembers(members);
   const totalCount = enrichedMembers.length;
 
   return (

@@ -114,7 +114,7 @@ export async function GET(req: NextRequest) {
         totalPages: Math.ceil(filteredTotal / limit),
       },
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Failed to fetch members" },
       { status: 500 },
@@ -188,7 +188,7 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json(attachPelkat(member), { status: 201 });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Failed to create member" },
       { status: 500 },

@@ -81,8 +81,8 @@ describe("auth-session", () => {
     });
 
     it("does nothing when window is undefined", () => {
-      const windowSpy = vi.spyOn(globalThis as any, "window", "get");
-      windowSpy.mockReturnValue(undefined as any);
+      const windowSpy = vi.spyOn(globalThis as unknown as Window & typeof globalThis, "window", "get");
+      windowSpy.mockReturnValue(undefined as unknown as Window & typeof globalThis);
       vi.clearAllMocks();
 
       expect(() => {
@@ -146,8 +146,8 @@ describe("auth-session", () => {
     });
 
     it("returns null when localStorage is accessed during SSR", () => {
-      const windowSpy = vi.spyOn(globalThis as any, "window", "get");
-      windowSpy.mockReturnValue(undefined as any);
+      const windowSpy = vi.spyOn(globalThis as unknown as Window & typeof globalThis, "window", "get");
+      windowSpy.mockReturnValue(undefined as unknown as Window & typeof globalThis);
       vi.clearAllMocks();
 
       expect(getStoredUser()).toBeNull();

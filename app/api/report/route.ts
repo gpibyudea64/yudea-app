@@ -4,7 +4,7 @@ import { attachPelkat } from "@/lib/helper";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { NextRequest, NextResponse } from "next/server";
-import { Prisma, User } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 
 // GET /api/report?pelkat=...&region=...
 // Returns flat member list with family info for report export
@@ -23,9 +23,10 @@ export async function GET(req: NextRequest) {
     }
 
     // Filter by region if user is a coordinator
-    const regionId = (session?.user as User)?.regionId;
+    const sessionUser = session?.user as { regionId?: string } | undefined;
+    const regionId = sessionUser?.regionId;
     if (session?.user?.role === "COORDINATOR" && regionId) {
-      where.family = { ...(where.family as any), regionId };
+      where.family = { ...(where.family as Prisma.FamilyWhereInput), regionId };
     }
 
     const members = await prisma.member.findMany({
@@ -44,7 +45,7 @@ export async function GET(req: NextRequest) {
 
     const filteredMembers =
       pelkat && pelkat !== "all"
-        ? membersWithPelkat.filter((m) => (m as any).pelkat === pelkat)
+        ? membersWithPelkat.filter((m) => m.pelkat === pelkat)
         : membersWithPelkat;
 
     // Map to report format
@@ -70,11 +71,11 @@ export async function GET(req: NextRequest) {
             .join(", "),
       birthDate: member.birthDate,
       regionName: member.family?.region?.name ?? "",
-      pelkat: (member as any).pelkat ?? "",
+      pelkat: member.pelkat ?? "",
     }));
 
     return NextResponse.json({ data: reportData });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Failed to fetch report data" },
       { status: 500 },

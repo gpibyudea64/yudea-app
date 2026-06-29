@@ -34,7 +34,7 @@ export async function GET(req: NextRequest) {
         totalPages: Math.ceil(total / limit),
       },
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Failed to fetch attendance" },
       { status: 500 },
@@ -73,7 +73,7 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json(attendance, { status: 201 });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Failed to create attendance" },
       { status: 500 },

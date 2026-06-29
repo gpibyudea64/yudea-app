@@ -10,7 +10,6 @@ import {
   SelectValue,
 } from "../ui/select";
 import { Button } from "../ui/button";
-import { useRegions } from "@/hooks/use-region";
 import PelkatSelect from "../ui/pelkat-select";
 
 type PaginationMeta = {

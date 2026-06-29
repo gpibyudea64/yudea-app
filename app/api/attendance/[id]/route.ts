@@ -22,7 +22,7 @@ export async function GET(
     }
 
     return NextResponse.json(attendance);
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Failed to fetch attendance" },
       { status: 500 },
@@ -68,7 +68,7 @@ export async function PATCH(
     });
 
     return NextResponse.json(attendance);
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Failed to update attendance" },
       { status: 500 },
@@ -88,7 +88,7 @@ export async function DELETE(
     });
 
     return NextResponse.json({ message: "Deleted successfully" });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Failed to delete attendance" },
       { status: 500 },

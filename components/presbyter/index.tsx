@@ -2,9 +2,8 @@
 
 import { usePageAccess } from "@/hooks/use-page-access";
 import { Badge } from "../ui/badge";
-import { Calendar, Edit, Plus, Trash2, User, Users } from "lucide-react";
+import { Calendar, User, Users } from "lucide-react";
 import { useState } from "react";
-import { Button } from "../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import {
   Table,
@@ -14,17 +13,9 @@ import {
   TableHeader,
   TableRow,
 } from "../ui/table";
-import { DataTableControls } from "../ui/data-table-controls";
 import { usePresbyters } from "@/hooks/use-member";
 import { DataTablePresbyterControls } from "./data-table-presbyter-control";
-
-function formatDate(value: Date | string) {
-  return new Date(value).toLocaleDateString();
-}
-
-function formatLabel(value: string) {
-  return value.replaceAll("_", " ");
-}
+import { formatDate, formatLabel } from "@/lib/client-helper";
 
 export default function PresbyterPage() {
   const [page, setPage] = useState(1);

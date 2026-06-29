@@ -14,7 +14,7 @@ import {
   useUpdateAttendance,
 } from "@/hooks/use-attendance"
 import { AttendanceForm } from "@/types/attendance"
-import { Dispatch, SetStateAction, useRef } from "react"
+import { Dispatch, SetStateAction, useEffect } from "react"
 import { toast } from "sonner"
 import { useForm, useWatch } from "react-hook-form"
 import { Attendance } from "@prisma/client"
@@ -30,7 +30,6 @@ export default function AttendanceDialog({
 }) {
   const createMutation = useCreateAttendance()
   const updateMutation = useUpdateAttendance()
-  const prevOpen = useRef(false)
 
   const {
     register,
@@ -53,27 +52,25 @@ export default function AttendanceDialog({
   })
 
   // Reset form when dialog opens with editing data
-  if (open !== prevOpen.current) {
-    prevOpen.current = open
-    if (open) {
-      if (editing) {
-        const date = new Date(editing.serviceDate)
-        reset({
-          serviceDate: date.toISOString().slice(0, 16), // datetime-local format
-          serviceType: editing.serviceType,
-          maleCount: editing.maleCount,
-          femaleCount: editing.femaleCount,
-        })
-      } else {
-        reset({
-          serviceDate: "",
-          serviceType: "",
-          maleCount: 0,
-          femaleCount: 0,
-        })
-      }
+  useEffect(() => {
+    if (!open) return
+    if (editing) {
+      const date = new Date(editing.serviceDate)
+      reset({
+        serviceDate: date.toISOString().slice(0, 16), // datetime-local format
+        serviceType: editing.serviceType,
+        maleCount: editing.maleCount,
+        femaleCount: editing.femaleCount,
+      })
+    } else {
+      reset({
+        serviceDate: "",
+        serviceType: "",
+        maleCount: 0,
+        femaleCount: 0,
+      })
     }
-  }
+  }, [open, editing, reset])
 
   async function onSubmit(values: AttendanceForm) {
     try {

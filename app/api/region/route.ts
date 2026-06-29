@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { NextRequest, NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 
 export const runtime = "nodejs";
 
@@ -15,7 +16,7 @@ export async function GET(req: NextRequest) {
     const skip = (page - 1) * limit;
 
     // Build where clause for search
-    let where: any = search
+    let where: Prisma.RegionWhereInput = search
       ? {
           OR: [
             { name: { contains: search, mode: "insensitive" as const } },
@@ -29,7 +30,8 @@ export async function GET(req: NextRequest) {
       : {};
 
     // Filter by coordinator's region if user is a coordinator
-    const regionId = (session?.user as any)?.regionId;
+    const sessionUser = session?.user as { regionId?: string } | undefined;
+    const regionId = sessionUser?.regionId;
     if (session?.user?.role === "COORDINATOR" && regionId) {
       where = {
         ...where,
@@ -63,7 +65,7 @@ export async function GET(req: NextRequest) {
         totalPages: Math.ceil(total / limit),
       },
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Failed to fetch regions" },
       { status: 500 },
@@ -101,7 +103,7 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json(full, { status: 201 });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Failed to create region" },
       { status: 500 },

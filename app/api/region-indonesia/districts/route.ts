@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
         name: d.name,
       })),
     );
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Failed to fetch districts" },
       { status: 500 },

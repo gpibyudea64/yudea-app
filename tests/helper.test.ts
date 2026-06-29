@@ -192,7 +192,7 @@ describe("helper utilities", () => {
       birthDate: new Date("2015-01-01T00:00:00Z"),
       gender: Gender.MALE,
       role: MemberRole.CHILD,
-    } as any;
+    } as Parameters<typeof attachPelkat>[0];
 
     const result = attachPelkat(member);
     expect(result.pelkat).toBe(MemberPelkat.PELAYANAN_ANAK);

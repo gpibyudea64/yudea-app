@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
         name: r.name,
       })),
     );
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Failed to fetch regencies" },
       { status: 500 },

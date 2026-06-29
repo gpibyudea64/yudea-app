@@ -16,6 +16,14 @@ import {
   saveRoleAccessConfigToDb,
 } from "@/lib/rbac-settings";
 
+// Minimal type for what the test needs from a Prisma AppSetting result
+type PrismaAppSettingValue = {
+  key?: string;
+  value?: string;
+  id?: string;
+  updatedAt?: Date;
+};
+
 const mockFindUnique = vi.mocked(prisma.appSetting.findUnique);
 const mockUpsert = vi.mocked(prisma.appSetting.upsert);
 
@@ -46,7 +54,7 @@ describe("rbac-settings integration", () => {
         value: JSON.stringify({
           "/dashboard/members": { view: ["ADMIN", "STAFF"], edit: ["ADMIN"] },
         }),
-      } as any);
+      } as PrismaAppSettingValue);
 
       const config = await getRoleAccessConfigFromDb();
       expect(config["/dashboard/members"].view).toEqual(["ADMIN", "STAFF"]);
@@ -58,7 +66,7 @@ describe("rbac-settings integration", () => {
         value: JSON.stringify({
           "/dashboard/members": ["ADMIN"],
         }),
-      } as any);
+      } as PrismaAppSettingValue);
 
       const config = await getRoleAccessConfigFromDb();
       expect(config["/dashboard/members"].view).toEqual(["ADMIN"]);
@@ -68,7 +76,7 @@ describe("rbac-settings integration", () => {
 
   describe("saveRoleAccessConfigToDb", () => {
     it("normalizes and saves config to DB", async () => {
-      mockUpsert.mockResolvedValue({} as any);
+      mockUpsert.mockResolvedValue({} as PrismaAppSettingValue);
 
       const result = await saveRoleAccessConfigToDb(
         JSON.stringify({
@@ -90,7 +98,7 @@ describe("rbac-settings integration", () => {
     });
 
     it("protects admin-only routes like /dashboard/settings", async () => {
-      mockUpsert.mockResolvedValue({} as any);
+      mockUpsert.mockResolvedValue({} as PrismaAppSettingValue);
 
       const result = await saveRoleAccessConfigToDb(
         JSON.stringify({

@@ -3,14 +3,6 @@ import type { VariantProps } from "class-variance-authority";
 
 type BadgeVariant = NonNullable<VariantProps<typeof badgeVariants>["variant"]>;
 
-export function toTitleCase(str: string): string {
-  return str
-    .toLowerCase()
-    .split(" ")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(" ");
-}
-
 export const getServiceTypeColor = (type: string) => {
   const types: Record<string, BadgeVariant> = {
     "Sunday Service": "default",
@@ -35,4 +27,28 @@ export function formatDate(value: Date | string) {
 
 export function formatLabel(value: string) {
   return value.replaceAll("_", " ");
+}
+
+export function buildMemberAddress(member: {
+  address?: string | null;
+  kotaKabupaten?: string | null;
+  kecamatan?: string | null;
+  memberAddress?: string | null;
+  memberKotaKabupaten?: string | null;
+  memberKecamatan?: string | null;
+  sameAddressAsFamily?: boolean;
+  family?: {
+    address?: string | null;
+    kotaKabupaten?: string | null;
+    kecamatan?: string | null;
+  } | null;
+}): string {
+  if (member.sameAddressAsFamily === false && member.memberAddress) {
+    return [member.memberAddress, member.memberKotaKabupaten, member.memberKecamatan]
+      .filter(Boolean)
+      .join(", ");
+  }
+  const f = member.family;
+  if (!f) return "";
+  return [f.address, f.kotaKabupaten, f.kecamatan].filter(Boolean).join(", ");
 }

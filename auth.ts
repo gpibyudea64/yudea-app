@@ -38,10 +38,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         }
 
         return {
-          ...user,
+          id: user.id,
+          email: user.email,
+          name: user.name,
           role: normalizeAppRole(user.role),
           regionId: user.regionId ?? undefined,
-        } as any;
+        };
       },
     }),
   ],
@@ -50,7 +52,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (user) {
         token.id = user.id;
         token.role = normalizeAppRole(user.role as string);
-        token.regionId = (user as any).regionId ?? undefined;
+        token.regionId = (user as { regionId?: string }).regionId ?? undefined;
       }
       return token;
     },

@@ -4,6 +4,7 @@ import { usePageAccess } from "@/hooks/use-page-access";
 import { useDeleteRegion, useRegions } from "@/hooks/use-region";
 import { useMembers } from "@/hooks/use-member";
 import { Region } from "@/types/region";
+import type { Member } from "@/types/member";
 import { memo, useState } from "react";
 import { Button } from "../ui/button";
 import {
@@ -35,6 +36,7 @@ import {
 } from "../ui/select";
 import RegionDialog from "./region-dialog";
 import { DataTableControls } from "../ui/data-table-controls";
+import { buildMemberAddress } from "@/lib/client-helper";
 
 function formatDate(value: string | Date) {
   return new Date(value).toLocaleDateString("id-ID", {
@@ -42,18 +44,6 @@ function formatDate(value: string | Date) {
     month: "2-digit",
     year: "numeric",
   });
-}
-
-function buildMemberAddress(member: {
-  family?: {
-    address?: string | null;
-    kotaKabupaten?: string | null;
-    kecamatan?: string | null;
-  } | null;
-}): string {
-  const f = member.family;
-  if (!f) return "";
-  return [f.address, f.kotaKabupaten, f.kecamatan].filter(Boolean).join(", ");
 }
 
 type ExportRow = {
@@ -154,7 +144,7 @@ export default function Regions() {
   });
   const members = membersData?.data ?? [];
   const enrichedMembers: (ExportRow & { id: string })[] = members.map(
-    (member: any) => ({
+    (member: Member) => ({
       id: member.id,
       familyName: member.family?.familyName ?? "",
       fullName:

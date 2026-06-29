@@ -47,7 +47,7 @@ export async function GET() {
         total: pelkatCounts[i],
       })),
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Failed to fetch dashboard counts" },
       { status: 500 },

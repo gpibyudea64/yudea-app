@@ -9,7 +9,7 @@ export async function GET() {
     const all = await prisma.family.count();
 
     return NextResponse.json({ all });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Failed to count families" },
       { status: 500 },

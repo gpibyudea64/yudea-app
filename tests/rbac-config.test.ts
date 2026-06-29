@@ -58,8 +58,8 @@ describe("rbac-config", () => {
     });
 
     it("returns default config when window is undefined (SSR)", () => {
-      const windowSpy = vi.spyOn(globalThis as any, "window", "get");
-      windowSpy.mockReturnValue(undefined as any);
+      const windowSpy = vi.spyOn(globalThis as unknown as Window & typeof globalThis, "window", "get");
+      windowSpy.mockReturnValue(undefined as unknown as Window & typeof globalThis);
       vi.clearAllMocks();
 
       const config = getStoredRoleAccessConfig();
@@ -105,8 +105,8 @@ describe("rbac-config", () => {
     });
 
     it("does nothing when window is undefined", () => {
-      const windowSpy = vi.spyOn(globalThis as any, "window", "get");
-      windowSpy.mockReturnValue(undefined as any);
+      const windowSpy = vi.spyOn(globalThis as unknown as Window & typeof globalThis, "window", "get");
+      windowSpy.mockReturnValue(undefined as unknown as Window & typeof globalThis);
       vi.clearAllMocks();
 
       expect(() => {

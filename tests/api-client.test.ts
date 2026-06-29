@@ -48,15 +48,14 @@ describe("API client - member", () => {
   });
 
   it("createMember sends POST with payload", async () => {
-    const payload = { firstName: "John", lastName: "Doe" } as any;
-    const response = { id: "new", ...payload };
+    const response = { id: "new", firstName: "John", lastName: "Doe" };
     mockFetch.mockResolvedValueOnce(mockResponse(response));
-    const result = await createMember(payload);
+    const result = await createMember({ firstName: "John", lastName: "Doe" } as Parameters<typeof createMember>[0]);
     expect(result).toEqual(response);
     expect(mockFetch).toHaveBeenCalledWith("/api/member", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      body: JSON.stringify({ firstName: "John", lastName: "Doe" }),
     });
   });
 
@@ -95,9 +94,8 @@ describe("API client - family", () => {
   });
 
   it("createFamily sends POST", async () => {
-    const payload = { familyName: "Smith", regionId: "r1" } as any;
-    mockFetch.mockResolvedValueOnce(mockResponse({ id: "new", ...payload }));
-    const result = await createFamily(payload);
+    mockFetch.mockResolvedValueOnce(mockResponse({ id: "new", familyName: "Smith", regionId: "r1" }));
+    const result = await createFamily({ familyName: "Smith", regionId: "r1" } as Parameters<typeof createFamily>[0]);
     expect(result.id).toBe("new");
     expect(mockFetch).toHaveBeenCalledWith("/api/family", expect.objectContaining({ method: "POST" }));
   });

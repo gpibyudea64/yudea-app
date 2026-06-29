@@ -12,7 +12,7 @@ export async function GET() {
         name: p.name,
       })),
     );
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Failed to fetch provinces" },
       { status: 500 },

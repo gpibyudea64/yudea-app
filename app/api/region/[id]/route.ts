@@ -31,7 +31,7 @@ export async function GET(
     }
 
     return NextResponse.json(region);
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Failed to fetch region" },
       { status: 500 },
@@ -66,7 +66,7 @@ export async function PATCH(
     }
 
     return NextResponse.json(updated);
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Failed to update region" },
       { status: 500 },
@@ -85,7 +85,7 @@ export async function DELETE(
     await prisma.region.delete({ where: { id } });
 
     return NextResponse.json({ message: "Deleted successfully" });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Failed to delete region" },
       { status: 500 },

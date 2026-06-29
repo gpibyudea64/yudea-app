@@ -36,7 +36,7 @@ export async function GET(req: NextRequest) {
         totalPages: Math.ceil(total / limit),
       },
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Failed to fetch branch" },
       { status: 500 },
@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json(branch, { status: 201 });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Failed to create branch" },
       { status: 500 },

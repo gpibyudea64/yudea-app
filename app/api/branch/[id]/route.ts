@@ -29,7 +29,7 @@ export async function GET(
     }
 
     return NextResponse.json(branch);
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Failed to fetch branch" },
       { status: 500 },
@@ -63,7 +63,7 @@ export async function PATCH(
     });
 
     return NextResponse.json(branch);
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Failed to update branch" },
       { status: 500 },
@@ -83,7 +83,7 @@ export async function DELETE(
     });
 
     return NextResponse.json({ message: "Deleted successfully" });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Failed to delete branch" },
       { status: 500 },

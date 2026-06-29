@@ -24,7 +24,7 @@ export async function GET(
     }
 
     return NextResponse.json(family);
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Failed to fetch family" },
       { status: 500 },
@@ -99,7 +99,7 @@ export async function PATCH(
     });
 
     return NextResponse.json(family);
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Failed to update family" },
       { status: 500 },
@@ -118,7 +118,7 @@ export async function DELETE(
     await prisma.family.delete({ where: { id } });
 
     return NextResponse.json({ message: "Deleted successfully" });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Failed to delete family" },
       { status: 500 },

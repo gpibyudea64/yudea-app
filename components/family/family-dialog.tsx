@@ -33,7 +33,7 @@ import {
   FileText,
 } from "lucide-react";
 import { Dispatch, SetStateAction, useState } from "react";
-import { Controller, useFieldArray, useForm, useWatch } from "react-hook-form";
+import { Controller, useFieldArray, useForm, useWatch, type Control, type UseFormRegister } from "react-hook-form";
 import { toast } from "sonner";
 import { useDialogForm } from "@/hooks/use-dialog-form";
 import { Button } from "../ui/button";
@@ -54,7 +54,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
-import { Switch } from "../ui/switch";
 
 const emptyMember: MemberForm = {
   firstName: "",
@@ -297,7 +296,7 @@ export default function FamilyDialog({
       value: region.id,
     })) ?? [];
 
-  const getRegionRef = { current: (() => ({ provinsi: "", kotaKabupaten: "", kecamatan: "", kelurahan: "" })) };
+  const [getRegion, setGetRegion] = useState(() => () => ({ provinsi: "", kotaKabupaten: "", kecamatan: "", kelurahan: "" }));
 
   const {
     control,
@@ -336,7 +335,7 @@ export default function FamilyDialog({
 
   async function onSubmit(values: FamilyForm) {
     try {
-      const region = getRegionRef.current();
+      const region = getRegion();
 
       if (!region.provinsi) {
         toast.error("Provinsi harus dipilih");
@@ -510,8 +509,8 @@ export default function FamilyDialog({
                     }
                   : undefined
               }
-              onRegionReady={(getRegion) => {
-                getRegionRef.current = getRegion;
+              onRegionReady={(fn) => {
+                setGetRegion(() => fn);
               }}
             />
           </div>
@@ -610,8 +609,8 @@ function MemberFormBlock({
   remove,
 }: {
   index: number;
-  control: any;
-  register: any;
+  control: Control<FamilyForm>;
+  register: UseFormRegister<FamilyForm>;
   remove: (index: number) => void;
 }) {
   const selectedRole = useWatch({ control, name: `members.${index}.role` as const });

@@ -4,8 +4,8 @@ import {
   formatLabel,
   formatPelkatName,
   getServiceTypeColor,
-  toTitleCase,
 } from "@/lib/client-helper";
+import { toTitleCase } from "@/lib/helper";
 
 describe("client-helper", () => {
   describe("toTitleCase", () => {

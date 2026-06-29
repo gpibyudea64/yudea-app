@@ -22,7 +22,7 @@ import {
 import { persistRoleAccessConfig } from "@/lib/rbac-config";
 import { menuItems } from "@/nav/const";
 import { RotateCcw, Save, Shield } from "lucide-react";
-import { Fragment, useEffect, useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 type PermissionKind = "view" | "edit";
@@ -67,10 +67,6 @@ export function RoleAccessMatrix({
 }) {
   const [draft, setDraft] = useState<RoleAccessConfig>(initialConfig);
   const saveMutation = useSaveRoleAccessSettings();
-
-  useEffect(() => {
-    setDraft(initialConfig);
-  }, [initialConfig]);
 
   const routes = useMemo(() => {
     const labels = Object.fromEntries(

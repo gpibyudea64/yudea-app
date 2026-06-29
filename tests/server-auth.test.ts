@@ -9,6 +9,18 @@ import { auth } from "@/auth";
 import { getSessionUser, requireAdmin, requireAuth } from "@/lib/server-auth";
 import { NextResponse } from "next/server";
 
+// Partial session type for test mocks
+interface MockSession {
+  user?: {
+    id?: string;
+    email?: string;
+    name?: string;
+    role?: string;
+    regionId?: string;
+  };
+  expires?: string;
+}
+
 afterEach(() => {
   vi.restoreAllMocks();
 });
@@ -24,7 +36,7 @@ describe("server-auth", () => {
     it("returns null when session has no user id", async () => {
       vi.mocked(auth).mockResolvedValue({
         user: { email: "test@example.com" },
-      } as any);
+      } as MockSession);
       const result = await getSessionUser();
       expect(result).toBeNull();
     });
@@ -37,7 +49,7 @@ describe("server-auth", () => {
           name: "Admin",
           role: "admin",
         },
-      } as any);
+      } as MockSession);
 
       const result = await getSessionUser();
       expect(result).toEqual({
@@ -51,7 +63,7 @@ describe("server-auth", () => {
     it("handles missing optional fields", async () => {
       vi.mocked(auth).mockResolvedValue({
         user: { id: "user-1", role: "staff" },
-      } as any);
+      } as MockSession);
 
       const result = await getSessionUser();
       expect(result).toEqual({
@@ -67,7 +79,7 @@ describe("server-auth", () => {
     it("returns user when authenticated", async () => {
       vi.mocked(auth).mockResolvedValue({
         user: { id: "user-1", role: "admin" },
-      } as any);
+      } as MockSession);
 
       const result = await requireAuth();
       expect(result.user).not.toBeNull();
@@ -89,7 +101,7 @@ describe("server-auth", () => {
     it("returns user when role is ADMIN", async () => {
       vi.mocked(auth).mockResolvedValue({
         user: { id: "user-1", role: "admin" },
-      } as any);
+      } as MockSession);
 
       const result = await requireAdmin();
       expect(result.user).not.toBeNull();
@@ -108,7 +120,7 @@ describe("server-auth", () => {
     it("returns error when role is not ADMIN", async () => {
       vi.mocked(auth).mockResolvedValue({
         user: { id: "user-2", role: "staff" },
-      } as any);
+      } as MockSession);
 
       const result = await requireAdmin();
       expect(result.user).toBeNull();

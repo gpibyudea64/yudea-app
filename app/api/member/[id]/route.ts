@@ -22,7 +22,7 @@ export async function GET(
     }
 
     return NextResponse.json(attachPelkat(member));
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Failed to fetch member" },
       { status: 500 },
@@ -128,7 +128,7 @@ export async function PATCH(
     });
 
     return NextResponse.json(attachPelkat(member));
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Failed to update member" },
       { status: 500 },
@@ -145,7 +145,7 @@ export async function DELETE(
     const { id } = await params;
     await prisma.member.delete({ where: { id } });
     return NextResponse.json({ message: "Deleted successfully" });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Failed to delete member" },
       { status: 500 },

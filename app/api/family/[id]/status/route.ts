@@ -36,7 +36,7 @@ export async function PATCH(
       message: "Status updated for all family members",
       count: result.count,
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Failed to update family status" },
       { status: 500 },

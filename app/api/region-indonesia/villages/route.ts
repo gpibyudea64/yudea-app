@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
         name: v.name,
       })),
     );
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Failed to fetch villages" },
       { status: 500 },

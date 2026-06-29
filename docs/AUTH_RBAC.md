@@ -1,85 +1,215 @@
-# Authentication and RBAC
+# Authentication & RBAC
 
 ## Authentication Flow
 
-Authentication is implemented with NextAuth v5.
+Authentication uses **NextAuth v5** with a credentials provider.
 
-- `auth.config.ts` holds shared config such as the custom sign-in page and JWT session strategy.
-- `auth.ts` adds the Prisma adapter and credentials provider.
-- `app/api/auth/[...nextauth]/route.ts` exports the NextAuth route handlers.
-- `proxy.ts` redirects unauthenticated dashboard users to `/public/login` and redirects logged-in users away from the login page.
+```
+auth.config.ts              Shared config (signIn page, JWT strategy, secret)
+auth.ts                     Prisma adapter + credentials provider + callbacks
+app/api/auth/[...nextauth]/route.ts   NextAuth route handlers
+```
 
-Credentials login checks:
+### Login Flow
 
-1. The submitted email and password exist.
-2. The user exists in the database.
-3. The user has a stored password hash.
-4. `bcrypt.compare()` validates the password.
-5. The role is normalized with `normalizeAppRole()`.
+1. User submits email + password via the login form at `/public/login`
+2. `signIn("credentials", ...)` calls the `authorize` function in `auth.ts`
+3. `prisma.user.findUnique({ where: { email } })` looks up the user
+4. `bcrypt.compare()` validates the password against the stored hash
+5. On success, the JWT callback copies `id`, `role`, and `regionId` into the token
+6. The session callback copies these into the session object
+7. The client-side `SessionSync` component persists the session to localStorage and fetches the RBAC config
 
-JWT and session callbacks copy the user id and normalized role into the token/session.
+### Session Configuration (`auth.config.ts`)
 
-## Server-Side Guards
+```typescript
+{
+  secret: process.env.NEXTAUTH_SECRET ?? process.env.AUTH_SECRET,
+  trustHost: true,
+  pages: { signIn: "/public/login" },
+  session: { strategy: "jwt" },  // No database sessions, JWT-based
+}
+```
 
-`lib/server-auth.ts` provides API helpers:
+### Credentials Provider Behavior (`auth.ts`)
 
-- `getSessionUser()` returns the authenticated session user or `null`.
-- `requireAuth()` returns a `401 Unauthorized` JSON response if the user is missing.
-- `requireAdmin()` returns a `403 Forbidden` JSON response unless the user role is `ADMIN`.
+- Returns `null` if email/password is missing, user not found, password not set, or password doesn't match
+- On success, returns `{ id, email, name, role, regionId }` with `normalizeAppRole()` applied
+- The `jwt` callback copies `token.id`, `token.role`, `token.regionId` from the authorize return
+- The `session` callback copies these into `session.user`
 
-The user and RBAC settings APIs use these helpers.
+---
+
+## Server-Side Guards (`lib/server-auth.ts`)
+
+| Function | Returns | Description |
+|----------|---------|-------------|
+| `getSessionUser()` | `{ id, email?, name?, role } \| null` | Calls `auth()`, returns parsed user with normalized role |
+| `requireAuth()` | `{ user, error }` | Returns `401 Unauthorized` response if no session |
+| `requireAdmin()` | `{ user, error }` | Returns `403 Forbidden` if role is not `ADMIN` |
+
+Used in API routes for privileged operations:
+- `/api/user` (user CRUD) — `requireAdmin()`
+- `/api/settings/rbac` (PUT) — `requireAdmin()`
+- `/api/settings/rbac` (GET) — `requireAuth()`
+
+---
 
 ## Client-Side Guards
 
-`components/auth/rbac-guard.tsx` wraps dashboard pages. It checks the current path against the stored role access config and shows an access restricted screen if the user's role cannot view that page.
+### RbacGuard (`components/auth/rbac-guard.tsx`)
 
-`hooks/use-page-access.ts` returns:
+Wraps the dashboard layout (`app/dashboard/layout.tsx`). For every navigation:
 
-- `canView`
-- `canEdit`
-- `role`
+1. Reads the current user from `useStoredUser()` (localStorage via `auth-session.ts`)
+2. Reads the role access config from `useStoredRoleAccessConfig()` (localStorage via `rbac-config.ts`)
+3. Compares the current path against the config using `canViewPath()`
+4. If access is denied, renders an "Access Restricted" card with a button to the user's default dashboard
 
-Feature components use this hook to hide or disable edit actions.
+### usePageAccess (`hooks/use-page-access.ts`)
 
-## Default Route Access
+Returns `{ canView, canEdit, role }` for the current path. Feature components use this to conditionally show/hide edit buttons, action columns, and form controls.
 
-Defaults are defined in `defaultProtectedRoutes` in `lib/rbac.ts`.
+---
 
-| Route | View Roles | Edit Roles |
-| --- | --- | --- |
-| `/dashboard` | `ADMIN`, `STAFF`, `COORDINATOR` | `ADMIN`, `STAFF` |
-| `/dashboard/branches` | `ADMIN`, `STAFF` | `ADMIN`, `STAFF` |
-| `/dashboard/regions` | `ADMIN`, `STAFF`, `COORDINATOR` | `ADMIN`, `STAFF` |
-| `/dashboard/families` | `ADMIN`, `STAFF`, `COORDINATOR` | `ADMIN`, `STAFF`, `COORDINATOR` |
-| `/dashboard/members` | `ADMIN`, `STAFF`, `COORDINATOR`, `MEMBER` | `ADMIN`, `STAFF`, `COORDINATOR` |
-| `/dashboard/pelkat-members` | `ADMIN`, `STAFF` | `ADMIN`, `STAFF` |
-| `/dashboard/attendance` | `ADMIN`, `STAFF` | `ADMIN`, `STAFF` |
-| `/dashboard/users` | `ADMIN` | `ADMIN` |
-| `/dashboard/settings` | `ADMIN` | `ADMIN` |
+## Session Sync (`components/auth/session-sync.tsx`)
 
-`/dashboard/settings` remains admin-only even when overrides are merged.
+This component runs inside the `SessionProvider` and handles three tasks:
 
-## Persisted Access Settings
+1. **On authentication:** Calls `persistAuthSession()` to write the user to localStorage and cookies (`user_role`, `user_email`, `user_name`, `user_region_id`)
+2. **On authentication:** Fetches the RBAC config from `/api/settings/rbac` and calls `persistRoleAccessConfig()` to mirror it to localStorage and a cookie
+3. **On sign-out:** Calls `clearAuthSession()` to remove localStorage entries and cookies
 
-Admins can save route access settings through `/api/settings/rbac`.
+### Provider Stack (`lib/providers.tsx`)
 
-Persistence path:
-
-1. The settings UI sends a `RoleAccessConfig`.
-2. `saveRoleAccessConfigToDb()` parses and normalizes it.
-3. The config is stored in `AppSetting` under `role_access_config`.
-4. Client state is mirrored into localStorage and a cookie by `lib/rbac-config.ts`.
-
-The config shape is:
-
-```ts
-type RoleAccessConfig = Record<
-  string,
-  {
-    view: string[];
-    edit: string[];
-  }
->;
+```
+Providers
+└── SessionProvider (NextAuth)
+    └── SessionSync
+        └── children
 ```
 
-Older array-only settings are still accepted by `parseRoleAccessConfig()` for migration compatibility.
+---
+
+## Client Persistence
+
+### Auth Session (`lib/auth-session.ts`)
+
+| Function | Description |
+|----------|-------------|
+| `persistAuthSession({ token?, user })` | Stores to localStorage + cookies, dispatches `auth-session-updated` event |
+| `clearAuthSession()` | Removes from localStorage + cookies, dispatches event |
+| `getStoredUser()` | Reads user from localStorage (cached) |
+| `useStoredUser()` | React hook using `useSyncExternalStore` for reactive reads |
+
+Dispatched events are picked up by `subscribeToAuthSession` which listens for both custom events and `storage` events (cross-tab sync).
+
+### RBAC Config (`lib/rbac-config.ts`)
+
+| Function | Description |
+|----------|-------------|
+| `getStoredRoleAccessConfig()` | Reads config from localStorage, parses, caches |
+| `getStoredRoleAccessMap()` | Returns view-only map (for sidebar) |
+| `persistRoleAccessConfig(config)` | Saves to localStorage + cookie, dispatches `role-access-config-updated` |
+| `resetStoredRoleAccessConfig()` | Restores defaults |
+| `useStoredRoleAccessConfig()` | React hook via `useSyncExternalStore` |
+| `useStoredRoleAccessMap()` | Derived view map hook |
+
+---
+
+## Roles
+
+| Role | Access Level |
+|------|-------------|
+| `ADMIN` | Full access to all pages and settings |
+| `STAFF` | CRUD on members, families, regions, attendance |
+| `COORDINATOR` | View/edit members and families in their assigned region only |
+| `MEMBER` | View-only access to members page |
+
+### Coordinator Scoping
+
+When a user has `role === "COORDINATOR"` and `regionId` set on their User record:
+
+- **Family queries** (`/api/family`): `where.regionId` is scoped
+- **Member queries** (`/api/member`): `where.family.regionId` is scoped
+- **Region queries** (`/api/region/member-count`): raw SQL `WHERE r.id = regionId`
+- **Birthday queries** (`/api/birthday`): raw SQL `AND r.id = regionId`
+- **Dashboard region table**: Only shows the coordinator's region
+
+The `regionId` on the User model links a coordinator to their sector.
+
+---
+
+## Default Route Permissions
+
+Defaults are defined in `defaultProtectedRoutes` in `lib/rbac.ts`. The sidebar routes are in `nav/const.ts`.
+
+| Route | View | Edit | Sidebar Label |
+|-------|------|------|---------------|
+| `/dashboard` | ADMIN, STAFF, COORDINATOR | ADMIN, STAFF | Dashboard |
+| `/dashboard/birthday` | ADMIN, STAFF, COORDINATOR | ADMIN, STAFF, COORDINATOR | Ulang Tahun |
+| `/dashboard/branches` | ADMIN, STAFF | ADMIN, STAFF | Wilayah Pelayanan |
+| `/dashboard/regions` | ADMIN, STAFF, COORDINATOR | ADMIN, STAFF | Sektor Pelayanan |
+| `/dashboard/families` | ADMIN, STAFF, COORDINATOR | ADMIN, STAFF, COORDINATOR | Keluarga |
+| `/dashboard/members` | ADMIN, STAFF, COORDINATOR, MEMBER | ADMIN, STAFF, COORDINATOR | Warga Jemaat |
+| `/dashboard/presbytery` | ADMIN, STAFF, COORDINATOR, MEMBER | ADMIN, STAFF, COORDINATOR | Majelis Jemaat |
+| `/dashboard/pelkat-members` | ADMIN, STAFF | ADMIN, STAFF | Pelkat Members |
+| `/dashboard/attendance` | ADMIN, STAFF | ADMIN, STAFF | Attendance |
+| `/dashboard/users` | ADMIN | ADMIN | Users |
+| `/dashboard/settings` | ADMIN | ADMIN | Settings |
+
+### Admin Route Hard-Coding
+
+`/dashboard/settings` is **hard-coded as admin-only** — even if persisted RBAC overrides grant other roles access, the `resolveRoleAccessConfig()` function always resets this path to `{ view: ["ADMIN"], edit: ["ADMIN"] }`.
+
+### Default Dashboard Redirect
+
+| Role | Redirect Path |
+|------|--------------|
+| `ADMIN` | `/dashboard` |
+| `STAFF` | `/dashboard` |
+| `COORDINATOR` | `/dashboard/families` |
+| `MEMBER` | `/dashboard/members` |
+
+---
+
+## RBAC Configuration Persistence
+
+### Config Shape
+
+```typescript
+type RouteAccessEntry = { view: string[]; edit: string[] };
+type RoleAccessConfig = Record<string, RouteAccessEntry>;
+```
+
+Older array-only configs are still accepted for migration compatibility via `parseRoleAccessConfig()`.
+
+### Lifecycle
+
+1. **Admin edits permissions** in the role-access-matrix UI at `/dashboard/settings`
+2. **Saved to database** via `PUT /api/settings/rbac` → stored in `AppSetting` under key `role_access_config`
+3. **Response is mirrored to client** by `persistRoleAccessConfig()` in `lib/rbac-config.ts`
+4. **Mirrored data** goes to `localStorage` (key: `role_access_config`) and a cookie (same key, 30-day expiry)
+5. **`role-access-config-updated` event** is dispatched to notify subscribers
+6. **Sidebar** (`nav/const.ts`) and **RbacGuard** read from the stored config reactively
+
+### Key Functions (`lib/rbac.ts`)
+
+| Function | Description |
+|----------|-------------|
+| `normalizeAppRole(role)` | Normalizes "admin" → "ADMIN", handles null/undefined |
+| `hasRequiredRole(role, allowedRoles?)` | Checks user role against allowed list |
+| `resolveRoleAccessConfig(overrides?)` | Merges overrides with defaults, enforces admin-only routes |
+| `getRouteAccessForPath(pathname, config?)` | Returns `{ view, edit }` for a path (longest match wins) |
+| `canViewPath(role, pathname, config?)` / `canEditPath(...)` | Permission check helpers |
+| `getDefaultDashboardPath(role)` | Returns redirect path per role |
+| `parseRoleAccessConfig(rawConfig?)` | Parses JSON config, accepts both `RouteAccessEntry` and legacy `string[]` formats |
+| `serializeRoleAccessConfig(config)` | Serializes merged config to JSON |
+| `configToViewMap(config)` | Derives view-only `RoleAccessMap` from full config |
+
+### Server-Side Persistence (`lib/rbac-settings.ts`)
+
+```typescript
+getRoleAccessConfigFromDb()     // Reads from AppSetting, returns merged config
+saveRoleAccessConfigToDb(raw)   // Parses, normalizes, upserts to AppSetting
+```
