@@ -36,7 +36,7 @@ export async function GET(req: NextRequest) {
               ],
             },
             {
-              isPresbyter: true,
+              jabatan: { in: ["DIAKEN", "PENATUA"] },
             },
           ],
         }

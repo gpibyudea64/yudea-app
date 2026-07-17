@@ -1,0 +1,2 @@
+-- AlterEnum
+ALTER TYPE "Jabatan" ADD VALUE 'WARGA_JEMAAT';

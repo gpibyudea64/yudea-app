@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Member" ALTER COLUMN "jabatan" SET DEFAULT 'WARGA_JEMAAT';

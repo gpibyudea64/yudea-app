@@ -1,10 +1,10 @@
 export const runtime = "nodejs";
 
-import { attachPelkat } from "@/lib/helper";
+import { attachPelkat, buildPelkatWhere } from "@/lib/helper";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { NextRequest, NextResponse } from "next/server";
-import { Prisma, User } from "@prisma/client";
+import { MemberPelkat, Prisma, User } from "@prisma/client";
 
 // GET /api/member?page=1&limit=10
 export async function GET(req: NextRequest) {
@@ -60,6 +60,14 @@ export async function GET(req: NextRequest) {
       };
     }
 
+    // Apply server-side pelkat filter using the existing buildPelkatWhere helper
+    if (pelkat && pelkat !== "all" && Object.values(MemberPelkat).includes(pelkat as MemberPelkat)) {
+      where = {
+        ...where,
+        AND: [where, buildPelkatWhere(pelkat as MemberPelkat)],
+      };
+    }
+
     const [items, total] = await prisma.$transaction([
       prisma.member.findMany({
         where,
@@ -95,23 +103,13 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    const filteredMembers =
-      pelkat && pelkat !== "all"
-        ? membersWithPelkat.filter((m) => m.pelkat === pelkat)
-        : membersWithPelkat;
-
-    const filteredTotal =
-      pelkat && pelkat !== "all"
-        ? membersWithPelkat.filter((m) => m.pelkat === pelkat).length
-        : total;
-
     return NextResponse.json({
-      data: filteredMembers,
+      data: membersWithPelkat,
       meta: {
-        total: filteredTotal,
+        total,
         page,
         limit,
-        totalPages: Math.ceil(filteredTotal / limit),
+        totalPages: Math.ceil(total / limit),
       },
     });
   } catch {
@@ -161,7 +159,6 @@ export async function POST(req: NextRequest) {
         memberKelurahan: body.sameAddressAsFamily ? null : (body.memberKelurahan || null),
         isActive: body.isActive ?? true,
         isDeceased: body.isDeceased ?? false,
-        isPresbyter: body.isPresbyter ?? false,
         deathDate: body.deathDate ? new Date(body.deathDate) : null,
         statusBaptis: body.statusBaptis || 'BELUM',
         lokasiBaptis: body.lokasiBaptis || null,
