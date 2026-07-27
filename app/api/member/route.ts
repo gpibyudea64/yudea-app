@@ -5,6 +5,8 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { NextRequest, NextResponse } from "next/server";
 import { MemberPelkat, Prisma, User } from "@prisma/client";
+import { validateBody, handleApiError } from "@/lib/api-validate";
+import { createMemberSchema } from "@/schemas/api.schemas";
 
 // GET /api/member?page=1&limit=10
 export async function GET(req: NextRequest) {
@@ -112,11 +114,8 @@ export async function GET(req: NextRequest) {
         totalPages: Math.ceil(total / limit),
       },
     });
-  } catch {
-    return NextResponse.json(
-      { error: "Failed to fetch members" },
-      { status: 500 },
-    );
+  } catch (error) {
+    return handleApiError(error, "member GET", "Failed to fetch members");
   }
 }
 
@@ -125,70 +124,57 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
 
-    if (
-      !body.firstName ||
-      !body.gender ||
-      !body.birthDate ||
-      !body.role ||
-      !body.familyId ||
-      !body.birthCity ||
-      !body.phone
-    ) {
-      return NextResponse.json(
-        { error: "Missing required fields: firstName, lastName, birthCity, gender, birthDate, phone, role, familyId" },
-        { status: 400 },
-      );
-    }
+    const parsed = validateBody(createMemberSchema, body, "member POST");
+    if (parsed.error) return parsed.error;
+
+    const d = parsed.data;
 
     const member = await prisma.member.create({
       data: {
-        firstName: body.firstName,
-        lastName: body.lastName || null,
-        birthCity: body.birthCity,
-        gender: body.gender,
-        birthDate: new Date(body.birthDate),
-        phone: body.phone,
-        email: body.email || null,
-        role: body.role,
-        childNumber: body.role === "CHILD" ? (body.childNumber || null) : null,
-        sameAddressAsFamily: body.sameAddressAsFamily ?? true,
-        memberAddress: body.sameAddressAsFamily ? null : (body.memberAddress || null),
-        memberProvinsi: body.sameAddressAsFamily ? null : (body.memberProvinsi || null),
-        memberKotaKabupaten: body.sameAddressAsFamily ? null : (body.memberKotaKabupaten || null),
-        memberKecamatan: body.sameAddressAsFamily ? null : (body.memberKecamatan || null),
-        memberKelurahan: body.sameAddressAsFamily ? null : (body.memberKelurahan || null),
-        isActive: body.isActive ?? true,
-        isDeceased: body.isDeceased ?? false,
-        deathDate: body.deathDate ? new Date(body.deathDate) : null,
-        statusBaptis: body.statusBaptis || 'BELUM',
-        lokasiBaptis: body.lokasiBaptis || null,
-        tanggalBaptis: body.tanggalBaptis ? new Date(body.tanggalBaptis) : null,
-        statusSidi: body.statusSidi || 'BELUM',
-        lokasiSidi: body.lokasiSidi || null,
-        tanggalSidi: body.tanggalSidi ? new Date(body.tanggalSidi) : null,
-        statusPerkawinan: body.statusPerkawinan || 'BELUM_MENIKAH',
-        lokasiPemberkatanGereja: body.lokasiPemberkatanGereja || null,
-        tanggalPemberkatanGereja: body.tanggalPemberkatanGereja ? new Date(body.tanggalPemberkatanGereja) : null,
-        lokasiPerkawinanSipil: body.lokasiPerkawinanSipil || null,
-        tanggalPerkawinanSipil: body.tanggalPerkawinanSipil ? new Date(body.tanggalPerkawinanSipil) : null,
-        jabatan: body.jabatan || null,
-        gerejaAsal: body.gerejaAsal || null,
-        pendidikanTerakhir: body.pendidikanTerakhir || null,
-        pekerjaan: body.pekerjaan || null,
-        tahunDaftar: body.tahunDaftar || null,
-        pengalamanGereja: body.pengalamanGereja || null,
-        pengalamanOrganisasi: body.pengalamanOrganisasi || null,
-        keteranganLain: body.keteranganLain || null,
-        family: { connect: { id: body.familyId } },
+        firstName: d.firstName,
+        lastName: d.lastName || null,
+        birthCity: d.birthCity,
+        gender: d.gender,
+        birthDate: new Date(d.birthDate),
+        phone: d.phone,
+        email: d.email || null,
+        role: d.role,
+        childNumber: d.role === "CHILD" ? (d.childNumber || null) : null,
+        sameAddressAsFamily: d.sameAddressAsFamily ?? true,
+        memberAddress: d.sameAddressAsFamily ? null : (d.memberAddress || null),
+        memberProvinsi: d.sameAddressAsFamily ? null : (d.memberProvinsi || null),
+        memberKotaKabupaten: d.sameAddressAsFamily ? null : (d.memberKotaKabupaten || null),
+        memberKecamatan: d.sameAddressAsFamily ? null : (d.memberKecamatan || null),
+        memberKelurahan: d.sameAddressAsFamily ? null : (d.memberKelurahan || null),
+        isActive: d.isActive ?? true,
+        isDeceased: d.isDeceased ?? false,
+        deathDate: d.deathDate ? new Date(d.deathDate) : null,
+        statusBaptis: d.statusBaptis || 'BELUM',
+        lokasiBaptis: d.lokasiBaptis || null,
+        tanggalBaptis: d.tanggalBaptis ? new Date(d.tanggalBaptis) : null,
+        statusSidi: d.statusSidi || 'BELUM',
+        lokasiSidi: d.lokasiSidi || null,
+        tanggalSidi: d.tanggalSidi ? new Date(d.tanggalSidi) : null,
+        statusPerkawinan: d.statusPerkawinan || 'BELUM_MENIKAH',
+        lokasiPemberkatanGereja: d.lokasiPemberkatanGereja || null,
+        tanggalPemberkatanGereja: d.tanggalPemberkatanGereja ? new Date(d.tanggalPemberkatanGereja) : null,
+        lokasiPerkawinanSipil: d.lokasiPerkawinanSipil || null,
+        tanggalPerkawinanSipil: d.tanggalPerkawinanSipil ? new Date(d.tanggalPerkawinanSipil) : null,
+        jabatan: d.jabatan || null,
+        gerejaAsal: d.gerejaAsal || null,
+        pendidikanTerakhir: d.pendidikanTerakhir || null,
+        pekerjaan: d.pekerjaan || null,
+        tahunDaftar: d.tahunDaftar || null,
+        pengalamanGereja: d.pengalamanGereja || null,
+        pengalamanOrganisasi: d.pengalamanOrganisasi || null,
+        keteranganLain: d.keteranganLain || null,
+        family: { connect: { id: d.familyId } },
       },
       include: { family: true },
     });
 
     return NextResponse.json(attachPelkat(member), { status: 201 });
-  } catch {
-    return NextResponse.json(
-      { error: "Failed to create member" },
-      { status: 500 },
-    );
+  } catch (error) {
+    return handleApiError(error, "member POST", "Failed to create member");
   }
 }

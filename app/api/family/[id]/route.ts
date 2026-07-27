@@ -2,6 +2,8 @@ export const runtime = "nodejs";
 
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
+import { validateBody, handleApiError } from "@/lib/api-validate";
+import { updateFamilySchema } from "@/schemas/api.schemas";
 
 // GET /api/family/:id
 export async function GET(
@@ -24,11 +26,8 @@ export async function GET(
     }
 
     return NextResponse.json(family);
-  } catch {
-    return NextResponse.json(
-      { error: "Failed to fetch family" },
-      { status: 500 },
-    );
+  } catch (error) {
+    return handleApiError(error, "family GET", "Failed to fetch family");
   }
 }
 
@@ -40,7 +39,11 @@ export async function PATCH(
   try {
     const { id } = await params;
     const body = await req.json();
-    const { familyName, address, provinsi, kotaKabupaten, kecamatan, kelurahan, regionId, members } = body;
+
+    const parsed = validateBody(updateFamilySchema, body, "family PATCH");
+    if (parsed.error) return parsed.error;
+
+    const { familyName, address, provinsi, kotaKabupaten, kecamatan, kelurahan, regionId, members } = parsed.data;
 
     const family = await prisma.family.update({
       where: { id },
@@ -57,7 +60,7 @@ export async function PATCH(
         ...(members?.length
           ? {
               members: {
-                create: members.map(
+                create: (members as never[]).map(
                   (member: {
                     firstName: string;
                     lastName?: string;
@@ -86,12 +89,12 @@ export async function PATCH(
                     deathDate: member.deathDate
                       ? new Date(member.deathDate)
                       : null,
-                  }),
+                  } as never),
                 ),
               },
             }
           : {}),
-      },
+      } as never,
       include: {
         region: true,
         members: true,
@@ -99,11 +102,8 @@ export async function PATCH(
     });
 
     return NextResponse.json(family);
-  } catch {
-    return NextResponse.json(
-      { error: "Failed to update family" },
-      { status: 500 },
-    );
+  } catch (error) {
+    return handleApiError(error, "family PATCH", "Failed to update family");
   }
 }
 
@@ -118,10 +118,7 @@ export async function DELETE(
     await prisma.family.delete({ where: { id } });
 
     return NextResponse.json({ message: "Deleted successfully" });
-  } catch {
-    return NextResponse.json(
-      { error: "Failed to delete family" },
-      { status: 500 },
-    );
+  } catch (error) {
+    return handleApiError(error, "family DELETE", "Failed to delete family");
   }
 }

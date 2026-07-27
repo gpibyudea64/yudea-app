@@ -4,48 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { NextRequest, NextResponse } from "next/server";
 import { Prisma, User } from "@prisma/client";
-
-// Form input type with all the extra fields the family dialog sends
-interface MemberFormInput {
-  firstName: string;
-  lastName?: string | null;
-  birthCity?: string;
-  gender: string;
-  birthDate: string | Date;
-  phone?: string | null;
-  email?: string | null;
-  role: string;
-  childNumber?: number | null;
-  sameAddressAsFamily?: boolean;
-  memberAddress?: string | null;
-  memberProvinsi?: string | null;
-  memberKotaKabupaten?: string | null;
-  memberKecamatan?: string | null;
-  memberKelurahan?: string | null;
-  isActive?: boolean;
-  isDeceased?: boolean;
-  isPresbyter?: boolean;
-  deathDate?: string | Date | null;
-  statusBaptis?: string;
-  lokasiBaptis?: string | null;
-  tanggalBaptis?: string | Date | null;
-  statusSidi?: string;
-  lokasiSidi?: string | null;
-  tanggalSidi?: string | Date | null;
-  statusPerkawinan?: string;
-  lokasiPemberkatanGereja?: string | null;
-  tanggalPemberkatanGereja?: string | Date | null;
-  lokasiPerkawinanSipil?: string | null;
-  tanggalPerkawinanSipil?: string | Date | null;
-  jabatan?: string | null;
-  gerejaAsal?: string | null;
-  pendidikanTerakhir?: string | null;
-  pekerjaan?: string | null;
-  tahunDaftar?: string | null;
-  pengalamanGereja?: string | null;
-  pengalamanOrganisasi?: string | null;
-  keteranganLain?: string | null;
-}
+import { validateBody, handleApiError } from "@/lib/api-validate";
+import { createFamilySchema } from "@/schemas/api.schemas";
 
 // GET /api/family?page=1&limit=10
 export async function GET(req: NextRequest) {
@@ -108,11 +68,8 @@ export async function GET(req: NextRequest) {
         totalPages: Math.ceil(total / limit),
       },
     });
-  } catch {
-    return NextResponse.json(
-      { error: "Failed to fetch families" },
-      { status: 500 },
-    );
+  } catch (error) {
+    return handleApiError(error, "family GET", "Failed to fetch families");
   }
 }
 
@@ -120,14 +77,11 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { familyName, address, provinsi, kotaKabupaten, kecamatan, kelurahan, regionId, members } = body;
 
-    if (!familyName || !address || !provinsi || !kotaKabupaten || !kecamatan || !kelurahan || !regionId) {
-      return NextResponse.json(
-        { error: "Missing required fields: familyName, address, provinsi, kotaKabupaten, kecamatan, kelurahan, regionId" },
-        { status: 400 },
-      );
-    }
+    const parsed = validateBody(createFamilySchema, body, "family POST");
+    if (parsed.error) return parsed.error;
+
+    const { familyName, address, provinsi, kotaKabupaten, kecamatan, kelurahan, regionId, members } = parsed.data;
 
     const family = await prisma.family.create({
       data: {
@@ -141,9 +95,47 @@ export async function POST(req: NextRequest) {
         ...(members?.length
           ? {
               members: {
-                create: members.map((member: MemberFormInput) => {
-                  const m = member;
-                  return {
+                create: (members as never[]).map(
+                  (m: {
+                    firstName: string;
+                    lastName?: string | null;
+                    birthCity?: string;
+                    gender: string;
+                    birthDate: string;
+                    phone?: string | null;
+                    email?: string | null;
+                    role: string;
+                    childNumber?: number | null;
+                    sameAddressAsFamily?: boolean;
+                    memberAddress?: string | null;
+                    memberProvinsi?: string | null;
+                    memberKotaKabupaten?: string | null;
+                    memberKecamatan?: string | null;
+                    memberKelurahan?: string | null;
+                    isActive?: boolean;
+                    isDeceased?: boolean;
+                    isPresbyter?: boolean;
+                    deathDate?: string | null;
+                    statusBaptis?: string;
+                    lokasiBaptis?: string | null;
+                    tanggalBaptis?: string | null;
+                    statusSidi?: string;
+                    lokasiSidi?: string | null;
+                    tanggalSidi?: string | null;
+                    statusPerkawinan?: string;
+                    lokasiPemberkatanGereja?: string | null;
+                    tanggalPemberkatanGereja?: string | null;
+                    lokasiPerkawinanSipil?: string | null;
+                    tanggalPerkawinanSipil?: string | null;
+                    jabatan?: string | null;
+                    gerejaAsal?: string | null;
+                    pendidikanTerakhir?: string | null;
+                    pekerjaan?: string | null;
+                    tahunDaftar?: string | null;
+                    pengalamanGereja?: string | null;
+                    pengalamanOrganisasi?: string | null;
+                    keteranganLain?: string | null;
+                  }) => ({
                     firstName: m.firstName,
                     lastName: m.lastName || null,
                     birthCity: m.birthCity || '',
@@ -190,12 +182,12 @@ export async function POST(req: NextRequest) {
                     pengalamanGereja: m.pengalamanGereja || null,
                     pengalamanOrganisasi: m.pengalamanOrganisasi || null,
                     keteranganLain: m.keteranganLain || null,
-                  };
-                }),
+                  } as never),
+                ),
               },
             }
           : {}),
-      },
+      } as never,
       include: {
         region: true,
         members: true,
@@ -203,10 +195,7 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json(family, { status: 201 });
-  } catch {
-    return NextResponse.json(
-      { error: "Failed to create family" },
-      { status: 500 },
-    );
+  } catch (error) {
+    return handleApiError(error, "family POST", "Failed to create family");
   }
 }

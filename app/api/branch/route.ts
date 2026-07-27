@@ -2,6 +2,8 @@ export const runtime = "nodejs";
 
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
+import { validateBody, handleApiError } from "@/lib/api-validate";
+import { createBranchSchema } from "@/schemas/api.schemas";
 
 export async function GET(req: NextRequest) {
   try {
@@ -36,37 +38,24 @@ export async function GET(req: NextRequest) {
         totalPages: Math.ceil(total / limit),
       },
     });
-  } catch {
-    return NextResponse.json(
-      { error: "Failed to fetch branch" },
-      { status: 500 },
-    );
+  } catch (error) {
+    return handleApiError(error, "branch GET", "Failed to fetch branch");
   }
 }
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { name } = body;
 
-    if (!name) {
-      return NextResponse.json(
-        { error: "Missing required fields" },
-        { status: 400 },
-      );
-    }
+    const parsed = validateBody(createBranchSchema, body, "branch POST");
+    if (parsed.error) return parsed.error;
 
     const branch = await prisma.branch.create({
-      data: {
-        name: name,
-      },
+      data: { name: parsed.data.name },
     });
 
     return NextResponse.json(branch, { status: 201 });
-  } catch {
-    return NextResponse.json(
-      { error: "Failed to create branch" },
-      { status: 500 },
-    );
+  } catch (error) {
+    return handleApiError(error, "branch POST", "Failed to create branch");
   }
 }

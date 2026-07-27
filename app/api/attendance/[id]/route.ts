@@ -2,6 +2,8 @@ export const runtime = "nodejs";
 
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
+import { validateBody, handleApiError } from "@/lib/api-validate";
+import { updateAttendanceSchema } from "@/schemas/api.schemas";
 
 // GET /api/attendance/:id
 export async function GET(
@@ -11,7 +13,7 @@ export async function GET(
   const { id } = await params;
   try {
     const attendance = await prisma.attendance.findUnique({
-      where: { id: id },
+      where: { id },
     });
 
     if (!attendance) {
@@ -22,11 +24,8 @@ export async function GET(
     }
 
     return NextResponse.json(attendance);
-  } catch {
-    return NextResponse.json(
-      { error: "Failed to fetch attendance" },
-      { status: 500 },
-    );
+  } catch (error) {
+    return handleApiError(error, "attendance GET", "Failed to fetch attendance");
   }
 }
 
@@ -38,10 +37,12 @@ export async function PATCH(
   const { id } = await params;
   try {
     const body = await req.json();
-    const { serviceDate, serviceType, maleCount, femaleCount } = body;
+
+    const parsed = validateBody(updateAttendanceSchema, body, "attendance PATCH");
+    if (parsed.error) return parsed.error;
 
     const existing = await prisma.attendance.findUnique({
-      where: { id: id },
+      where: { id },
     });
 
     if (!existing) {
@@ -51,28 +52,25 @@ export async function PATCH(
       );
     }
 
-    const updatedMaleCount = maleCount ?? existing.maleCount;
-    const updatedFemaleCount = femaleCount ?? existing.femaleCount;
+    const updatedMaleCount = parsed.data.maleCount ?? existing.maleCount;
+    const updatedFemaleCount = parsed.data.femaleCount ?? existing.femaleCount;
 
     const attendance = await prisma.attendance.update({
-      where: { id: id },
+      where: { id },
       data: {
-        ...(serviceDate !== undefined && {
-          serviceDate: new Date(serviceDate),
+        ...(parsed.data.serviceDate !== undefined && {
+          serviceDate: new Date(parsed.data.serviceDate),
         }),
-        ...(serviceType !== undefined && { serviceType }),
-        ...(maleCount !== undefined && { maleCount }),
-        ...(femaleCount !== undefined && { femaleCount }),
+        ...(parsed.data.serviceType !== undefined && { serviceType: parsed.data.serviceType }),
+        ...(parsed.data.maleCount !== undefined && { maleCount: parsed.data.maleCount }),
+        ...(parsed.data.femaleCount !== undefined && { femaleCount: parsed.data.femaleCount }),
         totalCount: updatedMaleCount + updatedFemaleCount,
       },
     });
 
     return NextResponse.json(attendance);
-  } catch {
-    return NextResponse.json(
-      { error: "Failed to update attendance" },
-      { status: 500 },
-    );
+  } catch (error) {
+    return handleApiError(error, "attendance PATCH", "Failed to update attendance");
   }
 }
 
@@ -84,14 +82,11 @@ export async function DELETE(
   const { id } = await params;
   try {
     await prisma.attendance.delete({
-      where: { id: id },
+      where: { id },
     });
 
     return NextResponse.json({ message: "Deleted successfully" });
-  } catch {
-    return NextResponse.json(
-      { error: "Failed to delete attendance" },
-      { status: 500 },
-    );
+  } catch (error) {
+    return handleApiError(error, "attendance DELETE", "Failed to delete attendance");
   }
 }

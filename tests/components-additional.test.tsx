@@ -38,14 +38,14 @@ vi.mock("@/hooks/use-region", () => ({
 vi.mock("@/hooks/use-member", () => ({
   usePresbyters: vi.fn(),
   useMembers: vi.fn(),
-  useDeleteMember: vi.fn(),
-  useUpdateMember: vi.fn(),
+  useDeleteMember: vi.fn(() => ({ mutateAsync: vi.fn() })),
+  useUpdateMember: vi.fn(() => ({ mutateAsync: vi.fn() })),
   useCreateMember: vi.fn(),
 }));
 
 vi.mock("@/hooks/use-family", () => ({
   useFamilies: vi.fn(),
-  useDeleteFamily: vi.fn(),
+  useDeleteFamily: vi.fn(() => ({ mutateAsync: vi.fn() })),
   useCreateFamily: vi.fn(),
   useUpdateFamily: vi.fn(),
 }));
@@ -192,7 +192,7 @@ describe("PresbyterPage rendering", () => {
     } as any);
 
     render(<PresbyterPage />);
-    expect(screen.getByText("Majelis Jemaat Management")).toBeDefined();
+    expect(screen.getByText("Presbyter Management")).toBeDefined();
   });
 
   it("renders empty state", () => {
@@ -202,7 +202,7 @@ describe("PresbyterPage rendering", () => {
     } as any);
 
     render(<PresbyterPage />);
-    expect(screen.getByText("Tidak ada data Majelis Jemaat")).toBeDefined();
+    expect(screen.getByText("No presbyter records found")).toBeDefined();
   });
 
   it("renders list of presbyters with names", () => {
@@ -255,6 +255,75 @@ describe("FamiliesPage rendering", () => {
     expect(screen.getByText("Family Management")).toBeDefined();
     expect(screen.getByText("No family records found")).toBeDefined();
   });
+
+  it("renders loading state", () => {
+    vi.mocked(useFamilies).mockReturnValue({
+      data: undefined,
+      isLoading: true,
+    } as any);
+
+    render(
+      <QueryClientProvider client={new QueryClient()}>
+        <FamiliesPage />
+      </QueryClientProvider>,
+    );
+    expect(screen.getByText("Family Management")).toBeDefined();
+    expect(screen.getByText("Loading family data...")).toBeDefined();
+  });
+
+  it("renders family records in table", () => {
+    const familiesData = [
+      {
+        id: "1",
+        familyName: "Smith Family",
+        address: "Jl. Merdeka 123",
+        kotaKabupaten: "Jakarta",
+        kecamatan: "Menteng",
+        kelurahan: "Gondangdia",
+        provinsi: "DKI Jakarta",
+        regionId: "r1",
+        region: { id: "r1", name: "Sektor A" },
+        members: [
+          { id: "m1", firstName: "John", lastName: "Smith", isActive: true, role: "FAMILY_HEAD" },
+          { id: "m2", firstName: "Jane", lastName: "Smith", isActive: true, role: "WIFE" },
+        ],
+      },
+      {
+        id: "2",
+        familyName: "Doe Family",
+        address: "Jl. Sudirman 456",
+        kotaKabupaten: "Bandung",
+        kecamatan: "Coblong",
+        kelurahan: "Dago",
+        provinsi: "Jawa Barat",
+        regionId: "r2",
+        region: { id: "r2", name: "Sektor B" },
+        members: [{ id: "m3", firstName: "John", lastName: "Doe", isActive: false, role: "FAMILY_HEAD" }],
+      },
+    ];
+
+    vi.mocked(useFamilies).mockReturnValue({
+      data: { data: familiesData, meta: { total: 2, page: 1, limit: 10, totalPages: 1 } },
+      isLoading: false,
+    } as any);
+
+    render(
+      <QueryClientProvider client={new QueryClient()}>
+        <FamiliesPage />
+      </QueryClientProvider>,
+    );
+
+    expect(screen.getByText("Smith Family")).toBeDefined();
+    expect(screen.getByText("Doe Family")).toBeDefined();
+    expect(screen.getByText("Sektor A")).toBeDefined();
+    expect(screen.getByText("Sektor B")).toBeDefined();
+    expect(screen.getByText("Jakarta")).toBeDefined();
+    expect(screen.getByText("Bandung")).toBeDefined();
+    expect(screen.getByText("Aktif")).toBeDefined();
+    expect(screen.getByText("Tidak Aktif")).toBeDefined();
+    expect(screen.getAllByText("Edit").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("Delete").length).toBeGreaterThanOrEqual(1);
+  });
 });
 
 describe("MembersPage rendering", () => {
@@ -272,5 +341,80 @@ describe("MembersPage rendering", () => {
     );
     expect(screen.getByText("Member Management")).toBeDefined();
     expect(screen.getByText("No member records found")).toBeDefined();
+  });
+
+  it("renders loading state", () => {
+    vi.mocked(useMembers).mockReturnValue({
+      data: undefined,
+      isLoading: true,
+    } as any);
+
+    render(
+      <QueryClientProvider client={new QueryClient()}>
+        <MembersPage />
+      </QueryClientProvider>,
+    );
+    expect(screen.getByText("Member Management")).toBeDefined();
+    expect(screen.getByText("Loading member data...")).toBeDefined();
+  });
+
+  it("renders member records in table", () => {
+    const membersData = [
+      {
+        id: "1",
+        firstName: "John",
+        lastName: "Doe",
+        birthDate: "1980-01-15T00:00:00.000Z",
+        role: "FAMILY_HEAD",
+        pelkat: "PERSEKUTUAN_KAUM_BAPAK",
+        isActive: true,
+        isDeceased: false,
+        deathDate: null,
+        family: {
+          id: "f1",
+          familyName: "Doe Family",
+          address: "Jl. Test 1",
+          regionId: "r1",
+          region: { id: "r1", name: "Sektor A" },
+        },
+      },
+      {
+        id: "2",
+        firstName: "Jane",
+        lastName: "Smith",
+        birthDate: "1985-06-20T00:00:00.000Z",
+        role: "WIFE",
+        pelkat: "PERSEKUTUAN_KAUM_PEREMPUAN",
+        isActive: false,
+        isDeceased: true,
+        deathDate: "2025-03-10T00:00:00.000Z",
+        family: {
+          id: "f2",
+          familyName: "Smith Family",
+          address: "Jl. Test 2",
+          regionId: "r2",
+          region: { id: "r2", name: "Sektor B" },
+        },
+      },
+    ];
+
+    vi.mocked(useMembers).mockReturnValue({
+      data: { data: membersData, meta: { total: 2, page: 1, limit: 10, totalPages: 1 } },
+      isLoading: false,
+    } as any);
+
+    render(
+      <QueryClientProvider client={new QueryClient()}>
+        <MembersPage />
+      </QueryClientProvider>,
+    );
+
+    expect(screen.getByText("John Doe")).toBeDefined();
+    expect(screen.getByText("Jane Smith")).toBeDefined();
+    expect(screen.getByText("Sektor A")).toBeDefined();
+    expect(screen.getByText("Sektor B")).toBeDefined();
+    expect(screen.getByText("Hidup")).toBeDefined();
+    expect(screen.getByText("Meninggal")).toBeDefined();
+    expect(screen.getAllByText("Edit").length).toBeGreaterThanOrEqual(1);
   });
 });

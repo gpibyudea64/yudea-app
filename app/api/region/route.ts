@@ -2,6 +2,8 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { NextRequest, NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
+import { validateBody, handleApiError } from "@/lib/api-validate";
+import { createRegionSchema } from "@/schemas/api.schemas";
 
 export const runtime = "nodejs";
 
@@ -65,11 +67,8 @@ export async function GET(req: NextRequest) {
         totalPages: Math.ceil(total / limit),
       },
     });
-  } catch {
-    return NextResponse.json(
-      { error: "Failed to fetch regions" },
-      { status: 500 },
-    );
+  } catch (error) {
+    return handleApiError(error, "region GET", "Failed to fetch regions");
   }
 }
 
@@ -77,19 +76,14 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { name, branchId } = body;
 
-    if (!name || !branchId) {
-      return NextResponse.json(
-        { error: "Missing required fields" },
-        { status: 400 },
-      );
-    }
+    const parsed = validateBody(createRegionSchema, body, "region POST");
+    if (parsed.error) return parsed.error;
 
     const region = await prisma.region.create({
       data: {
-        name,
-        branch: { connect: { id: branchId } },
+        name: parsed.data.name,
+        branch: { connect: { id: parsed.data.branchId } },
       },
     });
 
@@ -103,10 +97,7 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json(full, { status: 201 });
-  } catch {
-    return NextResponse.json(
-      { error: "Failed to create region" },
-      { status: 500 },
-    );
+  } catch (error) {
+    return handleApiError(error, "region POST", "Failed to create region");
   }
 }

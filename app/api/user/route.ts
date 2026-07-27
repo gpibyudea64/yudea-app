@@ -3,6 +3,8 @@ import { APP_ROLES, normalizeAppRole } from "@/lib/rbac";
 import { requireAdmin } from "@/lib/server-auth";
 import bcrypt from "bcryptjs";
 import { NextRequest, NextResponse } from "next/server";
+import { validateBody, handleApiError } from "@/lib/api-validate";
+import { createUserSchema } from "@/schemas/api.schemas";
 
 export const runtime = "nodejs";
 
@@ -54,11 +56,8 @@ export async function GET(req: NextRequest) {
         totalPages: Math.ceil(total / limit),
       },
     });
-  } catch {
-    return NextResponse.json(
-      { error: "Failed to fetch users" },
-      { status: 500 },
-    );
+  } catch (error) {
+    return handleApiError(error, "user GET", "Failed to fetch users");
   }
 }
 
@@ -68,14 +67,11 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { name, email, password, role, regionId } = body;
 
-    if (!email || !password || !role) {
-      return NextResponse.json(
-        { error: "Email, password, and role are required" },
-        { status: 400 },
-      );
-    }
+    const parsed = validateBody(createUserSchema, body, "user POST");
+    if (parsed.error) return parsed.error;
+
+    const { name, email, password, role, regionId } = parsed.data;
 
     const normalizedRole = normalizeAppRole(role);
     if (!(APP_ROLES as readonly string[]).includes(normalizedRole)) {
@@ -120,10 +116,7 @@ export async function POST(req: NextRequest) {
       { ...user, role: normalizeAppRole(user.role) },
       { status: 201 },
     );
-  } catch {
-    return NextResponse.json(
-      { error: "Failed to create user" },
-      { status: 500 },
-    );
+  } catch (error) {
+    return handleApiError(error, "user POST", "Failed to create user");
   }
 }

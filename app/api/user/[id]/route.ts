@@ -3,6 +3,8 @@ import { APP_ROLES, normalizeAppRole } from "@/lib/rbac";
 import { requireAdmin } from "@/lib/server-auth";
 import bcrypt from "bcryptjs";
 import { NextRequest, NextResponse } from "next/server";
+import { validateBody, handleApiError } from "@/lib/api-validate";
+import { updateUserSchema } from "@/schemas/api.schemas";
 
 export const runtime = "nodejs";
 
@@ -17,7 +19,11 @@ export async function PATCH(
 
   try {
     const body = await req.json();
-    const { name, email, password, role, regionId } = body;
+
+    const parsed = validateBody(updateUserSchema, body, "user PATCH");
+    if (parsed.error) return parsed.error;
+
+    const { name, email, password, role, regionId } = parsed.data;
 
     const existing = await prisma.user.findUnique({ where: { id } });
     if (!existing) {
@@ -81,11 +87,8 @@ export async function PATCH(
       ...user,
       role: normalizeAppRole(user.role),
     });
-  } catch {
-    return NextResponse.json(
-      { error: "Failed to update user" },
-      { status: 500 },
-    );
+  } catch (error) {
+    return handleApiError(error, "user PATCH", "Failed to update user");
   }
 }
 
@@ -108,10 +111,7 @@ export async function DELETE(
   try {
     await prisma.user.delete({ where: { id } });
     return NextResponse.json({ message: "Deleted successfully" });
-  } catch {
-    return NextResponse.json(
-      { error: "Failed to delete user" },
-      { status: 500 },
-    );
+  } catch (error) {
+    return handleApiError(error, "user DELETE", "Failed to delete user");
   }
 }

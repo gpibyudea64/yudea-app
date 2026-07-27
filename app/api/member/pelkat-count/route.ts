@@ -4,6 +4,7 @@ import { MemberPelkat } from "@prisma/client";
 import { buildPelkatWhere } from "@/lib/helper";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { handleApiError } from "@/lib/api-validate";
 
 export async function GET() {
   try {
@@ -15,10 +16,7 @@ export async function GET() {
     );
 
     return NextResponse.json(counts);
-  } catch {
-    return NextResponse.json(
-      { error: "Failed to count pelkat members" },
-      { status: 500 },
-    );
+  } catch (error) {
+    return handleApiError(error, "member pelkat-count GET", "Failed to count pelkat members");
   }
 }

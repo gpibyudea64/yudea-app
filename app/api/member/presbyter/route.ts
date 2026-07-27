@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { Prisma, User } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
+import { handleApiError } from "@/lib/api-validate";
 
 export async function GET(req: NextRequest) {
   try {
@@ -88,10 +89,7 @@ export async function GET(req: NextRequest) {
         totalPages: Math.ceil(total / limit),
       },
     });
-  } catch {
-    return NextResponse.json(
-      { error: "Failed to fetch members" },
-      { status: 500 },
-    );
+  } catch (error) {
+    return handleApiError(error, "presbyter GET", "Failed to fetch members");
   }
 }

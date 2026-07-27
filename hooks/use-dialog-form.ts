@@ -26,9 +26,14 @@ export function useDialogForm<TFieldValues extends FieldValues>(
       for (const key of Object.keys(editingRecord)) {
         if (key in values) {
           const val = editingRecord[key]
-          // Handle Date objects — convert to date input string
+          // Handle Date objects and ISO date strings — convert to date input string
           if (val instanceof Date) {
             values[key] = val.toISOString().slice(0, 10)
+          } else if (
+            typeof val === 'string' &&
+            /^\d{4}-\d{2}-\d{2}T/.test(val)
+          ) {
+            values[key] = val.slice(0, 10)
           } else {
             values[key] = val
           }

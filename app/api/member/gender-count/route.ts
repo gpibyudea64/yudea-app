@@ -3,6 +3,7 @@ export const runtime = "nodejs";
 import { prisma } from "@/lib/prisma";
 import { Gender } from "@prisma/client";
 import { NextResponse } from "next/server";
+import { handleApiError } from "@/lib/api-validate";
 
 export async function GET() {
   try {
@@ -13,10 +14,7 @@ export async function GET() {
     ]);
 
     return NextResponse.json({ all, female, male });
-  } catch {
-    return NextResponse.json(
-      { error: "Failed to count members" },
-      { status: 500 },
-    );
+  } catch (error) {
+    return handleApiError(error, "member gender-count GET", "Failed to count members");
   }
 }

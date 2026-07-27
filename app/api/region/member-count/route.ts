@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { NextResponse } from "next/server";
+import { handleApiError } from "@/lib/api-validate";
 
 export const runtime = "nodejs";
 
@@ -45,10 +46,6 @@ export async function GET() {
 
     return NextResponse.json({ data });
   } catch (error) {
-    console.error("/api/region/member-count error:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch member counts by region" },
-      { status: 500 },
-    );
+    return handleApiError(error, "region member-count GET", "Failed to fetch member counts by region");
   }
 }

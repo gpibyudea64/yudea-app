@@ -279,6 +279,13 @@ describe("useFamilies", () => {
 });
 
 describe("useFamily", () => {
+  it("fetches single family by id", async () => {
+    vi.mocked(familyApi.getFamily).mockResolvedValue({ id: "1", familyName: "Smith", regionId: "r1" } as any);
+    const { result } = renderHook(() => useFamily("1"), { wrapper: createWrapper() });
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data?.familyName).toBe("Smith");
+  });
+
   it("is disabled when id is empty", async () => {
     const { result } = renderHook(() => useFamily(""), { wrapper: createWrapper() });
     expect(result.current.isPending).toBe(true);
@@ -292,6 +299,26 @@ describe("useCreateFamily mutation", () => {
     result.current.mutate({ familyName: "New", regionId: "r1", members: [] } as any);
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(familyApi.createFamily).toHaveBeenCalled();
+  });
+});
+
+describe("useUpdateFamily mutation", () => {
+  it("calls updateFamily", async () => {
+    vi.mocked(familyApi.updateFamily).mockResolvedValue({ id: "1", familyName: "Updated" } as any);
+    const { result } = renderHook(() => useUpdateFamily(), { wrapper: createWrapper() });
+    result.current.mutate({ id: "1", data: { familyName: "Updated" } });
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(familyApi.updateFamily).toHaveBeenCalledWith("1", { familyName: "Updated" });
+  });
+});
+
+describe("useDeleteFamily mutation", () => {
+  it("calls deleteFamily", async () => {
+    vi.mocked(familyApi.deleteFamily).mockResolvedValue(undefined);
+    const { result } = renderHook(() => useDeleteFamily(), { wrapper: createWrapper() });
+    result.current.mutate("1");
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(familyApi.deleteFamily).toHaveBeenCalledWith("1");
   });
 });
 
@@ -354,12 +381,46 @@ describe("useMemberPerRegions", () => {
   });
 });
 
+describe("useRegion", () => {
+  it("fetches single region by id", async () => {
+    vi.mocked(regionApi.getRegion).mockResolvedValue({ id: "1", name: "Region A", branchId: "b1" } as any);
+    const { result } = renderHook(() => useRegion("1"), { wrapper: createWrapper() });
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data?.name).toBe("Region A");
+  });
+
+  it("is disabled when id is empty", async () => {
+    const { result } = renderHook(() => useRegion(""), { wrapper: createWrapper() });
+    expect(result.current.isPending).toBe(true);
+  });
+});
+
 describe("useCreateRegion mutation", () => {
   it("calls createRegion", async () => {
     vi.mocked(regionApi.createRegion).mockResolvedValue({ id: "new", name: "New", branchId: "b1" } as any);
     const { result } = renderHook(() => useCreateRegion(), { wrapper: createWrapper() });
     result.current.mutate({ name: "New", branchId: "b1" });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
+  });
+});
+
+describe("useUpdateRegion mutation", () => {
+  it("calls updateRegion", async () => {
+    vi.mocked(regionApi.updateRegion).mockResolvedValue({ id: "1", name: "Updated", branchId: "b1" } as any);
+    const { result } = renderHook(() => useUpdateRegion(), { wrapper: createWrapper() });
+    result.current.mutate({ id: "1", data: { name: "Updated" } });
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(regionApi.updateRegion).toHaveBeenCalledWith("1", { name: "Updated" });
+  });
+});
+
+describe("useDeleteRegion mutation", () => {
+  it("calls deleteRegion", async () => {
+    vi.mocked(regionApi.deleteRegion).mockResolvedValue(undefined);
+    const { result } = renderHook(() => useDeleteRegion(), { wrapper: createWrapper() });
+    result.current.mutate("1");
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(regionApi.deleteRegion).toHaveBeenCalledWith("1");
   });
 });
 
@@ -383,6 +444,26 @@ describe("useCreateUser mutation", () => {
   });
 });
 
+describe("useUpdateUser mutation", () => {
+  it("calls updateUser", async () => {
+    vi.mocked(userApi.updateUser).mockResolvedValue({ id: "1", name: "Updated", email: "a@b.com", role: "ADMIN" } as any);
+    const { result } = renderHook(() => useUpdateUser(), { wrapper: createWrapper() });
+    result.current.mutate({ id: "1", data: { name: "Updated" } });
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(userApi.updateUser).toHaveBeenCalledWith("1", { name: "Updated" });
+  });
+});
+
+describe("useDeleteUser mutation", () => {
+  it("calls deleteUser", async () => {
+    vi.mocked(userApi.deleteUser).mockResolvedValue(undefined);
+    const { result } = renderHook(() => useDeleteUser(), { wrapper: createWrapper() });
+    result.current.mutate("1");
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(userApi.deleteUser).toHaveBeenCalledWith("1");
+  });
+});
+
 // ── Attendance hooks ──
 
 describe("useAttendances", () => {
@@ -394,12 +475,46 @@ describe("useAttendances", () => {
   });
 });
 
+describe("useAttendance", () => {
+  it("fetches single attendance by id", async () => {
+    vi.mocked(attendanceApi.getAttendance).mockResolvedValue({ id: "1", serviceDate: new Date(), serviceType: "Sunday", maleCount: 10, femaleCount: 15, totalCount: 25 } as any);
+    const { result } = renderHook(() => useAttendance("1"), { wrapper: createWrapper() });
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data?.totalCount).toBe(25);
+  });
+
+  it("is disabled when id is empty", async () => {
+    const { result } = renderHook(() => useAttendance(""), { wrapper: createWrapper() });
+    expect(result.current.isPending).toBe(true);
+  });
+});
+
 describe("useCreateAttendance mutation", () => {
   it("calls createAttendance", async () => {
     vi.mocked(attendanceApi.createAttendance).mockResolvedValue({ id: "new", serviceDate: "2026-06-01", serviceType: "Sunday", maleCount: 10, femaleCount: 15, totalCount: 25 } as any);
     const { result } = renderHook(() => useCreateAttendance(), { wrapper: createWrapper() });
     result.current.mutate({ serviceDate: "2026-06-01", serviceType: "Sunday", maleCount: 10, femaleCount: 15 });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
+  });
+});
+
+describe("useUpdateAttendance mutation", () => {
+  it("calls updateAttendance", async () => {
+    vi.mocked(attendanceApi.updateAttendance).mockResolvedValue({ id: "1", serviceDate: new Date(), serviceType: "Sunday", maleCount: 20, femaleCount: 15, totalCount: 35 } as any);
+    const { result } = renderHook(() => useUpdateAttendance(), { wrapper: createWrapper() });
+    result.current.mutate({ id: "1", data: { maleCount: 20 } });
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(attendanceApi.updateAttendance).toHaveBeenCalledWith("1", { maleCount: 20 });
+  });
+});
+
+describe("useDeleteAttendance mutation", () => {
+  it("calls deleteAttendance", async () => {
+    vi.mocked(attendanceApi.deleteAttendance).mockResolvedValue(undefined);
+    const { result } = renderHook(() => useDeleteAttendance(), { wrapper: createWrapper() });
+    result.current.mutate("1");
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(attendanceApi.deleteAttendance).toHaveBeenCalledWith("1");
   });
 });
 

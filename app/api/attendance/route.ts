@@ -2,6 +2,8 @@ export const runtime = "nodejs";
 
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
+import { validateBody, handleApiError } from "@/lib/api-validate";
+import { createAttendanceSchema } from "@/schemas/api.schemas";
 
 // GET /api/attendance?page=1&limit=10
 export async function GET(req: NextRequest) {
@@ -34,11 +36,8 @@ export async function GET(req: NextRequest) {
         totalPages: Math.ceil(total / limit),
       },
     });
-  } catch {
-    return NextResponse.json(
-      { error: "Failed to fetch attendance" },
-      { status: 500 },
-    );
+  } catch (error) {
+    return handleApiError(error, "attendance GET", "Failed to fetch attendance");
   }
 }
 
@@ -46,20 +45,11 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { serviceDate, serviceType, maleCount, femaleCount } = body;
 
-    if (
-      !serviceDate ||
-      !serviceType ||
-      maleCount == null ||
-      femaleCount == null
-    ) {
-      return NextResponse.json(
-        { error: "Missing required fields" },
-        { status: 400 },
-      );
-    }
+    const parsed = validateBody(createAttendanceSchema, body, "attendance POST");
+    if (parsed.error) return parsed.error;
 
+    const { serviceDate, serviceType, maleCount, femaleCount } = parsed.data;
     const totalCount = maleCount + femaleCount;
 
     const attendance = await prisma.attendance.create({
@@ -73,10 +63,7 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json(attendance, { status: 201 });
-  } catch {
-    return NextResponse.json(
-      { error: "Failed to create attendance" },
-      { status: 500 },
-    );
+  } catch (error) {
+    return handleApiError(error, "attendance POST", "Failed to create attendance");
   }
 }

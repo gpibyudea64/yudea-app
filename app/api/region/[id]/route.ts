@@ -2,6 +2,8 @@ export const runtime = "nodejs";
 
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
+import { validateBody, handleApiError } from "@/lib/api-validate";
+import { updateRegionSchema } from "@/schemas/api.schemas";
 
 async function findOneOrThrow(id: string) {
   const region = await prisma.region.findUnique({
@@ -31,11 +33,8 @@ export async function GET(
     }
 
     return NextResponse.json(region);
-  } catch {
-    return NextResponse.json(
-      { error: "Failed to fetch region" },
-      { status: 500 },
-    );
+  } catch (error) {
+    return handleApiError(error, "region GET", "Failed to fetch region");
   }
 }
 
@@ -47,14 +46,16 @@ export async function PATCH(
   try {
     const { id } = await params;
     const body = await req.json();
-    const { name, branchId } = body;
+
+    const parsed = validateBody(updateRegionSchema, body, "region PATCH");
+    if (parsed.error) return parsed.error;
 
     await prisma.region.update({
       where: { id },
       data: {
-        ...(name !== undefined && { name }),
-        ...(branchId !== undefined && {
-          branch: { connect: { id: branchId } },
+        ...(parsed.data.name !== undefined && { name: parsed.data.name }),
+        ...(parsed.data.branchId !== undefined && {
+          branch: { connect: { id: parsed.data.branchId } },
         }),
       },
     });
@@ -66,11 +67,8 @@ export async function PATCH(
     }
 
     return NextResponse.json(updated);
-  } catch {
-    return NextResponse.json(
-      { error: "Failed to update region" },
-      { status: 500 },
-    );
+  } catch (error) {
+    return handleApiError(error, "region PATCH", "Failed to update region");
   }
 }
 
@@ -85,10 +83,7 @@ export async function DELETE(
     await prisma.region.delete({ where: { id } });
 
     return NextResponse.json({ message: "Deleted successfully" });
-  } catch {
-    return NextResponse.json(
-      { error: "Failed to delete region" },
-      { status: 500 },
-    );
+  } catch (error) {
+    return handleApiError(error, "region DELETE", "Failed to delete region");
   }
 }

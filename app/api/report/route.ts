@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { NextRequest, NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
+import { handleApiError } from "@/lib/api-validate";
 
 // GET /api/report?pelkat=...&region=...
 // Returns flat member list with family info for report export
@@ -75,10 +76,7 @@ export async function GET(req: NextRequest) {
     }));
 
     return NextResponse.json({ data: reportData });
-  } catch {
-    return NextResponse.json(
-      { error: "Failed to fetch report data" },
-      { status: 500 },
-    );
+  } catch (error) {
+    return handleApiError(error, "report GET", "Failed to fetch report data");
   }
 }

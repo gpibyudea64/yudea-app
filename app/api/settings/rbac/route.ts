@@ -5,6 +5,8 @@ import {
 import { serializeRoleAccessConfig } from "@/lib/rbac";
 import { requireAdmin, requireAuth } from "@/lib/server-auth";
 import { NextRequest, NextResponse } from "next/server";
+import { validateBody, handleApiError } from "@/lib/api-validate";
+import { rbacSettingsSchema } from "@/schemas/api.schemas";
 
 export const runtime = "nodejs";
 
@@ -15,11 +17,8 @@ export async function GET() {
   try {
     const config = await getRoleAccessConfigFromDb();
     return NextResponse.json({ config });
-  } catch {
-    return NextResponse.json(
-      { error: "Failed to load access settings" },
-      { status: 500 },
-    );
+  } catch (error) {
+    return handleApiError(error, "rbac GET", "Failed to load access settings");
   }
 }
 
@@ -29,17 +28,18 @@ export async function PUT(req: NextRequest) {
 
   try {
     const body = await req.json();
+
+    const parsed = validateBody(rbacSettingsSchema, body, "rbac PUT");
+    if (parsed.error) return parsed.error;
+
     const raw =
-      typeof body.config === "string"
-        ? body.config
-        : serializeRoleAccessConfig(body.config);
+      typeof parsed.data.config === "string"
+        ? parsed.data.config
+        : serializeRoleAccessConfig(parsed.data.config as Parameters<typeof serializeRoleAccessConfig>[0]);
 
     const config = await saveRoleAccessConfigToDb(raw);
     return NextResponse.json({ config });
-  } catch {
-    return NextResponse.json(
-      { error: "Failed to save access settings" },
-      { status: 500 },
-    );
+  } catch (error) {
+    return handleApiError(error, "rbac PUT", "Failed to save access settings");
   }
 }

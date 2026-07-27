@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { buildPelkatWhere } from "@/lib/helper";
 import { BloodType, Gender, MemberPelkat } from "@prisma/client";
 import { NextResponse } from "next/server";
+import { handleApiError } from "@/lib/api-validate";
 
 export async function GET() {
   try {
@@ -47,10 +48,7 @@ export async function GET() {
         total: pelkatCounts[i],
       })),
     });
-  } catch {
-    return NextResponse.json(
-      { error: "Failed to fetch dashboard counts" },
-      { status: 500 },
-    );
+  } catch (error) {
+    return handleApiError(error, "dashboard counts GET", "Failed to fetch dashboard counts");
   }
 }

@@ -18,10 +18,10 @@ import {
 
 // Minimal type for what the test needs from a Prisma AppSetting result
 type PrismaAppSettingValue = {
-  key?: string;
-  value?: string;
-  id?: string;
-  updatedAt?: Date;
+  key: string;
+  value: string;
+  id: string;
+  updatedAt: Date;
 };
 
 const mockFindUnique = vi.mocked(prisma.appSetting.findUnique);
@@ -50,10 +50,12 @@ describe("rbac-settings integration", () => {
 
     it("returns parsed config when setting exists", async () => {
       mockFindUnique.mockResolvedValue({
+        id: "setting-1",
         key: "role_access_config",
         value: JSON.stringify({
           "/dashboard/members": { view: ["ADMIN", "STAFF"], edit: ["ADMIN"] },
         }),
+        updatedAt: new Date(),
       } as PrismaAppSettingValue);
 
       const config = await getRoleAccessConfigFromDb();
@@ -62,10 +64,12 @@ describe("rbac-settings integration", () => {
 
     it("handles legacy array-only config format", async () => {
       mockFindUnique.mockResolvedValue({
+        id: "setting-2",
         key: "role_access_config",
         value: JSON.stringify({
           "/dashboard/members": ["ADMIN"],
         }),
+        updatedAt: new Date(),
       } as PrismaAppSettingValue);
 
       const config = await getRoleAccessConfigFromDb();
@@ -76,7 +80,14 @@ describe("rbac-settings integration", () => {
 
   describe("saveRoleAccessConfigToDb", () => {
     it("normalizes and saves config to DB", async () => {
-      mockUpsert.mockResolvedValue({} as PrismaAppSettingValue);
+      mockUpsert.mockResolvedValue({
+        id: "setting-3",
+        key: "role_access_config",
+        value: JSON.stringify({
+          "/dashboard/members": { view: ["ADMIN"], edit: ["ADMIN"] },
+        }),
+        updatedAt: new Date(),
+      } as PrismaAppSettingValue);
 
       const result = await saveRoleAccessConfigToDb(
         JSON.stringify({
@@ -98,7 +109,14 @@ describe("rbac-settings integration", () => {
     });
 
     it("protects admin-only routes like /dashboard/settings", async () => {
-      mockUpsert.mockResolvedValue({} as PrismaAppSettingValue);
+      mockUpsert.mockResolvedValue({
+        id: "setting-4",
+        key: "role_access_config",
+        value: JSON.stringify({
+          "/dashboard/settings": { view: ["ADMIN"], edit: ["ADMIN"] },
+        }),
+        updatedAt: new Date(),
+      } as PrismaAppSettingValue);
 
       const result = await saveRoleAccessConfigToDb(
         JSON.stringify({

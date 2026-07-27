@@ -2,6 +2,8 @@ export const runtime = "nodejs";
 
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
+import { validateBody, handleApiError } from "@/lib/api-validate";
+import { updateBranchSchema } from "@/schemas/api.schemas";
 
 async function findOneOrThrow(id: string) {
   const branch = await prisma.branch.findUnique({
@@ -15,7 +17,7 @@ async function findOneOrThrow(id: string) {
   return branch;
 }
 
-// GET /api/attendance/:id
+// GET /api/branch/:id
 export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -29,15 +31,12 @@ export async function GET(
     }
 
     return NextResponse.json(branch);
-  } catch {
-    return NextResponse.json(
-      { error: "Failed to fetch branch" },
-      { status: 500 },
-    );
+  } catch (error) {
+    return handleApiError(error, "branch GET", "Failed to fetch branch");
   }
 }
 
-// PATCH /api/attendance/:id
+// PATCH /api/branch/:id
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -45,33 +44,29 @@ export async function PATCH(
   const { id } = await params;
   try {
     const body = await req.json();
-    const { name } = body;
+
+    const parsed = validateBody(updateBranchSchema, body, "branch PATCH");
+    if (parsed.error) return parsed.error;
 
     const existing = await findOneOrThrow(id);
-
     if (!existing) {
       return NextResponse.json({ error: "branch not found" }, { status: 404 });
     }
 
     const branch = await prisma.branch.update({
-      where: { id: id },
+      where: { id },
       data: {
-        ...(name !== undefined && {
-          name: name,
-        }),
+        ...(parsed.data.name !== undefined && { name: parsed.data.name }),
       },
     });
 
     return NextResponse.json(branch);
-  } catch {
-    return NextResponse.json(
-      { error: "Failed to update branch" },
-      { status: 500 },
-    );
+  } catch (error) {
+    return handleApiError(error, "branch PATCH", "Failed to update branch");
   }
 }
 
-// DELETE /api/attendance/:id
+// DELETE /api/branch/:id
 export async function DELETE(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -79,14 +74,11 @@ export async function DELETE(
   const { id } = await params;
   try {
     await prisma.branch.delete({
-      where: { id: id },
+      where: { id },
     });
 
     return NextResponse.json({ message: "Deleted successfully" });
-  } catch {
-    return NextResponse.json(
-      { error: "Failed to delete branch" },
-      { status: 500 },
-    );
+  } catch (error) {
+    return handleApiError(error, "branch DELETE", "Failed to delete branch");
   }
 }

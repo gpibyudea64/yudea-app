@@ -2,12 +2,18 @@ export const runtime = "nodejs";
 
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
+import { validateBody, handleApiError } from "@/lib/api-validate";
+import { splitFamilySchema } from "@/schemas/api.schemas";
 
 // POST /api/family/split
 // Creates a new family and moves selected members into it, promoting one as FAMILY_HEAD.
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
+
+    const parsed = validateBody(splitFamilySchema, body, "family split POST");
+    if (parsed.error) return parsed.error;
+
     const {
       originalFamilyId,
       newHeadMemberId,
@@ -19,14 +25,7 @@ export async function POST(req: NextRequest) {
       kecamatan,
       kelurahan,
       regionId,
-    } = body;
-
-    if (!originalFamilyId || !newHeadMemberId || !familyName || !regionId) {
-      return NextResponse.json(
-        { error: "Missing required fields: originalFamilyId, newHeadMemberId, familyName, regionId" },
-        { status: 400 },
-      );
-    }
+    } = parsed.data;
 
     const memberIdsToMove = movedMemberIds?.length ? movedMemberIds : [newHeadMemberId];
 

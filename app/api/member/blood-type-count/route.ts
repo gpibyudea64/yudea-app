@@ -3,6 +3,7 @@ export const runtime = "nodejs";
 import { prisma } from "@/lib/prisma";
 import { BloodType } from "@prisma/client";
 import { NextResponse } from "next/server";
+import { handleApiError } from "@/lib/api-validate";
 
 export async function GET() {
   try {
@@ -15,10 +16,7 @@ export async function GET() {
     ]);
 
     return NextResponse.json({ all, A, B, AB, O });
-  } catch {
-    return NextResponse.json(
-      { error: "Failed to count members" },
-      { status: 500 },
-    );
+  } catch (error) {
+    return handleApiError(error, "member blood-type-count GET", "Failed to count members");
   }
 }

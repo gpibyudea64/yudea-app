@@ -1,15 +1,16 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 // Mock the auth module from @/auth before any imports
+// Use vi.hoisted to create the mock before the hoisted vi.mock call runs
+const mockAuth = vi.hoisted(() => vi.fn());
 vi.mock("@/auth", () => ({
-  auth: vi.fn(),
+  auth: mockAuth,
 }));
 
-import { auth } from "@/auth";
 import { getSessionUser, requireAdmin, requireAuth } from "@/lib/server-auth";
 import { NextResponse } from "next/server";
 
-// Partial session type for test mocks
+// Partial session type for test mocks (extends Session for type compatibility)
 interface MockSession {
   user?: {
     id?: string;
@@ -28,13 +29,13 @@ afterEach(() => {
 describe("server-auth", () => {
   describe("getSessionUser", () => {
     it("returns null when no session exists", async () => {
-      vi.mocked(auth).mockResolvedValue(null);
+      mockAuth.mockResolvedValue(null);
       const result = await getSessionUser();
       expect(result).toBeNull();
     });
 
     it("returns null when session has no user id", async () => {
-      vi.mocked(auth).mockResolvedValue({
+      mockAuth.mockResolvedValue({
         user: { email: "test@example.com" },
       } as MockSession);
       const result = await getSessionUser();
@@ -42,7 +43,7 @@ describe("server-auth", () => {
     });
 
     it("returns normalized user from session", async () => {
-      vi.mocked(auth).mockResolvedValue({
+      mockAuth.mockResolvedValue({
         user: {
           id: "user-1",
           email: "admin@test.com",
@@ -61,7 +62,7 @@ describe("server-auth", () => {
     });
 
     it("handles missing optional fields", async () => {
-      vi.mocked(auth).mockResolvedValue({
+      mockAuth.mockResolvedValue({
         user: { id: "user-1", role: "staff" },
       } as MockSession);
 
@@ -77,7 +78,7 @@ describe("server-auth", () => {
 
   describe("requireAuth", () => {
     it("returns user when authenticated", async () => {
-      vi.mocked(auth).mockResolvedValue({
+      mockAuth.mockResolvedValue({
         user: { id: "user-1", role: "admin" },
       } as MockSession);
 
@@ -88,7 +89,7 @@ describe("server-auth", () => {
     });
 
     it("returns error when not authenticated", async () => {
-      vi.mocked(auth).mockResolvedValue(null);
+      mockAuth.mockResolvedValue(null);
 
       const result = await requireAuth();
       expect(result.user).toBeNull();
@@ -99,7 +100,7 @@ describe("server-auth", () => {
 
   describe("requireAdmin", () => {
     it("returns user when role is ADMIN", async () => {
-      vi.mocked(auth).mockResolvedValue({
+      mockAuth.mockResolvedValue({
         user: { id: "user-1", role: "admin" },
       } as MockSession);
 
@@ -109,7 +110,7 @@ describe("server-auth", () => {
     });
 
     it("returns error when not authenticated", async () => {
-      vi.mocked(auth).mockResolvedValue(null);
+      mockAuth.mockResolvedValue(null);
 
       const result = await requireAdmin();
       expect(result.user).toBeNull();
@@ -118,7 +119,7 @@ describe("server-auth", () => {
     });
 
     it("returns error when role is not ADMIN", async () => {
-      vi.mocked(auth).mockResolvedValue({
+      mockAuth.mockResolvedValue({
         user: { id: "user-2", role: "staff" },
       } as MockSession);
 
