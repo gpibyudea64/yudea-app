@@ -359,7 +359,8 @@ export default function MemberDialog({
                 </Label>
                 <Input
                   id="lastName"
-                  {...register("lastName", { required: "Nama belakang wajib diisi" })}
+                  placeholder="Opsional"
+                  {...register("lastName")}
                 />
                 {errors.lastName && (
                   <p className="text-sm text-red-500">{errors.lastName.message}</p>
@@ -373,7 +374,8 @@ export default function MemberDialog({
                 </Label>
                 <Input
                   id="birthCity"
-                  {...register("birthCity", { required: "Kota lahir wajib diisi" })}
+                  placeholder="Opsional"
+                  {...register("birthCity")}
                 />
                 {errors.birthCity && (
                   <p className="text-sm text-red-500">{errors.birthCity.message}</p>
@@ -404,7 +406,8 @@ export default function MemberDialog({
                 <Input
                   id="phone"
                   type="tel"
-                  {...register("phone", { required: "Nomor handphone wajib diisi" })}
+                  placeholder="Opsional"
+                  {...register("phone")}
                 />
                 {errors.phone && (
                   <p className="text-sm text-red-500">{errors.phone.message}</p>
@@ -472,10 +475,10 @@ export default function MemberDialog({
                   <Input
                     id="childNumber"
                     type="number"
-                    min="1"
+                    min="0"
                     {...register("childNumber", {
                       valueAsNumber: true,
-                      min: { value: 1, message: "Minimal 1" },
+                      min: { value: 0, message: "Minimal 0" },
                     })}
                   />
                   {errors.childNumber && (

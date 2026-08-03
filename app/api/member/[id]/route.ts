@@ -143,7 +143,15 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
-    await prisma.member.delete({ where: { id } });
+    // A member may be a region coordinator — clear the reference first
+    // (no DB-level onDelete for the coordinator relation).
+    await prisma.$transaction([
+      prisma.region.updateMany({
+        where: { coordinatorMemberId: id },
+        data: { coordinatorMemberId: null },
+      }),
+      prisma.member.delete({ where: { id } }),
+    ]);
     return NextResponse.json({ message: "Deleted successfully" });
   } catch (error) {
     return handleApiError(error, "member DELETE", "Failed to delete member");

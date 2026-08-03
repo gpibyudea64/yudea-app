@@ -2,7 +2,7 @@ export const runtime = "nodejs";
 
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
-import { validateBody, handleApiError } from "@/lib/api-validate";
+import { validateBody } from "@/lib/api-validate";
 import { splitFamilySchema } from "@/schemas/api.schemas";
 
 // POST /api/family/split

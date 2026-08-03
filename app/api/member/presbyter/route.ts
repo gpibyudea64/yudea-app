@@ -16,32 +16,35 @@ export async function GET(req: NextRequest) {
     const region = searchParams.get("region")?.trim() ?? "";
     const skip = (page - 1) * limit;
 
-    // Build where clause for search
-    let where: Prisma.MemberWhereInput = search
-      ? {
-          AND: [
-            {
-              OR: [
-                { firstName: { contains: search, mode: "insensitive" as const } },
-                { lastName: { contains: search, mode: "insensitive" as const } },
-                { email: { contains: search, mode: "insensitive" as const } },
-                { phone: { contains: search, mode: "insensitive" as const } },
-                {
-                  family: {
-                    familyName: {
-                      contains: search,
-                      mode: "insensitive" as const,
-                    },
+    // Presbyters are members whose jabatan is DIAKEN or PENATUA.
+    // The jabatan filter must ALWAYS apply — not just when searching.
+    let where: Prisma.MemberWhereInput = {
+      jabatan: { in: ["DIAKEN", "PENATUA"] },
+    };
+
+    if (search) {
+      where = {
+        AND: [
+          {
+            OR: [
+              { firstName: { contains: search, mode: "insensitive" as const } },
+              { lastName: { contains: search, mode: "insensitive" as const } },
+              { email: { contains: search, mode: "insensitive" as const } },
+              { phone: { contains: search, mode: "insensitive" as const } },
+              {
+                family: {
+                  familyName: {
+                    contains: search,
+                    mode: "insensitive" as const,
                   },
                 },
-              ],
-            },
-            {
-              jabatan: { in: ["DIAKEN", "PENATUA"] },
-            },
-          ],
-        }
-      : {};
+              },
+            ],
+          },
+          where,
+        ],
+      };
+    }
 
     if (region && region !== "all") {
       where = {

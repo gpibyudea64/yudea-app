@@ -174,7 +174,7 @@ describe("useDialogForm", () => {
     expect(reset).toHaveBeenCalledWith({});
   });
 
-  it("handles null values in editing record", () => {
+  it("falls back to defaults for null values in editing record", () => {
     const reset = vi.fn();
     const defaults = { name: "", email: "" };
     const editing = { name: "John", email: null };
@@ -183,9 +183,11 @@ describe("useDialogForm", () => {
       useDialogForm(reset, defaults, { editing, open: true }),
     );
 
+    // DB nullable fields come back as `null`; the forms use "" and the API
+    // schemas reject `null`, so null falls back to the default value.
     expect(reset).toHaveBeenCalledWith({
       name: "John",
-      email: null,
+      email: "",
     });
   });
 

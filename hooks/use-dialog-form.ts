@@ -26,8 +26,13 @@ export function useDialogForm<TFieldValues extends FieldValues>(
       for (const key of Object.keys(editingRecord)) {
         if (key in values) {
           const val = editingRecord[key]
-          // Handle Date objects and ISO date strings — convert to date input string
-          if (val instanceof Date) {
+          // DB nullable string fields come back as `null` (e.g. jabatan,
+          // gerejaAsal, deathDate). The forms' defaults use "" and the API
+          // schemas reject `null` for these, so fall back to the default.
+          if (val === null) {
+            values[key] = defaults[key]
+          } else if (val instanceof Date) {
+            // Handle Date objects and ISO date strings — convert to date input string
             values[key] = val.toISOString().slice(0, 10)
           } else if (
             typeof val === 'string' &&

@@ -73,9 +73,27 @@ export async function DELETE(
 ) {
   const { id } = await params;
   try {
-    await prisma.branch.delete({
-      where: { id },
+    // Cascade: everything under the branch — regions, families, members,
+    // and user assignments (no DB-level onDelete: Cascade).
+    const memberIds = await prisma.member.findMany({
+      where: { family: { region: { branchId: id } } },
+      select: { id: true },
     });
+
+    await prisma.$transaction([
+      prisma.user.updateMany({
+        where: { region: { branchId: id } },
+        data: { regionId: null },
+      }),
+      prisma.region.updateMany({
+        where: { coordinatorMemberId: { in: memberIds.map((m) => m.id) } },
+        data: { coordinatorMemberId: null },
+      }),
+      prisma.member.deleteMany({ where: { family: { region: { branchId: id } } } }),
+      prisma.family.deleteMany({ where: { region: { branchId: id } } }),
+      prisma.region.deleteMany({ where: { branchId: id } }),
+      prisma.branch.delete({ where: { id } }),
+    ]);
 
     return NextResponse.json({ message: "Deleted successfully" });
   } catch (error) {

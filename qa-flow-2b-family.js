@@ -93,6 +93,15 @@ async function pickOption(page, triggerId, index = 0) {
   await page.waitForTimeout(600);
   await page.locator('input[placeholder="Nama Depan"]').first().fill(headName);
   await page.locator('input[placeholder="Nama Depan"]').first().locator("xpath=following::input[@type='date'][1]").fill("1985-05-10");
+  // Set member 1's role to Kepala Keluarga (FAMILY_HEAD) via the UI select.
+  // New members default to role CHILD, so the trigger shows "Anak".
+  const roleTrigger = page.locator('[role="dialog"] button', { hasText: /^Anak$/ }).first();
+  if ((await roleTrigger.count()) > 0) {
+    await robustClick(page, roleTrigger);
+    await page.waitForTimeout(600);
+    await robustClick(page, page.locator('[role="option"]', { hasText: "Kepala Keluarga" }).first());
+    await page.waitForTimeout(500);
+  }
   await robustClick(page, page.getByRole("button", { name: /Add Member/i }));
   await page.waitForTimeout(600);
   await page.locator('input[placeholder="Nama Depan"]').nth(1).fill(childName);
@@ -102,14 +111,13 @@ async function pickOption(page, triggerId, index = 0) {
   record("Family created with 2 members (POST)", page.url().includes("families"));
 
   // Verify via API
-  const api = await ctx.newContext();
-  const cookies = await ctx.cookies();
-  // reuse the page's cookie jar through page.request
   const famResp = await page.request.get(`${BASE}/api/family?page=1&limit=50&search=${encodeURIComponent(TAG)}`);
   const famData = await famResp.json();
   const createdFam = famData.data?.find((f) => f.familyName === famName);
   record("Family persisted with region data", !!createdFam && !!createdFam.provinsi && !!createdFam.kelurahan, createdFam ? `${createdFam.provinsi}/${createdFam.kotaKabupaten}/${createdFam.kecamatan}/${createdFam.kelurahan}` : "not found");
   record("Family has 2 members", createdFam?.members?.length === 2, `members: ${createdFam?.members?.length}`);
+  const headMember = createdFam?.members?.find((m) => m.firstName === headName) ?? createdFam?.members?.[0];
+  record("Head member has role FAMILY_HEAD (via dialog select)", headMember?.role === "FAMILY_HEAD", `role: ${headMember?.role}`);
 
   // ── MEMBER appears in members list ──────────────────────────
   await page.goto(BASE + "/dashboard/members", { waitUntil: "domcontentloaded" });
@@ -125,7 +133,8 @@ async function pickOption(page, triggerId, index = 0) {
   await robustClick(page, editBtn);
   await page.waitForTimeout(1500);
   await page.fill("#lastName", `${TAG} Edited`);
-  await robustClick(page, page.getByRole("button", { name: /^Update$/ }));
+  // The member dialog submit button is labelled "Simpan" in the Indonesian UI
+  await robustClick(page, page.getByRole("button", { name: /^Simpan$/ }));
   await page.waitForTimeout(3000);
   const updResp = await page.request.get(`${BASE}/api/member?page=1&limit=10&search=${encodeURIComponent(headName)}`);
   const updData = await updResp.json();

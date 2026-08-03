@@ -72,17 +72,13 @@ const MOCK_REGION_MEMBER_COUNTS = {
 // ─── Setup: mock API routes before each test ──────────────────────────────
 
 test.beforeEach(async ({ page }) => {
-  // Mock auth — return a valid session to bypass the login redirect
-  await page.route("**/api/auth/session", async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify({
-        user: { id: "user-1", email: "admin@test.com", name: "Admin", role: "ADMIN", regionId: null },
-        expires: new Date(Date.now() + 86400000).toISOString(),
-      }),
-    });
-  });
+  // Auth is enforced server-side by proxy.ts, so mocking /api/auth/session
+  // alone cannot bypass the login redirect. Perform a real UI login first.
+  await page.goto("/public/login");
+  await page.fill("#email", "admin@example.com");
+  await page.fill("#password", "admin123");
+  await page.click('button[type="submit"]');
+  await page.waitForURL("**/dashboard**", { timeout: 30000 });
 
   // Mock RBAC settings
   await page.route("**/api/settings/rbac", async (route) => {
@@ -262,8 +258,8 @@ test.describe("Member Management - Dialog E2E", () => {
     // Click Create Member button
     await page.getByRole("button", { name: "Create Member" }).click();
 
-    // Verify dialog opened
-    await expect(page.getByText("Create Member").first()).toBeVisible({ timeout: 5000 });
+    // Verify dialog opened (Indonesian UI: "Tambah Warga Jemaat")
+    await expect(page.getByText("Tambah Warga Jemaat").first()).toBeVisible({ timeout: 5000 });
   });
 
   test("Edit Member dialog pre-fills existing data", async ({ page }) => {
@@ -276,6 +272,6 @@ test.describe("Member Management - Dialog E2E", () => {
     await editButton.click();
 
     // Wait for dialog to appear with pre-filled data
-    await expect(page.getByText("Update Member").first()).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText("Edit Warga Jemaat").first()).toBeVisible({ timeout: 5000 });
   });
 });

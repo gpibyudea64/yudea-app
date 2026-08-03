@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "../ui/button";
 import {
   Dialog,
@@ -64,8 +64,12 @@ export default function SplitFamilyDialog({
   const [selectedMemberIds, setSelectedMemberIds] = useState<Set<string>>(new Set());
   const [saving, setSaving] = useState(false);
 
-  // Pre-fill from original family when dialog opens
-  useEffect(() => {
+  // Pre-fill from the original family when a new split target is provided.
+  // This uses React's recommended "adjust state during render when props
+  // change" pattern instead of an effect (avoids cascading re-renders).
+  const [lastData, setLastData] = useState(data);
+  if (data !== lastData) {
+    setLastData(data);
     if (data && open) {
       setFamilyName(`${data.originalFamilyName} - ${data.newHeadName}`);
       setSelectedRegionId(data.defaultRegionId);
@@ -77,7 +81,7 @@ export default function SplitFamilyDialog({
       // Pre-select ALL members by default
       setSelectedMemberIds(new Set(data.allMembers.map((m) => m.id)));
     }
-  }, [data, open]);
+  }
 
   if (!data) return null;
   const d = data;

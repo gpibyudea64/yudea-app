@@ -78,7 +78,7 @@ async function main() {
 
   // --- Seed Coordinator Users for Each Region ---
   const coordinatorPassword = await bcrypt.hash("coordinator123", 10);
-  const regionA_Coordinator = await prisma.user.create({
+  await prisma.user.create({
     data: {
       name: "Coordinator Region A",
       email: "coordinator-a@example.com",

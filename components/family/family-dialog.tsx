@@ -32,7 +32,7 @@ import {
   Briefcase,
   FileText,
 } from "lucide-react";
-import { Dispatch, SetStateAction, useCallback, useEffect, useRef, useState } from "react";
+import { Dispatch, SetStateAction, useCallback, useEffect, useMemo, useState } from "react";
 import { Controller, useFieldArray, useForm, useWatch, type Control, type UseFormRegister } from "react-hook-form";
 import { toast } from "sonner";
 import { useDialogForm } from "@/hooks/use-dialog-form";
@@ -105,7 +105,7 @@ function IndonesiaRegionSelects({
   onRegionReady,
 }: {
   initialValues?: { provinsi?: string; kotaKabupaten?: string; kecamatan?: string; kelurahan?: string };
-  onRegionReady: (getRegion: () => { provinsi: string; kotaKabupaten: string; kecamatan: string; kelurahan: string }) => void;
+  onRegionReady: (region: { provinsi: string; kotaKabupaten: string; kecamatan: string; kelurahan: string }) => void;
 }) {
   const { data: provinces } = useProvinces();
   const [provinsiCode, setProvinsiCode] = useState("");
@@ -113,26 +113,27 @@ function IndonesiaRegionSelects({
   const [kecamatanCode, setKecamatanCode] = useState("");
   const [kelurahanCode, setKelurahanCode] = useState("");
 
-  const [synced, setSynced] = useState(false);
-  if (!synced && provinces && initialValues?.provinsi) {
-    const p = provinces.find((p: { name: string }) => p.name === initialValues.provinsi);
-    if (p) setProvinsiCode(p.code);
-    setSynced(true);
-  }
-
+  // Sync each cascade level independently from the editing values. A single
+  // "synced" flag would stop the chain after the first level (the deeper
+  // levels' data isn't loaded yet on that render), leaving kota/kecamatan/
+  // kelurahan empty when editing an existing family.
   const { data: regencies } = useRegencies(provinsiCode || null);
   const { data: districts } = useDistricts(kotaCode || null);
   const { data: villages } = useVillages(kecamatanCode || null);
 
-  if (!synced && regencies && initialValues?.kotaKabupaten) {
+  if (!provinsiCode && provinces && initialValues?.provinsi) {
+    const p = provinces.find((p: { name: string }) => p.name === initialValues.provinsi);
+    if (p) setProvinsiCode(p.code);
+  }
+  if (provinsiCode && !kotaCode && regencies && initialValues?.kotaKabupaten) {
     const r = regencies.find((r: { name: string }) => r.name === initialValues.kotaKabupaten);
     if (r) setKotaCode(r.code);
   }
-  if (!synced && districts && initialValues?.kecamatan) {
+  if (kotaCode && !kecamatanCode && districts && initialValues?.kecamatan) {
     const d = districts.find((d: { name: string }) => d.name === initialValues.kecamatan);
     if (d) setKecamatanCode(d.code);
   }
-  if (!synced && villages && initialValues?.kelurahan) {
+  if (kecamatanCode && !kelurahanCode && villages && initialValues?.kelurahan) {
     const v = villages.find((v: { name: string }) => v.name === initialValues.kelurahan);
     if (v) setKelurahanCode(v.code);
   }
@@ -146,12 +147,12 @@ function IndonesiaRegionSelects({
   // (not during render) — calling the parent's setState during render here
   // caused an infinite update loop (React error #185) that crashed the dialog.
   useEffect(() => {
-    onRegionReady(() => ({
+    onRegionReady({
       provinsi: provinsiName,
       kotaKabupaten: kotaName,
       kecamatan: kecamatanName,
       kelurahan: kelurahanName,
-    }));
+    });
   }, [onRegionReady, provinsiName, kotaName, kecamatanName, kelurahanName]);
 
   return (
@@ -300,11 +301,16 @@ export default function FamilyDialog({
       value: region.id,
     })) ?? [];
 
-  const regionRef = useRef(() => ({ provinsi: "", kotaKabupaten: "", kecamatan: "", kelurahan: "" }));
+  const [region, setRegion] = useState({
+    provinsi: "",
+    kotaKabupaten: "",
+    kecamatan: "",
+    kelurahan: "",
+  });
 
   const handleRegionReady = useCallback(
-    (fn: () => { provinsi: string; kotaKabupaten: string; kecamatan: string; kelurahan: string }) => {
-      regionRef.current = fn;
+    (nextRegion: { provinsi: string; kotaKabupaten: string; kecamatan: string; kelurahan: string }) => {
+      setRegion(nextRegion);
     },
     [],
   );
@@ -333,6 +339,15 @@ export default function FamilyDialog({
     name: "members",
   });
 
+  // Existing members are displayed read-only and managed from the members
+  // page — never pre-populate the "New Warga Jemaat" form with them.
+  // Memoized so the reference stays stable across renders (a fresh object
+  // every render would retrigger useDialogForm's reset effect endlessly).
+  const editingWithoutMembers = useMemo(
+    () => (editing ? { ...editing, members: [] } : null),
+    [editing],
+  );
+
   useDialogForm(reset, {
     familyName: "",
     address: "",
@@ -342,12 +357,10 @@ export default function FamilyDialog({
     kelurahan: "",
     regionId: "",
     members: [],
-  }, { editing, open });
+  }, { editing: editingWithoutMembers, open });
 
   async function onSubmit(values: FamilyForm) {
     try {
-      const region = regionRef.current();
-
       if (!region.provinsi) {
         toast.error("Provinsi harus dipilih");
         return;
@@ -707,7 +720,7 @@ function MemberFormBlock({
         {selectedRole === "CHILD" && (
           <Input
             type="number"
-            min="1"
+            min="0"
             placeholder="Anak ke-"
             {...register(`members.${index}.childNumber` as const, {
               valueAsNumber: true,

@@ -46,7 +46,7 @@ export default function AttendancePage() {
   );
   const deleteMutation = useDeleteAttendance();
 
-  const attendances = attendanceResult?.data ?? [];
+  const attendances = useMemo(() => attendanceResult?.data ?? [], [attendanceResult]);
 
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Attendance | null>(null);

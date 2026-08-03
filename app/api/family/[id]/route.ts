@@ -80,7 +80,7 @@ export async function PATCH(
                     birthCity: member.birthCity || '',
                     gender: member.gender,
                     birthDate: new Date(member.birthDate),
-                    phone: member.phone || null,
+                    phone: member.phone || '',
                     email: member.email || null,
                     role: member.role,
                     childNumber: member.role === 'CHILD' ? (member.childNumber || null) : null,
@@ -115,7 +115,21 @@ export async function DELETE(
   try {
     const { id } = await params;
 
-    await prisma.family.delete({ where: { id } });
+    // Cascade: members reference the family (no DB-level onDelete: Cascade),
+    // and a member may be a region coordinator — clear that reference first.
+    const memberIds = await prisma.member.findMany({
+      where: { familyId: id },
+      select: { id: true },
+    });
+
+    await prisma.$transaction([
+      prisma.region.updateMany({
+        where: { coordinatorMemberId: { in: memberIds.map((m) => m.id) } },
+        data: { coordinatorMemberId: null },
+      }),
+      prisma.member.deleteMany({ where: { familyId: id } }),
+      prisma.family.delete({ where: { id } }),
+    ]);
 
     return NextResponse.json({ message: "Deleted successfully" });
   } catch (error) {

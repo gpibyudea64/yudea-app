@@ -24,10 +24,10 @@ const perkawinanStatusSchema = z.nativeEnum(PerkawinanStatus);
 export const createMemberSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().optional().default(""),
-  birthCity: z.string().min(1, "Birth city is required"),
+  birthCity: z.string().optional().default(""),
   gender: genderSchema,
   birthDate: z.string().min(1, "Birth date is required"),
-  phone: z.string().min(1, "Phone is required"),
+  phone: z.string().optional().default(""),
   email: z.string().optional().default(""),
   role: memberRoleSchema,
   childNumber: z.coerce.number().int().min(0).optional().default(0),

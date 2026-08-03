@@ -64,7 +64,7 @@ function record(name, ok, detail = "") {
   const pages = [
     ["/dashboard/members", "Member Management"],
     ["/dashboard/families", "Family Management"],
-    ["/dashboard/regions", "Region Management"],
+    ["/dashboard/regions", "Sektor Pelayanan Management"],
     ["/dashboard/branches", "Branch Management"],
     ["/dashboard/attendance", "Attendance Management"],
     ["/dashboard/birthday", "Birthday"],
@@ -88,31 +88,25 @@ function record(name, ok, detail = "") {
   const body = await page.locator("body").innerText().catch(() => "");
   record("Dashboard stats render", body.includes("Members") || body.includes("Family") || body.length > 200);
 
-  // 6. Logout via UI if possible
+  // 6. Logout via the avatar dropdown (Radix trigger exposes aria-haspopup="menu").
+  // NB: never match button text "Keluar" directly — it is a substring of the
+  // sidebar item "Keluarga" and would click the wrong control.
   await page.goto(BASE + "/dashboard", { waitUntil: "domcontentloaded" });
   await page.waitForTimeout(2000);
-  const logoutBtn = page.locator("button:has-text('Logout'), button:has-text('Keluar'), button:has-text('Sign out')").first();
-  if ((await logoutBtn.count()) > 0) {
-    await logoutBtn.click();
-    await page.waitForTimeout(2500);
-    record("Logout works", page.url().includes("login"), page.url());
-  } else {
-    // try avatar dropdown
-    const avatar = page.locator("button").filter({ has: page.locator("img, svg") }).first();
-    if ((await avatar.count()) > 0) {
-      await avatar.click();
-      await page.waitForTimeout(800);
-      const menuLogout = page.locator("text=Logout, text=Sign out, text=Keluar").first();
-      if ((await menuLogout.count()) > 0) {
-        await menuLogout.click();
-        await page.waitForTimeout(2500);
-        record("Logout via menu works", page.url().includes("login"), page.url());
-      } else {
-        record("Logout button not found", false, "no logout control found");
-      }
+  const avatar = page.locator('button[aria-haspopup="menu"]').first();
+  if ((await avatar.count()) > 0) {
+    await avatar.click();
+    await page.waitForTimeout(800);
+    const menuLogout = page.locator("[role='menuitem']", { hasText: "Logout" }).first();
+    if ((await menuLogout.count()) > 0) {
+      await menuLogout.click();
+      await page.waitForTimeout(2500);
+      record("Logout works", page.url().includes("login"), page.url());
     } else {
-      record("Logout button not found", false, "no avatar or logout control");
+      record("Logout button not found", false, "no logout control found");
     }
+  } else {
+    record("Logout button not found", false, "no avatar or logout control");
   }
 
   record("No console errors during navigation", consoleErrors.length === 0, consoleErrors.slice(0, 5).join(" || "));

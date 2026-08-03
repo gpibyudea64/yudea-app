@@ -140,7 +140,7 @@ export async function POST(req: NextRequest) {
                     birthCity: m.birthCity || '',
                     gender: m.gender,
                     birthDate: new Date(m.birthDate),
-                    phone: m.phone || null,
+                    phone: m.phone || '',
                     email: m.email || null,
                     role: m.role,
                     childNumber: m.role === 'CHILD' ? (m.childNumber || null) : null,
