@@ -114,7 +114,6 @@ export async function POST(req: NextRequest) {
                     memberKelurahan?: string | null;
                     isActive?: boolean;
                     isDeceased?: boolean;
-                    isPresbyter?: boolean;
                     deathDate?: string | null;
                     statusBaptis?: string;
                     lokasiBaptis?: string | null;
@@ -153,7 +152,6 @@ export async function POST(req: NextRequest) {
                     memberKelurahan: m.sameAddressAsFamily ? null : (m.memberKelurahan || null),
                     isActive: m.isActive ?? true,
                     isDeceased: m.isDeceased ?? false,
-                    isPresbyter: m.isPresbyter ?? false,
                     deathDate: m.deathDate ? new Date(m.deathDate) : null,
                     statusBaptis: m.statusBaptis || 'BELUM',
                     lokasiBaptis: m.statusBaptis === 'SUDAH' ? (m.lokasiBaptis || null) : null,

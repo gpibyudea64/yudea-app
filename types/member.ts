@@ -23,7 +23,12 @@ export type MemberPelkat =
 export type BaptisStatus = "SUDAH" | "BELUM";
 export type SidiStatus = "SUDAH" | "BELUM";
 export type PerkawinanStatus = "BELUM_MENIKAH" | "JANDA" | "DUDA" | "MENIKAH";
-export type Jabatan = "DIAKEN" | "PENATUA" | "PENGURUS_PELKAT" | "PENGURUS_KOMISI";
+export type Jabatan =
+  | "WARGA_JEMAAT"
+  | "DIAKEN"
+  | "PENATUA"
+  | "PENGURUS_PELKAT"
+  | "PENGURUS_KOMISI";
 
 export type Member = {
   id: string;
@@ -119,7 +124,6 @@ export type MemberForm = {
   deathDate: string;
   tanggalPindah: string;
   familyId: string;
-  isPresbyter: boolean;
 };
 
 export const genderOptions: Array<{ label: string; value: Gender }> = [
@@ -156,6 +160,7 @@ export const perkawinanStatusOptions: Array<{ label: string; value: PerkawinanSt
 ];
 
 export const jabatanOptions: Array<{ label: string; value: Jabatan }> = [
+  { label: "Warga Jemaat", value: "WARGA_JEMAAT" },
   { label: "Diaken", value: "DIAKEN" },
   { label: "Penatua", value: "PENATUA" },
   { label: "Pengurus PELKAT", value: "PENGURUS_PELKAT" },

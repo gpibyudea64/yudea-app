@@ -30,7 +30,7 @@ export const createMemberSchema = z.object({
   phone: z.string().min(1, "Phone is required"),
   email: z.string().optional().default(""),
   role: memberRoleSchema,
-  childNumber: z.coerce.number().int().min(1).optional().default(0),
+  childNumber: z.coerce.number().int().min(0).optional().default(0),
   sameAddressAsFamily: z.boolean().optional().default(true),
   memberAddress: z.string().optional().default(""),
   memberProvinsi: z.string().optional().default(""),
@@ -61,7 +61,6 @@ export const createMemberSchema = z.object({
   deathDate: z.string().optional().default(""),
   tanggalPindah: z.string().optional().default(""),
   familyId: z.string().min(1, "Family is required"),
-  isPresbyter: z.boolean().optional().default(false),
 });
 
 /**
@@ -82,7 +81,7 @@ export const updateMemberSchema = z.object({
   phone: z.string().optional(),
   email: z.string().optional(),
   role: memberRoleSchema.optional(),
-  childNumber: z.coerce.number().int().min(1).optional(),
+  childNumber: z.coerce.number().int().min(0).optional(),
   sameAddressAsFamily: z.boolean().optional(),
   memberAddress: z.string().optional(),
   memberProvinsi: z.string().optional(),
@@ -113,7 +112,6 @@ export const updateMemberSchema = z.object({
   deathDate: z.string().optional(),
   tanggalPindah: z.string().optional(),
   familyId: z.string().optional(),
-  isPresbyter: z.boolean().optional(),
 });
 
 // ── Family ──────────────────────────────────────────────
@@ -127,7 +125,7 @@ const memberInputSchema = z.object({
   phone: z.string().optional().nullable(),
   email: z.string().optional().nullable(),
   role: memberRoleSchema,
-  childNumber: z.coerce.number().int().min(1).optional().nullable(),
+  childNumber: z.coerce.number().int().min(0).optional().nullable(),
   sameAddressAsFamily: z.boolean().optional().default(true),
   memberAddress: z.string().optional().nullable(),
   memberProvinsi: z.string().optional().nullable(),
@@ -136,7 +134,6 @@ const memberInputSchema = z.object({
   memberKelurahan: z.string().optional().nullable(),
   isActive: z.boolean().optional().default(true),
   isDeceased: z.boolean().optional().default(false),
-  isPresbyter: z.boolean().optional().default(false),
   deathDate: z.string().optional().nullable(),
   statusBaptis: z.string().optional(),
   lokasiBaptis: z.string().optional().nullable(),

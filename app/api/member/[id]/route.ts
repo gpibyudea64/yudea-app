@@ -86,7 +86,6 @@ export async function PATCH(
         ...(d.deathDate !== undefined && {
           deathDate: d.deathDate ? new Date(d.deathDate) : null,
         }),
-        ...(d.isPresbyter !== undefined && { isPresbyter: d.isPresbyter }),
         ...(d.statusBaptis !== undefined && { statusBaptis: d.statusBaptis }),
         ...(d.lokasiBaptis !== undefined && { lokasiBaptis: d.lokasiBaptis || null }),
         ...(d.tanggalBaptis !== undefined && {

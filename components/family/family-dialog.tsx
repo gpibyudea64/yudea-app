@@ -32,7 +32,7 @@ import {
   Briefcase,
   FileText,
 } from "lucide-react";
-import { Dispatch, SetStateAction, useState } from "react";
+import { Dispatch, SetStateAction, useCallback, useEffect, useRef, useState } from "react";
 import { Controller, useFieldArray, useForm, useWatch, type Control, type UseFormRegister } from "react-hook-form";
 import { toast } from "sonner";
 import { useDialogForm } from "@/hooks/use-dialog-form";
@@ -95,7 +95,6 @@ const emptyMember: MemberForm = {
   isDeceased: false,
   deathDate: "",
   familyId: "",
-  isPresbyter: false,
 };
 
 /**
@@ -143,12 +142,17 @@ function IndonesiaRegionSelects({
   const kecamatanName = districts?.find((d: { code: string }) => d.code === kecamatanCode)?.name ?? "";
   const kelurahanName = villages?.find((v: { code: string }) => v.code === kelurahanCode)?.name ?? "";
 
-  onRegionReady(() => ({
-    provinsi: provinsiName,
-    kotaKabupaten: kotaName,
-    kecamatan: kecamatanName,
-    kelurahan: kelurahanName,
-  }));
+  // Report the current region selection to the parent. Must run in an effect
+  // (not during render) — calling the parent's setState during render here
+  // caused an infinite update loop (React error #185) that crashed the dialog.
+  useEffect(() => {
+    onRegionReady(() => ({
+      provinsi: provinsiName,
+      kotaKabupaten: kotaName,
+      kecamatan: kecamatanName,
+      kelurahan: kelurahanName,
+    }));
+  }, [onRegionReady, provinsiName, kotaName, kecamatanName, kelurahanName]);
 
   return (
     <div className="grid gap-4 md:grid-cols-2">
@@ -296,7 +300,14 @@ export default function FamilyDialog({
       value: region.id,
     })) ?? [];
 
-  const [getRegion, setGetRegion] = useState(() => () => ({ provinsi: "", kotaKabupaten: "", kecamatan: "", kelurahan: "" }));
+  const regionRef = useRef(() => ({ provinsi: "", kotaKabupaten: "", kecamatan: "", kelurahan: "" }));
+
+  const handleRegionReady = useCallback(
+    (fn: () => { provinsi: string; kotaKabupaten: string; kecamatan: string; kelurahan: string }) => {
+      regionRef.current = fn;
+    },
+    [],
+  );
 
   const {
     control,
@@ -335,7 +346,7 @@ export default function FamilyDialog({
 
   async function onSubmit(values: FamilyForm) {
     try {
-      const region = getRegion();
+      const region = regionRef.current();
 
       if (!region.provinsi) {
         toast.error("Provinsi harus dipilih");
@@ -509,9 +520,7 @@ export default function FamilyDialog({
                     }
                   : undefined
               }
-              onRegionReady={(fn) => {
-                setGetRegion(() => fn);
-              }}
+              onRegionReady={handleRegionReady}
             />
           </div>
 

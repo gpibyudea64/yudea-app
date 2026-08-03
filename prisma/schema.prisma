@@ -118,7 +118,6 @@ model Member {
   isActive           Boolean       @default(true)
   isDeceased         Boolean       @default(false)
   deathDate          DateTime?
-  isPresbyter        Boolean       @default(false)
   bloodType          BloodType?
   pelkat             MemberPelkat?
   // ── Baptis ──
@@ -156,7 +155,6 @@ model Member {
   @@index([firstName])
   @@index([lastName])
   @@index([isActive])
-  @@index([isPresbyter])
   @@index([gender])
   @@index([pelkat])
   @@index([birthDate])
@@ -180,6 +178,7 @@ enum PerkawinanStatus {
 }
 
 enum Jabatan {
+  WARGA_JEMAAT
   DIAKEN
   PENATUA
   PENGURUS_PELKAT

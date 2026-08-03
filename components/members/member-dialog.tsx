@@ -21,7 +21,6 @@ import {
   Plus,
   User,
   Users,
-  Baby,
   Hash,
   Church,
   Heart,
@@ -120,7 +119,6 @@ export default function MemberDialog({
       isDeceased: false,
       deathDate: "",
       familyId: "",
-      isPresbyter: false,
     },
   });
 
@@ -164,7 +162,6 @@ export default function MemberDialog({
     isDeceased: false,
     deathDate: "",
     familyId: "",
-    isPresbyter: false,
   }, { editing, open });
 
   // Local state for region selection to filter families
@@ -830,23 +827,6 @@ export default function MemberDialog({
                 </div>
               )}
 
-              <div className="space-y-2">
-                <Label htmlFor="isPresbyter" className="flex items-center gap-2">
-                  <Baby className="h-4 w-4" />
-                  Presbyter
-                </Label>
-                <Controller
-                  control={control}
-                  name="isPresbyter"
-                  render={({ field }) => (
-                    <Switch
-                      id="isPresbyter"
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  )}
-                />
-              </div>
             </div>
           </div>
 
