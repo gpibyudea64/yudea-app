@@ -22,7 +22,7 @@ export function useCreateUser() {
   return useMutation({
     mutationFn: (payload: UserForm) => createUser(payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY], refetchType: "all" });
     },
   });
 }
@@ -33,7 +33,7 @@ export function useUpdateUser() {
     mutationFn: ({ id, data }: { id: string; data: Partial<UserForm> }) =>
       updateUser(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY], refetchType: "all" });
     },
   });
 }
@@ -43,7 +43,7 @@ export function useDeleteUser() {
   return useMutation({
     mutationFn: (id: string) => deleteUser(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY], refetchType: "all" });
     },
   });
 }

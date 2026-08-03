@@ -36,7 +36,7 @@ export function useCreateBranch() {
   return useMutation({
     mutationFn: (payload: BranchForm) => createBranch(payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY], refetchType: "all" });
     },
   });
 }
@@ -47,7 +47,7 @@ export function useUpdateBranch() {
     mutationFn: ({ id, data }: { id: string; data: Partial<BranchForm> }) =>
       updateBranch(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY], refetchType: "all" });
     },
   });
 }
@@ -57,7 +57,7 @@ export function useDeleteBranch() {
   return useMutation({
     mutationFn: (id: string) => deleteBranch(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY], refetchType: "all" });
     },
   });
 }

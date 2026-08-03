@@ -145,8 +145,9 @@ export default function SplitFamilyDialog({
 
       toast.success("Keluarga baru berhasil dibuat");
       setOpen(false);
-      queryClient.invalidateQueries({ queryKey: ["family"] });
-      queryClient.invalidateQueries({ queryKey: ["member"] });
+      queryClient.invalidateQueries({ queryKey: ["family"], refetchType: "all" });
+      queryClient.invalidateQueries({ queryKey: ["member"], refetchType: "all" });
+      queryClient.invalidateQueries({ queryKey: ["birthday-members"], refetchType: "all" });
     } catch {
       toast.error("Gagal membuat keluarga baru");
     } finally {

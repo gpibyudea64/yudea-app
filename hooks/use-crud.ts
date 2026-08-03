@@ -59,7 +59,7 @@ export function useCrudMutations<TData, TCreatePayload, TUpdatePayload>(
   const queryClient = useQueryClient();
 
   function invalidate() {
-    queryClient.invalidateQueries({ queryKey: [key] });
+    queryClient.invalidateQueries({ queryKey: [key], refetchType: "all" });
   }
 
   const createMutation = useMutation({

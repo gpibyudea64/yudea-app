@@ -122,6 +122,7 @@ import {
   useRoleAccessSettings,
   useSaveRoleAccessSettings,
 } from "@/hooks/use-rbac-settings";
+import { useCrudMutations } from "@/hooks/use-crud";
 
 // Shared helpers
 function createWrapper() {
@@ -549,5 +550,236 @@ describe("useSaveRoleAccessSettings mutation", () => {
     result.current.mutate(config);
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(rbacApi.saveRoleAccessConfig).toHaveBeenCalledWith(config);
+  });
+});
+
+// ── Regression: mutations must invalidate ALL cached list variants ──
+// Guards the "created sektor doesn't show in the list" bug: onSuccess must
+// refetch every cached query variant (search/page combos), not only the
+// currently-active one, so `refetchType: "all"` is required. If it ever
+// regresses to the default (`active` only), the list can show stale data.
+
+function createClientWithSpy() {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false, gcTime: 0 },
+      mutations: { retry: false },
+    },
+  });
+  const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
+  return { queryClient, invalidateSpy };
+}
+
+function wrapperFor(queryClient: QueryClient) {
+  return function Wrapper({ children }: { children: ReactNode }) {
+    return (
+      <QueryClientProvider client={queryClient}>
+        {children}
+      </QueryClientProvider>
+    );
+  };
+}
+
+describe("CRUD mutations invalidate with refetchType: 'all'", () => {
+  it("region (Sektor Pelayanan) create/update/delete", async () => {
+    vi.mocked(regionApi.createRegion).mockResolvedValue({ id: "new", name: "New", branchId: "b1" } as any);
+    vi.mocked(regionApi.updateRegion).mockResolvedValue({ id: "1", name: "Updated", branchId: "b1" } as any);
+    vi.mocked(regionApi.deleteRegion).mockResolvedValue(undefined);
+
+    const { queryClient, invalidateSpy } = createClientWithSpy();
+    const { result } = renderHook(
+      () => ({
+        create: useCreateRegion(),
+        update: useUpdateRegion(),
+        remove: useDeleteRegion(),
+      }),
+      { wrapper: wrapperFor(queryClient) },
+    );
+
+    result.current.create.mutate({ name: "New", branchId: "b1" });
+    await waitFor(() => expect(result.current.create.isSuccess).toBe(true));
+    result.current.update.mutate({ id: "1", data: { name: "Updated" } });
+    await waitFor(() => expect(result.current.update.isSuccess).toBe(true));
+    result.current.remove.mutate("1");
+    await waitFor(() => expect(result.current.remove.isSuccess).toBe(true));
+
+    expect(invalidateSpy).toHaveBeenCalledTimes(6);
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["region"], refetchType: "all" });
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["birthday-members"], refetchType: "all" });
+  });
+
+  it("branch create/update/delete", async () => {
+    vi.mocked(branchApi.createBranch).mockResolvedValue({ id: "new", name: "New" } as any);
+    vi.mocked(branchApi.updateBranch).mockResolvedValue({ id: "1", name: "Updated" } as any);
+    vi.mocked(branchApi.deleteBranch).mockResolvedValue(undefined);
+
+    const { queryClient, invalidateSpy } = createClientWithSpy();
+    const { result } = renderHook(
+      () => ({
+        create: useCreateBranch(),
+        update: useUpdateBranch(),
+        remove: useDeleteBranch(),
+      }),
+      { wrapper: wrapperFor(queryClient) },
+    );
+
+    result.current.create.mutate({ name: "New" });
+    await waitFor(() => expect(result.current.create.isSuccess).toBe(true));
+    result.current.update.mutate({ id: "1", data: { name: "Updated" } });
+    await waitFor(() => expect(result.current.update.isSuccess).toBe(true));
+    result.current.remove.mutate("1");
+    await waitFor(() => expect(result.current.remove.isSuccess).toBe(true));
+
+    expect(invalidateSpy).toHaveBeenCalledTimes(3);
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["branch"], refetchType: "all" });
+  });
+
+  it("member create/update/delete invalidates member and family queries", async () => {
+    vi.mocked(memberApi.createMember).mockResolvedValue({ id: "new" } as any);
+    vi.mocked(memberApi.updateMember).mockResolvedValue({ id: "1" } as any);
+    vi.mocked(memberApi.deleteMember).mockResolvedValue(undefined);
+
+    const { queryClient, invalidateSpy } = createClientWithSpy();
+    const { result } = renderHook(
+      () => ({
+        create: useCreateMember(),
+        update: useUpdateMember(),
+        remove: useDeleteMember(),
+      }),
+      { wrapper: wrapperFor(queryClient) },
+    );
+
+    result.current.create.mutate({ firstName: "New", familyId: "f1" } as any);
+    await waitFor(() => expect(result.current.create.isSuccess).toBe(true));
+    result.current.update.mutate({ id: "1", data: { firstName: "Updated" } });
+    await waitFor(() => expect(result.current.update.isSuccess).toBe(true));
+    result.current.remove.mutate("1");
+    await waitFor(() => expect(result.current.remove.isSuccess).toBe(true));
+
+    expect(invalidateSpy).toHaveBeenCalledTimes(9);
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["member"], refetchType: "all" });
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["family"], refetchType: "all" });
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["birthday-members"], refetchType: "all" });
+  });
+
+  it("family create/update/delete", async () => {
+    vi.mocked(familyApi.createFamily).mockResolvedValue({ id: "new", familyName: "New", regionId: "r1" } as any);
+    vi.mocked(familyApi.updateFamily).mockResolvedValue({ id: "1", familyName: "Updated", regionId: "r1" } as any);
+    vi.mocked(familyApi.deleteFamily).mockResolvedValue(undefined);
+
+    const { queryClient, invalidateSpy } = createClientWithSpy();
+    const { result } = renderHook(
+      () => ({
+        create: useCreateFamily(),
+        update: useUpdateFamily(),
+        remove: useDeleteFamily(),
+      }),
+      { wrapper: wrapperFor(queryClient) },
+    );
+
+    result.current.create.mutate({ familyName: "New", regionId: "r1", members: [] } as any);
+    await waitFor(() => expect(result.current.create.isSuccess).toBe(true));
+    result.current.update.mutate({ id: "1", data: { familyName: "Updated" } });
+    await waitFor(() => expect(result.current.update.isSuccess).toBe(true));
+    result.current.remove.mutate("1");
+    await waitFor(() => expect(result.current.remove.isSuccess).toBe(true));
+
+    expect(invalidateSpy).toHaveBeenCalledTimes(9);
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["family"], refetchType: "all" });
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["member"], refetchType: "all" });
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["birthday-members"], refetchType: "all" });
+  });
+
+  it("user create/update/delete", async () => {
+    vi.mocked(userApi.createUser).mockResolvedValue({ id: "new", name: "U", email: "u@b.com", role: "STAFF" } as any);
+    vi.mocked(userApi.updateUser).mockResolvedValue({ id: "1", name: "Updated", email: "a@b.com", role: "ADMIN" } as any);
+    vi.mocked(userApi.deleteUser).mockResolvedValue(undefined);
+
+    const { queryClient, invalidateSpy } = createClientWithSpy();
+    const { result } = renderHook(
+      () => ({
+        create: useCreateUser(),
+        update: useUpdateUser(),
+        remove: useDeleteUser(),
+      }),
+      { wrapper: wrapperFor(queryClient) },
+    );
+
+    result.current.create.mutate({ name: "U", email: "u@b.com", password: "123456", role: "STAFF" });
+    await waitFor(() => expect(result.current.create.isSuccess).toBe(true));
+    result.current.update.mutate({ id: "1", data: { name: "Updated" } });
+    await waitFor(() => expect(result.current.update.isSuccess).toBe(true));
+    result.current.remove.mutate("1");
+    await waitFor(() => expect(result.current.remove.isSuccess).toBe(true));
+
+    expect(invalidateSpy).toHaveBeenCalledTimes(3);
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["users"], refetchType: "all" });
+  });
+
+  it("attendance create/update/delete", async () => {
+    vi.mocked(attendanceApi.createAttendance).mockResolvedValue({ id: "new", serviceDate: "2026-06-01", serviceType: "Sunday", maleCount: 10, femaleCount: 15, totalCount: 25 } as any);
+    vi.mocked(attendanceApi.updateAttendance).mockResolvedValue({ id: "1", serviceDate: new Date(), serviceType: "Sunday", maleCount: 20, femaleCount: 15, totalCount: 35 } as any);
+    vi.mocked(attendanceApi.deleteAttendance).mockResolvedValue(undefined);
+
+    const { queryClient, invalidateSpy } = createClientWithSpy();
+    const { result } = renderHook(
+      () => ({
+        create: useCreateAttendance(),
+        update: useUpdateAttendance(),
+        remove: useDeleteAttendance(),
+      }),
+      { wrapper: wrapperFor(queryClient) },
+    );
+
+    result.current.create.mutate({ serviceDate: "2026-06-01", serviceType: "Sunday", maleCount: 10, femaleCount: 15 });
+    await waitFor(() => expect(result.current.create.isSuccess).toBe(true));
+    result.current.update.mutate({ id: "1", data: { maleCount: 20 } });
+    await waitFor(() => expect(result.current.update.isSuccess).toBe(true));
+    result.current.remove.mutate("1");
+    await waitFor(() => expect(result.current.remove.isSuccess).toBe(true));
+
+    expect(invalidateSpy).toHaveBeenCalledTimes(3);
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["attendance"], refetchType: "all" });
+  });
+
+  it("useCrudMutations (generic factory) invalidates with refetchType: 'all'", async () => {
+    const create = vi.fn().mockResolvedValue({ id: "new" });
+    const update = vi.fn().mockResolvedValue({ id: "1" });
+    const remove = vi.fn().mockResolvedValue(undefined);
+
+    const { queryClient, invalidateSpy } = createClientWithSpy();
+    const { result } = renderHook(
+      () => useCrudMutations("custom", { create, update, remove }),
+      { wrapper: wrapperFor(queryClient) },
+    );
+
+    result.current.createMutation.mutate({ name: "x" });
+    await waitFor(() => expect(result.current.createMutation.isSuccess).toBe(true));
+    result.current.updateMutation.mutate({ id: "1", data: { name: "y" } });
+    await waitFor(() => expect(result.current.updateMutation.isSuccess).toBe(true));
+    result.current.deleteMutation.mutate("1");
+    await waitFor(() => expect(result.current.deleteMutation.isSuccess).toBe(true));
+
+    expect(invalidateSpy).toHaveBeenCalledTimes(3);
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["custom"], refetchType: "all" });
+  });
+
+  it("useSaveRoleAccessSettings invalidates with refetchType: 'all'", async () => {
+    const config = { "/dashboard/members": { view: ["ADMIN"], edit: ["ADMIN"] } };
+    vi.mocked(rbacApi.saveRoleAccessConfig).mockResolvedValue(config);
+
+    const { queryClient, invalidateSpy } = createClientWithSpy();
+    const { result } = renderHook(() => useSaveRoleAccessSettings(), {
+      wrapper: wrapperFor(queryClient),
+    });
+
+    result.current.mutate(config);
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    expect(invalidateSpy).toHaveBeenCalledTimes(1);
+    expect(invalidateSpy).toHaveBeenCalledWith({
+      queryKey: ["rbac-settings"],
+      refetchType: "all",
+    });
   });
 });

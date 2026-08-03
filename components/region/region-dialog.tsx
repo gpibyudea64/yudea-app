@@ -29,10 +29,12 @@ export default function RegionDialog({
   editing,
   open,
   setOpen,
+  onCreated,
 }: {
   editing: Region | null;
   open: boolean;
   setOpen: Dispatch<SetStateAction<boolean>>;
+  onCreated?: () => void;
 }) {
   const createMutation = useCreateRegion();
   const updateMutation = useUpdateRegion();
@@ -72,6 +74,7 @@ export default function RegionDialog({
         });
       } else {
         await createMutation.mutateAsync(payload);
+        onCreated?.();
       }
 
       toast.success("Successfull");

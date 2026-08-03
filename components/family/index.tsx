@@ -132,7 +132,8 @@ export default function FamiliesPage() {
       if (!res.ok) throw new Error();
       toast.success("Status keluarga diperbarui untuk semua anggota");
       setStatusOpen(false);
-      queryClient.invalidateQueries({ queryKey: ["family"] });
+      queryClient.invalidateQueries({ queryKey: ["family"], refetchType: "all" });
+      queryClient.invalidateQueries({ queryKey: ["member"], refetchType: "all" });
     } catch {
       toast.error("Gagal memperbarui status keluarga");
     }

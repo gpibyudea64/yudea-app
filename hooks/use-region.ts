@@ -45,7 +45,8 @@ export function useCreateRegion() {
   return useMutation({
     mutationFn: (payload: RegionForm) => createRegion(payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY], refetchType: "all" });
+      queryClient.invalidateQueries({ queryKey: ["birthday-members"], refetchType: "all" });
     },
   });
 }
@@ -56,7 +57,8 @@ export function useUpdateRegion() {
     mutationFn: ({ id, data }: { id: string; data: Partial<RegionForm> }) =>
       updateRegion(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY], refetchType: "all" });
+      queryClient.invalidateQueries({ queryKey: ["birthday-members"], refetchType: "all" });
     },
   });
 }
@@ -66,7 +68,8 @@ export function useDeleteRegion() {
   return useMutation({
     mutationFn: (id: string) => deleteRegion(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY], refetchType: "all" });
+      queryClient.invalidateQueries({ queryKey: ["birthday-members"], refetchType: "all" });
     },
   });
 }

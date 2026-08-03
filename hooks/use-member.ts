@@ -54,8 +54,9 @@ export function useCreateMember() {
   return useMutation({
     mutationFn: (payload: MemberForm) => createMember(payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
-      queryClient.invalidateQueries({ queryKey: ["family"] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY], refetchType: "all" });
+      queryClient.invalidateQueries({ queryKey: ["family"], refetchType: "all" });
+      queryClient.invalidateQueries({ queryKey: ["birthday-members"], refetchType: "all" });
     },
   });
 }
@@ -66,8 +67,9 @@ export function useUpdateMember() {
     mutationFn: ({ id, data }: { id: string; data: Partial<MemberForm> }) =>
       updateMember(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
-      queryClient.invalidateQueries({ queryKey: ["family"] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY], refetchType: "all" });
+      queryClient.invalidateQueries({ queryKey: ["family"], refetchType: "all" });
+      queryClient.invalidateQueries({ queryKey: ["birthday-members"], refetchType: "all" });
     },
   });
 }
@@ -77,8 +79,9 @@ export function useDeleteMember() {
   return useMutation({
     mutationFn: (id: string) => deleteMember(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
-      queryClient.invalidateQueries({ queryKey: ["family"] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY], refetchType: "all" });
+      queryClient.invalidateQueries({ queryKey: ["family"], refetchType: "all" });
+      queryClient.invalidateQueries({ queryKey: ["birthday-members"], refetchType: "all" });
     },
   });
 }

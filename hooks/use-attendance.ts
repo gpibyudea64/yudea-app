@@ -36,7 +36,7 @@ export function useCreateAttendance() {
   return useMutation({
     mutationFn: (payload: AttendanceForm) => createAttendance(payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY], refetchType: "all" });
     },
   });
 }
@@ -47,7 +47,7 @@ export function useUpdateAttendance() {
     mutationFn: ({ id, data }: { id: string; data: Partial<AttendanceForm> }) =>
       updateAttendance(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY], refetchType: "all" });
     },
   });
 }
@@ -57,7 +57,7 @@ export function useDeleteAttendance() {
   return useMutation({
     mutationFn: (id: string) => deleteAttendance(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY], refetchType: "all" });
     },
   });
 }

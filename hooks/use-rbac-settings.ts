@@ -19,7 +19,7 @@ export function useSaveRoleAccessSettings() {
   return useMutation({
     mutationFn: (config: RoleAccessConfig) => saveRoleAccessConfig(config),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY], refetchType: "all" });
     },
   });
 }

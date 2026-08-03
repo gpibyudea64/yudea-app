@@ -455,7 +455,12 @@ export default function Regions() {
         </Card>
 
         {canEdit && (
-          <RegionDialog editing={editing} open={open} setOpen={setOpen} />
+          <RegionDialog
+            editing={editing}
+            open={open}
+            setOpen={setOpen}
+            onCreated={() => setPage(1)}
+          />
         )}
       </div>
     </div>
