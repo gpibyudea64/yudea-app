@@ -35,6 +35,7 @@ import { Button } from "../ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -245,6 +246,11 @@ export default function MemberDialog({
               </>
             )}
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            {editing
+              ? "Update the details of this Warga Jemaat member."
+              : "Create a new Warga Jemaat member record."}
+          </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -261,7 +267,7 @@ export default function MemberDialog({
                   Sektor Pelayanan
                 </Label>
                 <Select
-                  value={dialogRegionId || undefined}
+                  value={dialogRegionId}
                   onValueChange={(value) => {
                     setDialogRegionId(value);
                     setValue("familyId", "");
@@ -293,7 +299,7 @@ export default function MemberDialog({
                   rules={{ required: "Keluarga wajib dipilih" }}
                   render={({ field }) => (
                     <Select
-                      value={field.value || undefined}
+                      value={field.value}
                       onValueChange={field.onChange}
                       disabled={!dialogRegionId}
                     >
@@ -697,7 +703,7 @@ export default function MemberDialog({
                   name="jabatan"
                   render={({ field }) => (
                     <Select
-                      value={field.value || undefined}
+                      value={field.value}
                       onValueChange={field.onChange}
                     >
                       <SelectTrigger className="w-full">

@@ -22,6 +22,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -540,11 +541,11 @@ export default function MembersPage({ initialRegion }: MembersPageProps) {
                 <Users className="h-5 w-5" />
                 Update Status
               </DialogTitle>
+              <DialogDescription>
+                {aktifMember?.firstName} {aktifMember?.lastName ?? ""}
+              </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-2">
-              <p className="text-sm text-muted-foreground">
-                {aktifMember?.firstName} {aktifMember?.lastName ?? ""}
-              </p>
               <div className="space-y-2">
                 <Label>Status</Label>
                 <Select
@@ -597,11 +598,11 @@ export default function MembersPage({ initialRegion }: MembersPageProps) {
                 <Heart className="h-5 w-5" />
                 Update Status Hidup
               </DialogTitle>
+              <DialogDescription>
+                {statusMember?.firstName} {statusMember?.lastName ?? ""}
+              </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-2">
-              <p className="text-sm text-muted-foreground">
-                {statusMember?.firstName} {statusMember?.lastName ?? ""}
-              </p>
               <div className="space-y-2">
                 <Label>Status Hidup</Label>
                 <Select

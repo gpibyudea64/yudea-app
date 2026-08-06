@@ -40,6 +40,7 @@ import { Button } from "../ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -441,6 +442,11 @@ export default function FamilyDialog({
               </>
             )}
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            {editing
+              ? "Update this family and its household details."
+              : "Create a new family and its household details."}
+          </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
@@ -685,7 +691,7 @@ function MemberFormBlock({
           control={control}
           name={`members.${index}.gender` as const}
           render={({ field }) => (
-            <Select value={field.value || undefined} onValueChange={field.onChange}>
+            <Select value={field.value} onValueChange={field.onChange}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Gender" />
               </SelectTrigger>
@@ -703,7 +709,7 @@ function MemberFormBlock({
           control={control}
           name={`members.${index}.role` as const}
           render={({ field }) => (
-            <Select value={field.value || undefined} onValueChange={field.onChange}>
+            <Select value={field.value} onValueChange={field.onChange}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Role" />
               </SelectTrigger>
@@ -740,7 +746,7 @@ function MemberFormBlock({
             control={control}
             name={`members.${index}.statusBaptis` as const}
             render={({ field }) => (
-              <Select value={field.value || undefined} onValueChange={field.onChange}>
+              <Select value={field.value} onValueChange={field.onChange}>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Status Baptis" />
                 </SelectTrigger>
@@ -781,7 +787,7 @@ function MemberFormBlock({
             control={control}
             name={`members.${index}.statusSidi` as const}
             render={({ field }) => (
-              <Select value={field.value || undefined} onValueChange={field.onChange}>
+              <Select value={field.value} onValueChange={field.onChange}>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Status Sidi" />
                 </SelectTrigger>
@@ -822,7 +828,7 @@ function MemberFormBlock({
             control={control}
             name={`members.${index}.statusPerkawinan` as const}
             render={({ field }) => (
-              <Select value={field.value || undefined} onValueChange={field.onChange}>
+              <Select value={field.value} onValueChange={field.onChange}>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Status Perkawinan" />
                 </SelectTrigger>
@@ -872,7 +878,7 @@ function MemberFormBlock({
             control={control}
             name={`members.${index}.jabatan` as const}
             render={({ field }) => (
-              <Select value={field.value || undefined} onValueChange={field.onChange}>
+              <Select value={field.value} onValueChange={field.onChange}>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Pilih Jabatan" />
                 </SelectTrigger>

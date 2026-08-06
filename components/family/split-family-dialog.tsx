@@ -5,6 +5,7 @@ import { Button } from "../ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -163,6 +164,10 @@ export default function SplitFamilyDialog({
             <Users className="h-5 w-5" />
             Jadikan {d.newHeadName} sebagai Kepala Keluarga
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            Create a new family by moving selected members from{" "}
+            {d.originalFamilyName} under {d.newHeadName} as its head.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-2">

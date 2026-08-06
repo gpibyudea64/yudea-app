@@ -253,7 +253,7 @@ export function EntityManager<TItem>({
 
                           {field.type === "select" ? (
                             <Select
-                              value={String(values[field.name] ?? "") || undefined}
+                              value={String(values[field.name] ?? "")}
                               onValueChange={(value) => handleChange(field, value)}
                             >
                               <SelectTrigger id={`create-${field.name}`}>
@@ -421,7 +421,7 @@ export function EntityManager<TItem>({
 
                                               {field.type === "select" ? (
                                                 <Select
-                                                  value={String(values[field.name] ?? "") || undefined}
+                                                  value={String(values[field.name] ?? "")}
                                                   onValueChange={(value) =>
                                                     handleChange(field, value)
                                                   }

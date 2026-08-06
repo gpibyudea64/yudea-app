@@ -2,6 +2,7 @@ import { Edit, GitBranch, Plus } from "lucide-react";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -82,6 +83,11 @@ export default function BranchDialog({
               </>
             )}
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            {editing
+              ? "Update the details of this Wilayah Pelayanan."
+              : "Create a new Wilayah Pelayanan record."}
+          </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)}>

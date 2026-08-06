@@ -25,6 +25,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -432,11 +433,11 @@ export default function FamiliesPage() {
                 <Users className="h-5 w-5" />
                 Update Status Keluarga
               </DialogTitle>
+              <DialogDescription>
+                {statusFamily?.familyName} — {statusFamily?.members?.length ?? 0} anggota
+              </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-2">
-              <p className="text-sm text-muted-foreground">
-                {statusFamily?.familyName} — {statusFamily?.members?.length ?? 0} anggota
-              </p>
               <p className="text-xs text-muted-foreground">
                 Perubahan status akan diterapkan ke semua anggota keluarga.
               </p>

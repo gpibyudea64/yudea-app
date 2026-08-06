@@ -2,6 +2,7 @@ import { Calendar, Church, Edit, Plus, UserCheck, UserX } from "lucide-react"
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -113,6 +114,11 @@ export default function AttendanceDialog({
               </>
             )}
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            {editing
+              ? "Update the details of this attendance record."
+              : "Create a new attendance record."}
+          </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)}>
