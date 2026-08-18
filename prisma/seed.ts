@@ -1,11 +1,12 @@
 import { prisma } from "@/lib/prisma";
-import { Gender, MemberRole } from "@prisma/client";
+import { BloodType, Gender, MemberRole } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
-async function main() {
-  console.log("🌱 Seeding database...");
-  await prisma.user.deleteMany();
-
+/**
+ * Demo users are upserted on every run so the documented login accounts always
+ * exist, even when an existing database is left untouched.
+ */
+async function upsertDemoUsers() {
   const password = await bcrypt.hash("admin123", 10);
 
   await prisma.user.upsert({
@@ -33,8 +34,56 @@ async function main() {
       role: "STAFF",
     },
   });
+}
 
-  // Clear existing data (optional, useful for seeding fresh)
+/**
+ * Spreads member ages across every pelkat bracket (children, youth, adults,
+ * elderly) instead of seeding everyone with the same birth date, which made
+ * the pelkat dashboard show a single group.
+ */
+const SEED_AGES_BY_INDEX = [42, 38, 10, 16, 22, 65, 8, 14, 28, 55];
+
+function seedBirthDate(index: number): Date {
+  const now = new Date();
+  const birth = new Date(now);
+  birth.setFullYear(now.getFullYear() - SEED_AGES_BY_INDEX[index % SEED_AGES_BY_INDEX.length]);
+  // Fixed month/day keeps the data deterministic across runs.
+  birth.setMonth(1, 21);
+  return birth;
+}
+
+const SEED_BLOOD_TYPES: Array<BloodType | null> = [
+  BloodType.A,
+  BloodType.B,
+  BloodType.AB,
+  BloodType.O,
+  null,
+];
+
+async function main() {
+  console.log("🌱 Seeding database...");
+
+  const reset = process.argv.includes("--reset");
+  const existingBranches = await prisma.branch.count();
+
+  // Safety guard: never wipe a populated database unless --reset is passed.
+  if (existingBranches > 0 && !reset) {
+    await upsertDemoUsers();
+    console.log(
+      `⚠️  Database already has ${existingBranches} branch(es) — refusing to wipe existing data.`,
+    );
+    console.log("    Re-run with `npm run prisma:seed -- --reset` to wipe and reseed from scratch.");
+    return;
+  }
+
+  if (reset) {
+    console.log("🧹 --reset passed: wiping existing data first...");
+  }
+
+  await prisma.user.deleteMany();
+  await upsertDemoUsers();
+
+  // Clear existing data (only reached when seeding fresh or with --reset)
   await prisma.attendance.deleteMany();
   await prisma.member.deleteMany();
   await prisma.family.deleteMany();
@@ -155,9 +204,10 @@ async function main() {
           lastName: `NamaBelakang${i}`,
           birthCity: "Jakarta",
           gender: i % 2 === 0 ? Gender.MALE : Gender.FEMALE,
-          birthDate: new Date("2026-02-21T19:03:24.480Z"),
+          birthDate: seedBirthDate(i),
           phone: "12390231021",
           email: "danjdw@dsad.com",
+          bloodType: SEED_BLOOD_TYPES[i % SEED_BLOOD_TYPES.length] ?? null,
           familyId: family.id,
           role:
             i === 1

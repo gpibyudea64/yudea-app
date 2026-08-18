@@ -44,14 +44,20 @@ app/api/auth/[...nextauth]/route.ts   NextAuth route handlers
 
 | Function | Returns | Description |
 |----------|---------|-------------|
-| `getSessionUser()` | `{ id, email?, name?, role } \| null` | Calls `auth()`, returns parsed user with normalized role |
+| `getSessionUser()` | `{ id, email?, name?, role, regionId? } \| null` | Calls `auth()`, returns parsed user with normalized role |
 | `requireAuth()` | `{ user, error }` | Returns `401 Unauthorized` response if no session |
 | `requireAdmin()` | `{ user, error }` | Returns `403 Forbidden` if role is not `ADMIN` |
+| `requireEditAccess(pathname)` | `{ user, error }` | Returns `403 Forbidden` if the user's role is not in the route's persisted `edit` list |
+| `requireViewAccess(pathname)` | `{ user, error }` | Returns `403 Forbidden` if the user's role is not in the route's persisted `view` list |
 
-Used in API routes for privileged operations:
+Used in API routes:
 - `/api/user` (user CRUD) — `requireAdmin()`
 - `/api/settings/rbac` (PUT) — `requireAdmin()`
-- `/api/settings/rbac` (GET) — `requireAuth()`
+- `/api/settings/rbac` (GET) — `requireAuth()` (bootstrap for all roles; must stay role-agnostic)
+- **All write endpoints** (member/family/region/branch/attendance create, update, delete, status, split) — `requireEditAccess("/dashboard/<route>")`
+- **All read endpoints** (member/family/region/branch/attendance lists and single items, presbyter, dashboard counts, region member-count, family count, birthday, report) — `requireViewAccess("/dashboard/<route>")`
+
+> **Server-side enforcement:** the middleware only checks authentication (401). Role permissions are enforced per-route by `requireEditAccess()` (writes) and `requireViewAccess()` (reads) using the persisted RBAC config, so a `MEMBER` role user cannot read family/region/dashboard/report data or mutate anything through direct API calls even though the UI hides the buttons.
 
 ---
 
@@ -154,6 +160,7 @@ Defaults are defined in `defaultProtectedRoutes` in `lib/rbac.ts`. The sidebar r
 | `/dashboard/members` | ADMIN, STAFF, COORDINATOR, MEMBER | ADMIN, STAFF, COORDINATOR | Warga Jemaat |
 | `/dashboard/presbytery` | ADMIN, STAFF, COORDINATOR, MEMBER | ADMIN, STAFF, COORDINATOR | Majelis Jemaat |
 | `/dashboard/pelkat-members` | ADMIN, STAFF | ADMIN, STAFF | Pelkat Members |
+| `/dashboard/report` | ADMIN, STAFF | ADMIN, STAFF | — (direct URL only) |
 | `/dashboard/attendance` | ADMIN, STAFF | ADMIN, STAFF | Attendance |
 | `/dashboard/users` | ADMIN | ADMIN | Users |
 | `/dashboard/settings` | ADMIN | ADMIN | Settings |
@@ -198,7 +205,7 @@ Older array-only configs are still accepted for migration compatibility via `par
 | Function | Description |
 |----------|-------------|
 | `normalizeAppRole(role)` | Normalizes "admin" → "ADMIN", handles null/undefined |
-| `hasRequiredRole(role, allowedRoles?)` | Checks user role against allowed list |
+| `hasRequiredRole(role, allowedRoles?)` | Checks user role against allowed list — **denies when the list is empty or missing** (never fail-open) |
 | `resolveRoleAccessConfig(overrides?)` | Merges overrides with defaults, enforces admin-only routes |
 | `getRouteAccessForPath(pathname, config?)` | Returns `{ view, edit }` for a path (longest match wins) |
 | `canViewPath(role, pathname, config?)` / `canEditPath(...)` | Permission check helpers |

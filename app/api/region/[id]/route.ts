@@ -3,6 +3,7 @@ export const runtime = "nodejs";
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 import { validateBody, handleApiError } from "@/lib/api-validate";
+import { requireEditAccess, requireViewAccess } from "@/lib/server-auth";
 import { updateRegionSchema } from "@/schemas/api.schemas";
 
 async function findOneOrThrow(id: string) {
@@ -24,6 +25,9 @@ export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const authResult = await requireViewAccess("/dashboard/regions");
+  if (authResult.error) return authResult.error;
+
   try {
     const { id } = await params;
     const region = await findOneOrThrow(id);
@@ -43,6 +47,9 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const authResult = await requireEditAccess("/dashboard/regions");
+  if (authResult.error) return authResult.error;
+
   try {
     const { id } = await params;
     const body = await req.json();
@@ -77,6 +84,9 @@ export async function DELETE(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const authResult = await requireEditAccess("/dashboard/regions");
+  if (authResult.error) return authResult.error;
+
   try {
     const { id } = await params;
 

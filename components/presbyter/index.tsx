@@ -15,6 +15,7 @@ import {
 } from "../ui/table";
 import { usePresbyters } from "@/hooks/use-member";
 import { DataTablePresbyterControls } from "./data-table-presbyter-control";
+import { SortableHeader } from "../ui/sortable-header";
 import { formatDate, formatLabel } from "@/lib/client-helper";
 
 export default function PresbyterPage() {
@@ -24,13 +25,23 @@ export default function PresbyterPage() {
     search: "",
     region: "all",
   });
+  const [sortBy, setSortBy] = useState("firstName");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const { canEdit } = usePageAccess("/dashboard/presbytery");
   const { data, isLoading } = usePresbyters({
     page,
     limit,
     search: filter.search,
     region: filter.region,
+    sortBy,
+    sortOrder,
   });
+
+  function handleSort(next: string) {
+    setSortBy(next);
+    setSortOrder(next === sortBy ? (sortOrder === "asc" ? "desc" : "asc") : "asc");
+    setPage(1);
+  }
   const members = data?.data ?? [];
 
   return (
@@ -73,11 +84,51 @@ export default function PresbyterPage() {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/50">
-                    <TableHead className="font-semibold">Nama</TableHead>
-                    <TableHead className="font-semibold">Family</TableHead>
-                    <TableHead className="font-semibold">Birth Date</TableHead>
-                    <TableHead className="font-semibold">Role</TableHead>
-                    <TableHead className="font-semibold">Status</TableHead>
+                    <TableHead className="font-semibold">
+                      <SortableHeader
+                        label="Nama"
+                        sortBy="firstName"
+                        currentSortBy={sortBy}
+                        sortOrder={sortOrder}
+                        onSort={handleSort}
+                      />
+                    </TableHead>
+                    <TableHead className="font-semibold">
+                      <SortableHeader
+                        label="Family"
+                        sortBy="familyRegionName"
+                        currentSortBy={sortBy}
+                        sortOrder={sortOrder}
+                        onSort={handleSort}
+                      />
+                    </TableHead>
+                    <TableHead className="font-semibold">
+                      <SortableHeader
+                        label="Birth Date"
+                        sortBy="birthDate"
+                        currentSortBy={sortBy}
+                        sortOrder={sortOrder}
+                        onSort={handleSort}
+                      />
+                    </TableHead>
+                    <TableHead className="font-semibold">
+                      <SortableHeader
+                        label="Role"
+                        sortBy="role"
+                        currentSortBy={sortBy}
+                        sortOrder={sortOrder}
+                        onSort={handleSort}
+                      />
+                    </TableHead>
+                    <TableHead className="font-semibold">
+                      <SortableHeader
+                        label="Status"
+                        sortBy="isActive"
+                        currentSortBy={sortBy}
+                        sortOrder={sortOrder}
+                        onSort={handleSort}
+                      />
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

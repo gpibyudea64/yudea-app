@@ -1,17 +1,19 @@
 import { prisma } from "@/lib/prisma";
-import { auth } from "@/auth";
 import { NextResponse } from "next/server";
 import { handleApiError } from "@/lib/api-validate";
+import { requireViewAccess } from "@/lib/server-auth";
 
 export const runtime = "nodejs";
 
 export async function GET() {
   try {
-    const session = await auth();
-    const regionId = session?.user?.regionId;
+    const authResult = await requireViewAccess("/dashboard/regions");
+    if (authResult.error) return authResult.error;
+    const session = authResult.user;
+    const regionId = session.regionId;
 
     const result =
-      session?.user?.role === "COORDINATOR" && regionId
+      session.role === "COORDINATOR" && regionId
         ? await prisma.$queryRaw<
             Array<{ regionId: string; regionName: string; memberCount: bigint }>
           >`

@@ -2,16 +2,18 @@ export const runtime = "nodejs";
 
 import { attachPelkat } from "@/lib/helper";
 import { prisma } from "@/lib/prisma";
-import { auth } from "@/auth";
 import { NextRequest, NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import { handleApiError } from "@/lib/api-validate";
+import { requireViewAccess } from "@/lib/server-auth";
 
 // GET /api/report?pelkat=...&region=...
 // Returns flat member list with family info for report export
 export async function GET(req: NextRequest) {
   try {
-    const session = await auth();
+    const authResult = await requireViewAccess("/dashboard/report");
+    if (authResult.error) return authResult.error;
+    const session = authResult.user;
     const { searchParams } = req.nextUrl;
     const pelkat = searchParams.get("pelkat")?.trim() ?? "";
     const region = searchParams.get("region")?.trim() ?? "";
@@ -24,9 +26,8 @@ export async function GET(req: NextRequest) {
     }
 
     // Filter by region if user is a coordinator
-    const sessionUser = session?.user as { regionId?: string } | undefined;
-    const regionId = sessionUser?.regionId;
-    if (session?.user?.role === "COORDINATOR" && regionId) {
+    const regionId = session.regionId;
+    if (session.role === "COORDINATOR" && regionId) {
       where.family = { ...(where.family as Prisma.FamilyWhereInput), regionId };
     }
 

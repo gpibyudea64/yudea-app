@@ -3,6 +3,7 @@ export const runtime = "nodejs";
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 import { validateBody, handleApiError } from "@/lib/api-validate";
+import { requireEditAccess, requireViewAccess } from "@/lib/server-auth";
 import { updateBranchSchema } from "@/schemas/api.schemas";
 
 async function findOneOrThrow(id: string) {
@@ -22,6 +23,9 @@ export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const authResult = await requireViewAccess("/dashboard/branches");
+  if (authResult.error) return authResult.error;
+
   const { id } = await params;
   try {
     const branch = await findOneOrThrow(id);
@@ -41,6 +45,9 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const authResult = await requireEditAccess("/dashboard/branches");
+  if (authResult.error) return authResult.error;
+
   const { id } = await params;
   try {
     const body = await req.json();
@@ -71,6 +78,9 @@ export async function DELETE(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const authResult = await requireEditAccess("/dashboard/branches");
+  if (authResult.error) return authResult.error;
+
   const { id } = await params;
   try {
     // Cascade: everything under the branch — regions, families, members,

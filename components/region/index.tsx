@@ -36,6 +36,7 @@ import {
 } from "../ui/select";
 import RegionDialog from "./region-dialog";
 import { DataTableControls } from "../ui/data-table-controls";
+import { SortableHeader } from "../ui/sortable-header";
 import { buildMemberAddress } from "@/lib/client-helper";
 
 function formatDate(value: string | Date) {
@@ -121,9 +122,17 @@ export default function Regions() {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [search, setSearch] = useState("");
+  const [sortBy, setSortBy] = useState("name");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
 
   const { canEdit } = usePageAccess("/dashboard/regions");
-  const { data, isLoading } = useRegions(page, limit, search);
+  const { data, isLoading } = useRegions(page, limit, search, sortBy, sortOrder);
+
+  function handleSort(next: string) {
+    setSortBy(next);
+    setSortOrder(next === sortBy ? (sortOrder === "asc" ? "desc" : "asc") : "asc");
+    setPage(1);
+  }
   const deleteMutation = useDeleteRegion();
   const { data: allRegionsData } = useRegions(1, 999);
 
@@ -219,8 +228,24 @@ export default function Regions() {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/50">
-                    <TableHead className="font-semibold">Name</TableHead>
-                    <TableHead className="font-semibold">Branch</TableHead>
+                    <TableHead className="font-semibold">
+                      <SortableHeader
+                        label="Name"
+                        sortBy="name"
+                        currentSortBy={sortBy}
+                        sortOrder={sortOrder}
+                        onSort={handleSort}
+                      />
+                    </TableHead>
+                    <TableHead className="font-semibold">
+                      <SortableHeader
+                        label="Branch"
+                        sortBy="branchName"
+                        currentSortBy={sortBy}
+                        sortOrder={sortOrder}
+                        onSort={handleSort}
+                      />
+                    </TableHead>
                     {canEdit && (
                       <TableHead className="font-semibold text-center w-40">
                         Actions

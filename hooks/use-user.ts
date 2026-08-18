@@ -9,10 +9,16 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 const QUERY_KEY = "users";
 
-export function useUsers(page = 1, limit = 10, search = "") {
+export function useUsers(
+  page = 1,
+  limit = 10,
+  search = "",
+  sortBy = "email",
+  sortOrder: "asc" | "desc" = "asc",
+) {
   return useQuery({
-    queryKey: [QUERY_KEY, page, limit, search],
-    queryFn: () => getUsers(page, limit, search),
+    queryKey: [QUERY_KEY, page, limit, search, sortBy, sortOrder],
+    queryFn: () => getUsers(page, limit, search, sortBy, sortOrder),
     staleTime: 30_000,
   });
 }

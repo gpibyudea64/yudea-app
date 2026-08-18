@@ -105,7 +105,11 @@ describe("useProvinces", () => {
       wrapper: createWrapper(),
     });
 
-    await waitFor(() => expect(result.current.isError).toBe(true));
+    // The hooks set retry: 3 to survive slow serverless cold starts, so the
+    // error state settles only after the retries + backoff (≈7s) — wait for it.
+    await waitFor(() => expect(result.current.isError).toBe(true), {
+      timeout: 15_000,
+    });
   });
 });
 

@@ -1,20 +1,21 @@
 export const runtime = "nodejs";
 
-import { attachPelkat, buildPelkatWhere } from "@/lib/helper";
+import { attachPelkat, buildPelkatWhere, parsePagination } from "@/lib/helper";
 import { prisma } from "@/lib/prisma";
-import { auth } from "@/auth";
 import { NextRequest, NextResponse } from "next/server";
-import { MemberPelkat, Prisma, User } from "@prisma/client";
+import { BloodType, MemberPelkat, Prisma } from "@prisma/client";
 import { validateBody, handleApiError } from "@/lib/api-validate";
+import { requireEditAccess, requireViewAccess } from "@/lib/server-auth";
 import { createMemberSchema } from "@/schemas/api.schemas";
 
 // GET /api/member?page=1&limit=10
 export async function GET(req: NextRequest) {
   try {
-    const session = await auth();
+    const authResult = await requireViewAccess("/dashboard/members");
+    if (authResult.error) return authResult.error;
+    const session = authResult.user;
     const { searchParams } = req.nextUrl;
-    const page = Math.max(1, Number(searchParams.get("page") ?? 1));
-    const limit = Math.max(1, Number(searchParams.get("limit") ?? 10));
+    const { page, limit } = parsePagination(searchParams);
     const search = searchParams.get("search")?.trim() ?? "";
     const region = searchParams.get("region")?.trim() ?? "";
     const pelkat = searchParams.get("pelkat")?.trim() ?? "";
@@ -52,8 +53,8 @@ export async function GET(req: NextRequest) {
     }
 
     // Filter by region if user is a coordinator
-    const regionId = (session?.user as User)?.regionId;
-    if (session?.user?.role === "COORDINATOR" && regionId) {
+    const regionId = session.regionId;
+    if (session.role === "COORDINATOR" && regionId) {
       where = {
         ...where,
         family: {
@@ -78,9 +79,11 @@ export async function GET(req: NextRequest) {
         orderBy:
           sortBy === "familyRegionName"
             ? { family: { region: { name: sortOrder } } }
-            : sortBy === "pelkat"
-              ? { createdAt: "desc" } // pelkat sorting done in JS below
-              : { [sortBy]: sortOrder },
+            : sortBy === "familyFamilyName"
+              ? { family: { familyName: sortOrder } }
+              : sortBy === "pelkat"
+                ? { createdAt: "desc" } // pelkat sorting done in JS below
+                : { [sortBy]: sortOrder },
         include: {
           family: {
             include: {
@@ -121,6 +124,9 @@ export async function GET(req: NextRequest) {
 
 // POST /api/member
 export async function POST(req: NextRequest) {
+  const authResult = await requireEditAccess("/dashboard/members");
+  if (authResult.error) return authResult.error;
+
   try {
     const body = await req.json();
 
@@ -128,6 +134,17 @@ export async function POST(req: NextRequest) {
     if (parsed.error) return parsed.error;
 
     const d = parsed.data;
+
+    // Coordinators may only add members to families in their own region.
+    if (authResult.user.role === "COORDINATOR" && authResult.user.regionId) {
+      const family = await prisma.family.findUnique({
+        where: { id: d.familyId },
+        select: { regionId: true },
+      });
+      if (!family || family.regionId !== authResult.user.regionId) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
+    }
 
     const member = await prisma.member.create({
       data: {
@@ -149,6 +166,7 @@ export async function POST(req: NextRequest) {
         isActive: d.isActive ?? true,
         isDeceased: d.isDeceased ?? false,
         deathDate: d.deathDate ? new Date(d.deathDate) : null,
+        bloodType: d.bloodType ? (d.bloodType as BloodType) : null,
         statusBaptis: d.statusBaptis || 'BELUM',
         lokasiBaptis: d.lokasiBaptis || null,
         tanggalBaptis: d.tanggalBaptis ? new Date(d.tanggalBaptis) : null,

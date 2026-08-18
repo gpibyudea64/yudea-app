@@ -1,6 +1,5 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import { renderHook } from "@testing-library/react";
-import { useMemo } from "react";
 
 // Mock next/navigation
 vi.mock("next/navigation", () => ({

@@ -6,10 +6,14 @@ export async function getBranches(
   page = 1,
   limit = 10,
   search = "",
+  sortBy = "name",
+  sortOrder: "asc" | "desc" = "asc",
 ): Promise<PaginatedResponse<Branch>> {
   const params = new URLSearchParams({
     page: String(page),
     limit: String(limit),
+    sortBy,
+    sortOrder,
   });
   if (search) params.set("search", search);
 

@@ -6,9 +6,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import type { Family } from "@/types/family";
 import { Badge } from "../ui/badge";
 import {
-  ArrowDown,
-  ArrowUp,
-  ArrowUpDown,
   Calendar,
   Edit,
   Home,
@@ -49,6 +46,7 @@ import {
 } from "../ui/table";
 import FamilyDialog from "./family-dialog";
 import { DataTableControls } from "../ui/data-table-controls";
+import { SortableHeader } from "../ui/sortable-header";
 import { toast } from "sonner";
 
 export default function FamiliesPage() {
@@ -57,6 +55,13 @@ export default function FamiliesPage() {
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState("familyName");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+
+  function handleSort(next: string) {
+    setSortBy(next);
+    setSortOrder(next === sortBy ? (sortOrder === "asc" ? "desc" : "asc") : "asc");
+    setPage(1);
+  }
+
   const { canEdit } = usePageAccess("/dashboard/families");
   const { data, isLoading } = useFamilies(page, limit, search, sortBy, sortOrder);
   const deleteMutation = useDeleteFamily();
@@ -200,90 +205,67 @@ export default function FamiliesPage() {
                 <TableHeader>
                   <TableRow className="bg-muted/50">
                     <TableHead className="font-semibold">
-                      <button
-                        type="button"
-                        className="inline-flex items-center gap-1 hover:text-primary transition-colors cursor-pointer"
-                        onClick={() => {
-                          setSortBy("familyName");
-                          setSortOrder(
-                            sortBy === "familyName"
-                              ? sortOrder === "asc" ? "desc" : "asc"
-                              : "asc",
-                          );
-                          setPage(1);
-                        }}
-                      >
-                        Family
-                        {sortBy === "familyName" ? (
-                          sortOrder === "asc" ? (
-                            <ArrowUp className="h-3 w-3" />
-                          ) : (
-                            <ArrowDown className="h-3 w-3" />
-                          )
-                        ) : (
-                          <ArrowUpDown className="h-3 w-3 text-muted-foreground/50" />
-                        )}
-                      </button>
+                      <SortableHeader
+                        label="Family"
+                        sortBy="familyName"
+                        currentSortBy={sortBy}
+                        sortOrder={sortOrder}
+                        onSort={handleSort}
+                      />
                     </TableHead>
                     <TableHead className="font-semibold">
-                      <button
-                        type="button"
-                        className="inline-flex items-center gap-1 hover:text-primary transition-colors cursor-pointer"
-                        onClick={() => {
-                          setSortBy("regionName");
-                          setSortOrder(
-                            sortBy === "regionName"
-                              ? sortOrder === "asc" ? "desc" : "asc"
-                              : "asc",
-                          );
-                          setPage(1);
-                        }}
-                      >
-                        Sektor Pelayanan
-                        {sortBy === "regionName" ? (
-                          sortOrder === "asc" ? (
-                            <ArrowUp className="h-3 w-3" />
-                          ) : (
-                            <ArrowDown className="h-3 w-3" />
-                          )
-                        ) : (
-                          <ArrowUpDown className="h-3 w-3 text-muted-foreground/50" />
-                        )}
-                      </button>
+                      <SortableHeader
+                        label="Sektor Pelayanan"
+                        sortBy="regionName"
+                        currentSortBy={sortBy}
+                        sortOrder={sortOrder}
+                        onSort={handleSort}
+                      />
                     </TableHead>
                     <TableHead className="font-semibold">
-                      Kota/Kab
-                    </TableHead>
-                    <TableHead className="font-semibold">Kecamatan</TableHead>
-                    <TableHead className="font-semibold">Kelurahan</TableHead>
-                    <TableHead className="font-semibold">
-                      <button
-                        type="button"
-                        className="inline-flex items-center gap-1 hover:text-primary transition-colors cursor-pointer"
-                        onClick={() => {
-                          setSortBy("address");
-                          setSortOrder(
-                            sortBy === "address"
-                              ? sortOrder === "asc" ? "desc" : "asc"
-                              : "asc",
-                          );
-                          setPage(1);
-                        }}
-                      >
-                        Detail Alamat
-                        {sortBy === "address" ? (
-                          sortOrder === "asc" ? (
-                            <ArrowUp className="h-3 w-3" />
-                          ) : (
-                            <ArrowDown className="h-3 w-3" />
-                          )
-                        ) : (
-                          <ArrowUpDown className="h-3 w-3 text-muted-foreground/50" />
-                        )}
-                      </button>
+                      <SortableHeader
+                        label="Kota/Kab"
+                        sortBy="kotaKabupaten"
+                        currentSortBy={sortBy}
+                        sortOrder={sortOrder}
+                        onSort={handleSort}
+                      />
                     </TableHead>
                     <TableHead className="font-semibold">
-                      Warga Jemaat
+                      <SortableHeader
+                        label="Kecamatan"
+                        sortBy="kecamatan"
+                        currentSortBy={sortBy}
+                        sortOrder={sortOrder}
+                        onSort={handleSort}
+                      />
+                    </TableHead>
+                    <TableHead className="font-semibold">
+                      <SortableHeader
+                        label="Kelurahan"
+                        sortBy="kelurahan"
+                        currentSortBy={sortBy}
+                        sortOrder={sortOrder}
+                        onSort={handleSort}
+                      />
+                    </TableHead>
+                    <TableHead className="font-semibold">
+                      <SortableHeader
+                        label="Detail Alamat"
+                        sortBy="address"
+                        currentSortBy={sortBy}
+                        sortOrder={sortOrder}
+                        onSort={handleSort}
+                      />
+                    </TableHead>
+                    <TableHead className="font-semibold">
+                      <SortableHeader
+                        label="Warga Jemaat"
+                        sortBy="memberCount"
+                        currentSortBy={sortBy}
+                        sortOrder={sortOrder}
+                        onSort={handleSort}
+                      />
                     </TableHead>
                     <TableHead className="font-semibold">Status</TableHead>
                     {canEdit && (

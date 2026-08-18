@@ -11,6 +11,7 @@ import {
 import type { Family, FamilyForm } from "@/types/family";
 import {
   genderOptions,
+  bloodTypeOptions,
   memberRoleOptions,
   baptisStatusOptions,
   sidiStatusOptions,
@@ -64,6 +65,7 @@ const emptyMember: MemberForm = {
   birthDate: "",
   phone: "",
   email: "",
+  bloodType: "",
   role: "CHILD",
   childNumber: 0,
   sameAddressAsFamily: true,
@@ -108,7 +110,12 @@ function IndonesiaRegionSelects({
   initialValues?: { provinsi?: string; kotaKabupaten?: string; kecamatan?: string; kelurahan?: string };
   onRegionReady: (region: { provinsi: string; kotaKabupaten: string; kecamatan: string; kelurahan: string }) => void;
 }) {
-  const { data: provinces } = useProvinces();
+  const {
+    data: provinces,
+    isLoading: provincesLoading,
+    isError: provincesError,
+    refetch: refetchProvinces,
+  } = useProvinces();
   const [provinsiCode, setProvinsiCode] = useState("");
   const [kotaCode, setKotaCode] = useState("");
   const [kecamatanCode, setKecamatanCode] = useState("");
@@ -118,9 +125,24 @@ function IndonesiaRegionSelects({
   // "synced" flag would stop the chain after the first level (the deeper
   // levels' data isn't loaded yet on that render), leaving kota/kecamatan/
   // kelurahan empty when editing an existing family.
-  const { data: regencies } = useRegencies(provinsiCode || null);
-  const { data: districts } = useDistricts(kotaCode || null);
-  const { data: villages } = useVillages(kecamatanCode || null);
+  const {
+    data: regencies,
+    isLoading: regenciesLoading,
+    isError: regenciesError,
+    refetch: refetchRegencies,
+  } = useRegencies(provinsiCode || null);
+  const {
+    data: districts,
+    isLoading: districtsLoading,
+    isError: districtsError,
+    refetch: refetchDistricts,
+  } = useDistricts(kotaCode || null);
+  const {
+    data: villages,
+    isLoading: villagesLoading,
+    isError: villagesError,
+    refetch: refetchVillages,
+  } = useVillages(kecamatanCode || null);
 
   if (!provinsiCode && provinces && initialValues?.provinsi) {
     const p = provinces.find((p: { name: string }) => p.name === initialValues.provinsi);
@@ -171,9 +193,12 @@ function IndonesiaRegionSelects({
             setKecamatanCode("");
             setKelurahanCode("");
           }}
+          disabled={provincesLoading}
         >
           <SelectTrigger id="provinsi" className="w-full">
-            <SelectValue placeholder="Pilih Provinsi" />
+            <SelectValue
+              placeholder={provincesLoading ? "Memuat…" : "Pilih Provinsi"}
+            />
           </SelectTrigger>
           <SelectContent>
             <SelectGroup>
@@ -185,6 +210,18 @@ function IndonesiaRegionSelects({
             </SelectGroup>
           </SelectContent>
         </Select>
+        {provincesError && (
+          <p className="flex items-center gap-2 text-xs text-destructive">
+            Gagal memuat data provinsi.
+            <button
+              type="button"
+              onClick={() => refetchProvinces()}
+              className="underline underline-offset-2"
+            >
+              Muat ulang
+            </button>
+          </p>
+        )}
       </div>
 
       <div className="space-y-2">
@@ -199,12 +236,16 @@ function IndonesiaRegionSelects({
             setKecamatanCode("");
             setKelurahanCode("");
           }}
-          disabled={!provinsiCode}
+          disabled={!provinsiCode || regenciesLoading}
         >
           <SelectTrigger id="kotaKabupaten" className="w-full">
             <SelectValue
               placeholder={
-                provinsiCode ? "Pilih Kota/Kabupaten" : "Pilih Provinsi dulu"
+                regenciesLoading
+                  ? "Memuat…"
+                  : provinsiCode
+                    ? "Pilih Kota/Kabupaten"
+                    : "Pilih Provinsi dulu"
               }
             />
           </SelectTrigger>
@@ -218,6 +259,18 @@ function IndonesiaRegionSelects({
             </SelectGroup>
           </SelectContent>
         </Select>
+        {regenciesError && (
+          <p className="flex items-center gap-2 text-xs text-destructive">
+            Gagal memuat data kota/kabupaten.
+            <button
+              type="button"
+              onClick={() => refetchRegencies()}
+              className="underline underline-offset-2"
+            >
+              Muat ulang
+            </button>
+          </p>
+        )}
       </div>
 
       <div className="space-y-2">
@@ -231,12 +284,16 @@ function IndonesiaRegionSelects({
             setKecamatanCode(code);
             setKelurahanCode("");
           }}
-          disabled={!kotaCode}
+          disabled={!kotaCode || districtsLoading}
         >
           <SelectTrigger id="kecamatan" className="w-full">
             <SelectValue
               placeholder={
-                kotaCode ? "Pilih Kecamatan" : "Pilih Kota/Kabupaten dulu"
+                districtsLoading
+                  ? "Memuat…"
+                  : kotaCode
+                    ? "Pilih Kecamatan"
+                    : "Pilih Kota/Kabupaten dulu"
               }
             />
           </SelectTrigger>
@@ -250,6 +307,18 @@ function IndonesiaRegionSelects({
             </SelectGroup>
           </SelectContent>
         </Select>
+        {districtsError && (
+          <p className="flex items-center gap-2 text-xs text-destructive">
+            Gagal memuat data kecamatan.
+            <button
+              type="button"
+              onClick={() => refetchDistricts()}
+              className="underline underline-offset-2"
+            >
+              Muat ulang
+            </button>
+          </p>
+        )}
       </div>
 
       <div className="space-y-2">
@@ -260,12 +329,16 @@ function IndonesiaRegionSelects({
         <Select
           value={kelurahanCode}
           onValueChange={setKelurahanCode}
-          disabled={!kecamatanCode}
+          disabled={!kecamatanCode || villagesLoading}
         >
           <SelectTrigger id="kelurahan" className="w-full">
             <SelectValue
               placeholder={
-                kecamatanCode ? "Pilih Kelurahan" : "Pilih Kecamatan dulu"
+                villagesLoading
+                  ? "Memuat…"
+                  : kecamatanCode
+                    ? "Pilih Kelurahan"
+                    : "Pilih Kecamatan dulu"
               }
             />
           </SelectTrigger>
@@ -279,6 +352,18 @@ function IndonesiaRegionSelects({
             </SelectGroup>
           </SelectContent>
         </Select>
+        {villagesError && (
+          <p className="flex items-center gap-2 text-xs text-destructive">
+            Gagal memuat data kelurahan.
+            <button
+              type="button"
+              onClick={() => refetchVillages()}
+              className="underline underline-offset-2"
+            >
+              Muat ulang
+            </button>
+          </p>
+        )}
       </div>
     </div>
   );
@@ -697,6 +782,29 @@ function MemberFormBlock({
               </SelectTrigger>
               <SelectContent>
                 {genderOptions.map((item) => (
+                  <SelectItem key={item.value} value={item.value}>
+                    {item.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        />
+        <Controller
+          control={control}
+          name={`members.${index}.bloodType` as const}
+          render={({ field }) => (
+            <Select
+              value={field.value === "" ? "none" : field.value}
+              onValueChange={(value) =>
+                field.onChange(value === "none" ? "" : value)
+              }
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Golongan Darah" />
+              </SelectTrigger>
+              <SelectContent>
+                {bloodTypeOptions.map((item) => (
                   <SelectItem key={item.value} value={item.value}>
                     {item.label}
                   </SelectItem>

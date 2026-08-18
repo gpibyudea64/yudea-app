@@ -5,9 +5,6 @@ import { useDeleteMember, useMembers } from "@/hooks/use-member";
 import type { Member, MemberForm } from "@/types/member";
 import { Badge } from "../ui/badge";
 import {
-  ArrowDown,
-  ArrowUp,
-  ArrowUpDown,
   Calendar,
   Edit,
   Heart,
@@ -46,6 +43,7 @@ import {
 } from "../ui/table";
 import MemberDialog from "./member-dialog";
 import { DataTableMemberControls } from "./data-table-member-control";
+import { SortableHeader } from "../ui/sortable-header";
 import { formatDate, formatLabel } from "@/lib/client-helper";
 import { useUpdateMember } from "@/hooks/use-member";
 import { toast } from "sonner";
@@ -68,6 +66,12 @@ export default function MembersPage({ initialRegion }: MembersPageProps) {
 
   const [sortBy, setSortBy] = useState("firstName");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+
+  function handleSort(next: string) {
+    setSortBy(next);
+    setSortOrder(next === sortBy ? (sortOrder === "asc" ? "desc" : "asc") : "asc");
+    setPage(1);
+  }
 
   const { canEdit } = usePageAccess("/dashboard/members");
   const { data, isLoading } = useMembers({
@@ -252,137 +256,68 @@ export default function MembersPage({ initialRegion }: MembersPageProps) {
                 <TableHeader>
                   <TableRow className="bg-muted/50">
                     <TableHead className="font-semibold">
-                      <button
-                        type="button"
-                        className="inline-flex items-center gap-1 hover:text-primary transition-colors cursor-pointer"
-                        onClick={() => {
-                          setSortBy("firstName");
-                          setSortOrder(
-                            sortBy === "firstName"
-                              ? sortOrder === "asc" ? "desc" : "asc"
-                              : "asc",
-                          );
-                          setPage(1);
-                        }}
-                      >
-                        Nama Lengkap
-                        {sortBy === "firstName" ? (
-                          sortOrder === "asc" ? (
-                            <ArrowUp className="h-3 w-3" />
-                          ) : (
-                            <ArrowDown className="h-3 w-3" />
-                          )
-                        ) : (
-                          <ArrowUpDown className="h-3 w-3 text-muted-foreground/50" />
-                        )}
-                      </button>
-                    </TableHead>
-                    <TableHead className="font-semibold">Birth Date</TableHead>
-                    <TableHead className="font-semibold">
-                      <button
-                        type="button"
-                        className="inline-flex items-center gap-1 hover:text-primary transition-colors cursor-pointer"
-                        onClick={() => {
-                          setSortBy("role");
-                          setSortOrder(
-                            sortBy === "role"
-                              ? sortOrder === "asc" ? "desc" : "asc"
-                              : "asc",
-                          );
-                          setPage(1);
-                        }}
-                      >
-                        Role
-                        {sortBy === "role" ? (
-                          sortOrder === "asc" ? (
-                            <ArrowUp className="h-3 w-3" />
-                          ) : (
-                            <ArrowDown className="h-3 w-3" />
-                          )
-                        ) : (
-                          <ArrowUpDown className="h-3 w-3 text-muted-foreground/50" />
-                        )}
-                      </button>
+                      <SortableHeader
+                        label="Nama Lengkap"
+                        sortBy="firstName"
+                        currentSortBy={sortBy}
+                        sortOrder={sortOrder}
+                        onSort={handleSort}
+                      />
                     </TableHead>
                     <TableHead className="font-semibold">
-                      <button
-                        type="button"
-                        className="inline-flex items-center gap-1 hover:text-primary transition-colors cursor-pointer"
-                        onClick={() => {
-                          setSortBy("familyRegionName");
-                          setSortOrder(
-                            sortBy === "familyRegionName"
-                              ? sortOrder === "asc" ? "desc" : "asc"
-                              : "asc",
-                          );
-                          setPage(1);
-                        }}
-                      >
-                        Sektor
-                        {sortBy === "familyRegionName" ? (
-                          sortOrder === "asc" ? (
-                            <ArrowUp className="h-3 w-3" />
-                          ) : (
-                            <ArrowDown className="h-3 w-3" />
-                          )
-                        ) : (
-                          <ArrowUpDown className="h-3 w-3 text-muted-foreground/50" />
-                        )}
-                      </button>
+                      <SortableHeader
+                        label="Birth Date"
+                        sortBy="birthDate"
+                        currentSortBy={sortBy}
+                        sortOrder={sortOrder}
+                        onSort={handleSort}
+                      />
                     </TableHead>
                     <TableHead className="font-semibold">
-                      <button
-                        type="button"
-                        className="inline-flex items-center gap-1 hover:text-primary transition-colors cursor-pointer"
-                        onClick={() => {
-                          setSortBy("pelkat");
-                          setSortOrder(
-                            sortBy === "pelkat"
-                              ? sortOrder === "asc" ? "desc" : "asc"
-                              : "asc",
-                          );
-                          setPage(1);
-                        }}
-                      >
-                        Pelkat
-                        {sortBy === "pelkat" ? (
-                          sortOrder === "asc" ? (
-                            <ArrowUp className="h-3 w-3" />
-                          ) : (
-                            <ArrowDown className="h-3 w-3" />
-                          )
-                        ) : (
-                          <ArrowUpDown className="h-3 w-3 text-muted-foreground/50" />
-                        )}
-                      </button>
+                      <SortableHeader
+                        label="Role"
+                        sortBy="role"
+                        currentSortBy={sortBy}
+                        sortOrder={sortOrder}
+                        onSort={handleSort}
+                      />
                     </TableHead>
                     <TableHead className="font-semibold">
-                      <button
-                        type="button"
-                        className="inline-flex items-center gap-1 hover:text-primary transition-colors cursor-pointer"
-                        onClick={() => {
-                          setSortBy("isActive");
-                          setSortOrder(
-                            sortBy === "isActive"
-                              ? sortOrder === "asc" ? "desc" : "asc"
-                              : "asc",
-                          );
-                          setPage(1);
-                        }}
-                      >
-                        Status
-                        {sortBy === "isActive" ? (
-                          sortOrder === "asc" ? (
-                            <ArrowUp className="h-3 w-3" />
-                          ) : (
-                            <ArrowDown className="h-3 w-3" />
-                          )
-                        ) : (
-                          <ArrowUpDown className="h-3 w-3 text-muted-foreground/50" />
-                        )}
-                      </button>
+                      <SortableHeader
+                        label="Sektor"
+                        sortBy="familyRegionName"
+                        currentSortBy={sortBy}
+                        sortOrder={sortOrder}
+                        onSort={handleSort}
+                      />
                     </TableHead>
-                    <TableHead className="font-semibold">Status Hidup</TableHead>
+                    <TableHead className="font-semibold">
+                      <SortableHeader
+                        label="Pelkat"
+                        sortBy="pelkat"
+                        currentSortBy={sortBy}
+                        sortOrder={sortOrder}
+                        onSort={handleSort}
+                      />
+                    </TableHead>
+                    <TableHead className="font-semibold">
+                      <SortableHeader
+                        label="Status"
+                        sortBy="isActive"
+                        currentSortBy={sortBy}
+                        sortOrder={sortOrder}
+                        onSort={handleSort}
+                      />
+                    </TableHead>
+                    <TableHead className="font-semibold">
+                      <SortableHeader
+                        label="Status Hidup"
+                        sortBy="isDeceased"
+                        currentSortBy={sortBy}
+                        sortOrder={sortOrder}
+                        onSort={handleSort}
+                      />
+                    </TableHead>
                     {canEdit && (
                       <TableHead className="w-40 text-center font-semibold">
                         Actions

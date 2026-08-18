@@ -5,10 +5,14 @@ export async function getUsers(
   page = 1,
   limit = 10,
   search = "",
+  sortBy = "email",
+  sortOrder: "asc" | "desc" = "asc",
 ): Promise<PaginatedResponse<UserListItem>> {
   const params = new URLSearchParams({
     page: String(page),
     limit: String(limit),
+    sortBy,
+    sortOrder,
   });
   if (search) params.set("search", search);
 

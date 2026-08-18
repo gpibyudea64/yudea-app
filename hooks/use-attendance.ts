@@ -12,10 +12,16 @@ const QUERY_KEY = "attendance";
 
 // ── queries ───────────────────────────────────────────────
 
-export function useAttendances(page = 1, limit = 10, search = "") {
+export function useAttendances(
+  page = 1,
+  limit = 10,
+  search = "",
+  sortBy = "serviceDate",
+  sortOrder: "asc" | "desc" = "desc",
+) {
   return useQuery({
-    queryKey: [QUERY_KEY, page, limit, search],
-    queryFn: () => getAttendances(page, limit, search),
+    queryKey: [QUERY_KEY, page, limit, search, sortBy, sortOrder],
+    queryFn: () => getAttendances(page, limit, search, sortBy, sortOrder),
     staleTime: 30_000,
   });
 }

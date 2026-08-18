@@ -1,9 +1,9 @@
 export const runtime = "nodejs";
 
 import { prisma } from "@/lib/prisma";
-import { auth } from "@/auth";
 import { NextRequest, NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
+import { requireViewAccess } from "@/lib/server-auth";
 
 function pad(value: number) {
   return value.toString().padStart(2, "0");
@@ -37,10 +37,9 @@ type BirthdayRow = {
 };
 
 export async function GET(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const authResult = await requireViewAccess("/dashboard/birthday");
+  if (authResult.error) return authResult.error;
+  const session = authResult.user;
 
   const requestedDate = req.nextUrl.searchParams.get("date");
   const today = requestedDate ? new Date(requestedDate) : new Date();
@@ -59,10 +58,10 @@ export async function GET(req: NextRequest) {
 
   // Restrict region when the user is a COORDINATOR — parameterized via Prisma.sql
   const isCoordinator =
-    session.user.role === "COORDINATOR" && !!session.user.regionId;
+    session.role === "COORDINATOR" && !!session.regionId;
 
   const regionClause: Prisma.Sql = isCoordinator
-    ? Prisma.sql`AND r.id = ${session.user.regionId}`
+    ? Prisma.sql`AND r.id = ${session.regionId}`
     : Prisma.sql``;
 
   const members = await prisma.$queryRaw<BirthdayRow[]>`

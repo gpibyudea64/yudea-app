@@ -48,3 +48,17 @@ export function handleApiError(
   console.error(`[api] ${label}:`, error);
   return NextResponse.json({ error: fallbackMessage }, { status: 500 });
 }
+
+/**
+ * Returns true when the error is a Prisma unique-constraint violation
+ * (P2002) — e.g. a duplicate `(serviceDate, serviceType)` attendance record.
+ * Use it in a catch block to map the conflict to a 409 instead of a generic 500.
+ */
+export function isPrismaUniqueViolation(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    (error as { code?: unknown }).code === "P2002"
+  );
+}

@@ -21,6 +21,10 @@ export function useProvinces() {
     queryFn: () => fetchRegion<RegionOption[]>("/api/region-indonesia/provinces"),
     staleTime: Infinity, // Province data never changes
     gcTime: Infinity,
+    // Serverless cold starts parse these CSV-backed datasets — allow a few
+    // quick retries so a slow first response doesn't leave an empty dropdown.
+    retry: 3,
+    retryDelay: 300,
   });
 }
 
@@ -38,6 +42,7 @@ export function useRegencies(provinceCode: string | null) {
     enabled: !!provinceCode,
     staleTime: Infinity,
     gcTime: Infinity,
+    retry: 3,
   });
 }
 
@@ -55,6 +60,7 @@ export function useDistricts(regencyCode: string | null) {
     enabled: !!regencyCode,
     staleTime: Infinity,
     gcTime: Infinity,
+    retry: 3,
   });
 }
 
@@ -72,5 +78,6 @@ export function useVillages(districtCode: string | null) {
     enabled: !!districtCode,
     staleTime: Infinity,
     gcTime: Infinity,
+    retry: 3,
   });
 }

@@ -1,3 +1,4 @@
+import { parsePagination } from "@/lib/helper";
 import { prisma } from "@/lib/prisma";
 import { APP_ROLES, normalizeAppRole } from "@/lib/rbac";
 import { requireAdmin } from "@/lib/server-auth";
@@ -14,9 +15,10 @@ export async function GET(req: NextRequest) {
 
   try {
     const { searchParams } = req.nextUrl;
-    const page = Math.max(1, Number(searchParams.get("page") ?? 1));
-    const limit = Math.max(1, Number(searchParams.get("limit") ?? 10));
+    const { page, limit } = parsePagination(searchParams);
     const search = searchParams.get("search")?.trim() ?? "";
+    const sortBy = searchParams.get("sortBy")?.trim() || "email";
+    const sortOrder = searchParams.get("sortOrder")?.trim() === "asc" ? "asc" : "desc";
     const skip = (page - 1) * limit;
 
     const where = search
@@ -33,7 +35,7 @@ export async function GET(req: NextRequest) {
         where,
         skip,
         take: limit,
-        orderBy: { email: "asc" },
+        orderBy: { [sortBy]: sortOrder },
         select: {
           id: true,
           name: true,

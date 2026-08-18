@@ -1,19 +1,21 @@
 export const runtime = "nodejs";
 
+import { parsePagination } from "@/lib/helper";
 import { prisma } from "@/lib/prisma";
-import { auth } from "@/auth";
 import { NextRequest, NextResponse } from "next/server";
-import { Prisma, User } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { validateBody, handleApiError } from "@/lib/api-validate";
+import { requireEditAccess, requireViewAccess } from "@/lib/server-auth";
 import { createFamilySchema } from "@/schemas/api.schemas";
 
 // GET /api/family?page=1&limit=10
 export async function GET(req: NextRequest) {
   try {
-    const session = await auth();
+    const authResult = await requireViewAccess("/dashboard/families");
+    if (authResult.error) return authResult.error;
+    const session = authResult.user;
     const { searchParams } = req.nextUrl;
-    const page = Math.max(1, Number(searchParams.get("page") ?? 1));
-    const limit = Math.max(1, Number(searchParams.get("limit") ?? 10));
+    const { page, limit } = parsePagination(searchParams);
     const search = searchParams.get("search")?.trim() ?? "";
     const sortBy = searchParams.get("sortBy")?.trim() || "familyName";
     const sortOrder = searchParams.get("sortOrder")?.trim() === "asc" ? "asc" : "desc";
@@ -34,8 +36,8 @@ export async function GET(req: NextRequest) {
       : {};
 
     // Filter by region if user is a coordinator
-    const regionId = (session?.user as User)?.regionId;
-    if (session?.user?.role === "COORDINATOR" && regionId) {
+    const regionId = session.regionId;
+    if (session.role === "COORDINATOR" && regionId) {
       where = {
         ...where,
         regionId,
@@ -50,7 +52,9 @@ export async function GET(req: NextRequest) {
         orderBy:
           sortBy === "regionName"
             ? { region: { name: sortOrder } }
-            : { [sortBy]: sortOrder },
+            : sortBy === "memberCount"
+              ? { members: { _count: sortOrder } }
+              : { [sortBy]: sortOrder },
         include: {
           region: true,
           members: true,
@@ -75,6 +79,9 @@ export async function GET(req: NextRequest) {
 
 // POST /api/family
 export async function POST(req: NextRequest) {
+  const authResult = await requireEditAccess("/dashboard/families");
+  if (authResult.error) return authResult.error;
+
   try {
     const body = await req.json();
 
@@ -82,6 +89,15 @@ export async function POST(req: NextRequest) {
     if (parsed.error) return parsed.error;
 
     const { familyName, address, provinsi, kotaKabupaten, kecamatan, kelurahan, regionId, members } = parsed.data;
+
+    // Coordinators may only create families in their own region.
+    if (
+      authResult.user.role === "COORDINATOR" &&
+      authResult.user.regionId &&
+      regionId !== authResult.user.regionId
+    ) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
 
     const family = await prisma.family.create({
       data: {
@@ -104,6 +120,7 @@ export async function POST(req: NextRequest) {
                     birthDate: string;
                     phone?: string | null;
                     email?: string | null;
+                    bloodType?: string;
                     role: string;
                     childNumber?: number | null;
                     sameAddressAsFamily?: boolean;
@@ -142,6 +159,7 @@ export async function POST(req: NextRequest) {
                     birthDate: new Date(m.birthDate),
                     phone: m.phone || '',
                     email: m.email || null,
+                    bloodType: m.bloodType ? (m.bloodType as never) : null,
                     role: m.role,
                     childNumber: m.role === 'CHILD' ? (m.childNumber || null) : null,
                     sameAddressAsFamily: m.sameAddressAsFamily ?? true,

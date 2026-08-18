@@ -34,9 +34,11 @@ export default auth((req) => {
   return NextResponse.next();
 });
 
+// Next.js requires this object to be statically analyzable, so the matcher
+// must be a literal here. Keep it in sync with `proxyConfig` in
+// lib/proxy-config.ts (used by tests/proxy.test.ts to assert the behavior).
 export const config = {
   matcher: [
-    // Match all routes except static files, Next.js internals, and common assets
-    "/((?!_next/static|_next/image|favicon\\.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!api/auth|_next/static|_next/image|favicon\\.ico|login|register|public|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

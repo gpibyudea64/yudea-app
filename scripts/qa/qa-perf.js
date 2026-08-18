@@ -23,9 +23,6 @@ const BASE = "http://localhost:3000";
     "/api/attendance?page=1&limit=10",
     "/api/dashboard/counts",
     "/api/region/member-count",
-    "/api/member/pelkat-count",
-    "/api/member/gender-count",
-    "/api/member/blood-type-count",
     "/api/birthday",
     "/api/settings/rbac",
   ];

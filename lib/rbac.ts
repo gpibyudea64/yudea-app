@@ -67,7 +67,17 @@ export const defaultProtectedRoutes: ProtectedRoute[] = [
     editRoles: ["ADMIN", "STAFF", "COORDINATOR"],
   },
   {
+    path: "/dashboard/presbytery",
+    roles: ["ADMIN", "STAFF", "COORDINATOR", "MEMBER"],
+    editRoles: ["ADMIN", "STAFF", "COORDINATOR"],
+  },
+  {
     path: "/dashboard/pelkat-members",
+    roles: ["ADMIN", "STAFF"],
+    editRoles: ["ADMIN", "STAFF"],
+  },
+  {
+    path: "/dashboard/report",
     roles: ["ADMIN", "STAFF"],
     editRoles: ["ADMIN", "STAFF"],
   },
@@ -184,7 +194,11 @@ export const hasRequiredRole = (
   role: string | null | undefined,
   allowedRoles?: string[],
 ) => {
-  if (!allowedRoles?.length) return true;
+  // Deny by default: an empty or missing allow-list grants nothing. Treating
+  // an empty `edit` list as "everyone may edit" previously opened writes to
+  // any authenticated user when the persisted RBAC config had an empty or
+  // legacy array-formatted entry for a route.
+  if (!role || !allowedRoles?.length) return false;
   const normalized = normalizeAppRole(role);
   if (!normalized) return false;
   return allowedRoles.includes(normalized);

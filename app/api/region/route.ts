@@ -1,8 +1,9 @@
+import { parsePagination } from "@/lib/helper";
 import { prisma } from "@/lib/prisma";
-import { auth } from "@/auth";
 import { NextRequest, NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import { validateBody, handleApiError } from "@/lib/api-validate";
+import { requireEditAccess, requireViewAccess } from "@/lib/server-auth";
 import { createRegionSchema } from "@/schemas/api.schemas";
 
 export const runtime = "nodejs";
@@ -10,11 +11,14 @@ export const runtime = "nodejs";
 // GET /api/region?page=1&limit=10
 export async function GET(req: NextRequest) {
   try {
-    const session = await auth();
+    const authResult = await requireViewAccess("/dashboard/regions");
+    if (authResult.error) return authResult.error;
+    const session = authResult.user;
     const { searchParams } = req.nextUrl;
-    const page = Math.max(1, Number(searchParams.get("page") ?? 1));
-    const limit = Math.max(1, Number(searchParams.get("limit") ?? 10));
+    const { page, limit } = parsePagination(searchParams);
     const search = searchParams.get("search")?.trim() ?? "";
+    const sortBy = searchParams.get("sortBy")?.trim() || "name";
+    const sortOrder = searchParams.get("sortOrder")?.trim() === "asc" ? "asc" : "desc";
     const skip = (page - 1) * limit;
 
     // Build where clause for search
@@ -32,9 +36,8 @@ export async function GET(req: NextRequest) {
       : {};
 
     // Filter by coordinator's region if user is a coordinator
-    const sessionUser = session?.user as { regionId?: string } | undefined;
-    const regionId = sessionUser?.regionId;
-    if (session?.user?.role === "COORDINATOR" && regionId) {
+    const regionId = session.regionId;
+    if (session.role === "COORDINATOR" && regionId) {
       where = {
         ...where,
         id: regionId,
@@ -46,7 +49,10 @@ export async function GET(req: NextRequest) {
         where,
         skip,
         take: limit,
-        orderBy: { createdAt: "desc" },
+        orderBy:
+          sortBy === "branchName"
+            ? { branch: { name: sortOrder } }
+            : { [sortBy]: sortOrder },
         include: {
           branch: true,
           families: true,
@@ -74,6 +80,9 @@ export async function GET(req: NextRequest) {
 
 // POST /api/region
 export async function POST(req: NextRequest) {
+  const authResult = await requireEditAccess("/dashboard/regions");
+  if (authResult.error) return authResult.error;
+
   try {
     const body = await req.json();
 

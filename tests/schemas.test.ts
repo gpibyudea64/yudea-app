@@ -1,6 +1,15 @@
 import { describe, expect, it } from "vitest";
 import { loginSchema } from "@/schemas/auth.schema";
 import { userFormSchema } from "@/schemas/user.schema";
+import { createMemberSchema, updateMemberSchema } from "@/schemas/api.schemas";
+
+const validMember = {
+  firstName: "John",
+  gender: "MALE",
+  birthDate: "1990-01-01",
+  role: "FAMILY_HEAD",
+  familyId: "family-1",
+};
 
 describe("auth schemas", () => {
   describe("loginSchema", () => {
@@ -41,6 +50,54 @@ describe("auth schemas", () => {
         email: "",
         password: "password123",
       });
+      expect(result.success).toBe(false);
+    });
+  });
+});
+
+describe("member schemas", () => {
+  describe("createMemberSchema bloodType", () => {
+    it("accepts a valid blood type", () => {
+      const result = createMemberSchema.safeParse({
+        ...validMember,
+        bloodType: "AB",
+      });
+      expect(result.success).toBe(true);
+      if (result.success) expect(result.data.bloodType).toBe("AB");
+    });
+
+    it("defaults bloodType to empty string when omitted", () => {
+      const result = createMemberSchema.safeParse(validMember);
+      expect(result.success).toBe(true);
+      if (result.success) expect(result.data.bloodType).toBe("");
+    });
+
+    it("rejects an invalid blood type", () => {
+      const result = createMemberSchema.safeParse({
+        ...validMember,
+        bloodType: "Z",
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it("allows clearing bloodType via empty string", () => {
+      const result = createMemberSchema.safeParse({
+        ...validMember,
+        bloodType: "",
+      });
+      expect(result.success).toBe(true);
+      if (result.success) expect(result.data.bloodType).toBe("");
+    });
+  });
+
+  describe("updateMemberSchema bloodType", () => {
+    it("accepts a valid blood type without requiring other fields", () => {
+      const result = updateMemberSchema.safeParse({ bloodType: "O" });
+      expect(result.success).toBe(true);
+    });
+
+    it("rejects an invalid blood type", () => {
+      const result = updateMemberSchema.safeParse({ bloodType: "X" });
       expect(result.success).toBe(false);
     });
   });

@@ -139,10 +139,7 @@ Validates that all moved members belong to the original family.
 | `/api/member/:id` | `GET` | Get a member by ID | Required |
 | `/api/member/:id` | `PATCH` | Update a member | Required |
 | `/api/member/:id` | `DELETE` | Delete a member | Required |
-| `/api/member/presbyter` | `GET` | List presbyters (isPresbyter=true) with region filter | Required |
-| `/api/member/gender-count` | `GET` | Gender distribution counts | Required |
-| `/api/member/blood-type-count` | `GET` | Blood type distribution counts | Required |
-| `/api/member/pelkat-count` | `GET` | Pelkat group counts | Required |
+| `/api/member/presbyter` | `GET` | List presbyters (`jabatan` = `DIAKEN`/`PENATUA`) with region filter | Required |
 
 ### GET /api/member
 
@@ -172,9 +169,9 @@ Create fields:
 - `role` (`FAMILY_HEAD` / `WIFE` / `CHILD` / `OTHER` / `ORANG_TUA` / `CUCU` / `KAKAK_ADIK_KANDUNG` / `FAMILI_LAIN`, required)
 - `familyId` (string, required)
 - `email` (string, optional)
+- `bloodType` (`A`/`B`/`AB`/`O` or `""`, optional — empty stores null)
 - `isActive` (boolean, default `true`)
 - `isDeceased` (boolean, default `false`)
-- `isPresbyter` (boolean, default `false`)
 - `deathDate` (string/Date, optional)
 - `childNumber` (number, optional — only for `CHILD` role)
 - `sameAddressAsFamily` (boolean, default `true`)

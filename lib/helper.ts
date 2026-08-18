@@ -121,6 +121,37 @@ export function toPaginatedResult<T>(
   };
 }
 
+const DEFAULT_MAX_PAGE_LIMIT = 10_000;
+
+/**
+ * Parses `page` and `limit` query params defensively.
+ *
+ * Non-numeric, zero, or negative values fall back to the supplied defaults
+ * instead of producing NaN (which previously caused a 500 from Prisma).
+ * `limit` is capped so abusive values like `?limit=999999999` can't trigger
+ * unbounded queries; the cap is generous enough for the UI's export fetches
+ * (which use limit=9999).
+ */
+export function parsePagination(
+  searchParams: URLSearchParams,
+  options: { page?: number; limit?: number } = {},
+) {
+  const defaultPage = options.page ?? 1;
+  const defaultLimit = options.limit ?? 10;
+
+  const parse = (value: string | null, fallback: number, max?: number) => {
+    const n = Number(value);
+    if (!Number.isFinite(n) || n <= 0) return fallback;
+    const floored = Math.floor(n);
+    return max !== undefined ? Math.min(floored, max) : floored;
+  };
+
+  return {
+    page: parse(searchParams.get("page"), defaultPage),
+    limit: parse(searchParams.get("limit"), defaultLimit, DEFAULT_MAX_PAGE_LIMIT),
+  };
+}
+
 export function attachPelkat<T extends Member>(member: T) {
   return { ...member, pelkat: determinePelkat(member) };
 }

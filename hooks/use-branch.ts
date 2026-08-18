@@ -12,10 +12,16 @@ const QUERY_KEY = "branch";
 
 // ── queries ───────────────────────────────────────────────
 
-export function useBranches(page = 1, limit = 10, search = "") {
+export function useBranches(
+  page = 1,
+  limit = 10,
+  search = "",
+  sortBy = "name",
+  sortOrder: "asc" | "desc" = "asc",
+) {
   return useQuery({
-    queryKey: [QUERY_KEY, page, limit, search],
-    queryFn: () => getBranches(page, limit, search),
+    queryKey: [QUERY_KEY, page, limit, search, sortBy, sortOrder],
+    queryFn: () => getBranches(page, limit, search, sortBy, sortOrder),
     staleTime: 30_000,
   });
 }
@@ -37,6 +43,7 @@ export function useCreateBranch() {
     mutationFn: (payload: BranchForm) => createBranch(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY], refetchType: "all" });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"], refetchType: "all" });
     },
   });
 }
@@ -48,6 +55,7 @@ export function useUpdateBranch() {
       updateBranch(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY], refetchType: "all" });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"], refetchType: "all" });
     },
   });
 }
@@ -58,6 +66,7 @@ export function useDeleteBranch() {
     mutationFn: (id: string) => deleteBranch(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY], refetchType: "all" });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"], refetchType: "all" });
     },
   });
 }

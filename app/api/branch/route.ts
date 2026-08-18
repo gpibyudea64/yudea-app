@@ -1,16 +1,22 @@
 export const runtime = "nodejs";
 
+import { parsePagination } from "@/lib/helper";
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 import { validateBody, handleApiError } from "@/lib/api-validate";
+import { requireEditAccess, requireViewAccess } from "@/lib/server-auth";
 import { createBranchSchema } from "@/schemas/api.schemas";
 
 export async function GET(req: NextRequest) {
+  const authResult = await requireViewAccess("/dashboard/branches");
+  if (authResult.error) return authResult.error;
+
   try {
     const { searchParams } = req.nextUrl;
-    const page = Math.max(1, Number(searchParams.get("page") ?? 1));
-    const limit = Math.max(1, Number(searchParams.get("limit") ?? 10));
+    const { page, limit } = parsePagination(searchParams);
     const search = searchParams.get("search")?.trim() ?? "";
+    const sortBy = searchParams.get("sortBy")?.trim() || "name";
+    const sortOrder = searchParams.get("sortOrder")?.trim() === "asc" ? "asc" : "desc";
     const skip = (page - 1) * limit;
     const where = search
       ? { name: { contains: search, mode: "insensitive" as const } }
@@ -21,7 +27,7 @@ export async function GET(req: NextRequest) {
         where,
         skip,
         take: limit,
-        orderBy: { createdAt: "desc" },
+        orderBy: { [sortBy]: sortOrder },
         include: {
           regions: true,
         },
@@ -44,6 +50,9 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  const authResult = await requireEditAccess("/dashboard/branches");
+  if (authResult.error) return authResult.error;
+
   try {
     const body = await req.json();
 

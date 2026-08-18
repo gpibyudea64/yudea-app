@@ -5,6 +5,7 @@ import {
   calculateAge,
   determinePelkat,
   getErrorMessage,
+  parsePagination,
   toPaginatedResult,
   toTitleCase,
 } from "@/lib/helper";
@@ -27,6 +28,48 @@ describe("helper utilities", () => {
     ).toBe("Email already used");
     expect(getErrorMessage(new Error("Boom"))).toBe("Boom");
     expect(getErrorMessage("unknown", "Fallback")).toBe("Fallback");
+  });
+
+  it("parses valid pagination params", () => {
+    const params = new URLSearchParams({ page: "3", limit: "25" });
+    expect(parsePagination(params)).toEqual({ page: 3, limit: 25 });
+  });
+
+  it("falls back to defaults for missing, empty, or non-numeric params", () => {
+    expect(parsePagination(new URLSearchParams())).toEqual({
+      page: 1,
+      limit: 10,
+    });
+    expect(parsePagination(new URLSearchParams({ page: "abc", limit: "x" }))).toEqual({
+      page: 1,
+      limit: 10,
+    });
+    expect(parsePagination(new URLSearchParams({ page: "", limit: "" }))).toEqual({
+      page: 1,
+      limit: 10,
+    });
+  });
+
+  it("falls back for zero, negative, and float params", () => {
+    expect(parsePagination(new URLSearchParams({ page: "0", limit: "-5" }))).toEqual({
+      page: 1,
+      limit: 10,
+    });
+    expect(parsePagination(new URLSearchParams({ page: "1.9", limit: "2.4" }))).toEqual({
+      page: 1,
+      limit: 2,
+    });
+  });
+
+  it("caps limit to protect against unbounded queries", () => {
+    const params = new URLSearchParams({ page: "1", limit: "999999999999" });
+    expect(parsePagination(params).limit).toBe(10_000);
+  });
+
+  it("honors custom defaults", () => {
+    expect(
+      parsePagination(new URLSearchParams(), { page: 5, limit: 50 }),
+    ).toEqual({ page: 5, limit: 50 });
   });
 
   it("normalizes array payloads into pagination metadata", () => {

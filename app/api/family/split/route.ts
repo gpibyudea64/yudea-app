@@ -3,11 +3,15 @@ export const runtime = "nodejs";
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 import { validateBody } from "@/lib/api-validate";
+import { requireEditAccess } from "@/lib/server-auth";
 import { splitFamilySchema } from "@/schemas/api.schemas";
 
 // POST /api/family/split
 // Creates a new family and moves selected members into it, promoting one as FAMILY_HEAD.
 export async function POST(req: NextRequest) {
+  const authResult = await requireEditAccess("/dashboard/families");
+  if (authResult.error) return authResult.error;
+
   try {
     const body = await req.json();
 
@@ -26,6 +30,24 @@ export async function POST(req: NextRequest) {
       kelurahan,
       regionId,
     } = parsed.data;
+
+    // Coordinators may only split families inside their own region, and the
+    // new family must also belong to their region.
+    if (authResult.user.role === "COORDINATOR" && authResult.user.regionId) {
+      if (regionId !== authResult.user.regionId) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
+      const originalFamily = await prisma.family.findUnique({
+        where: { id: originalFamilyId },
+        select: { regionId: true },
+      });
+      if (!originalFamily) {
+        return NextResponse.json({ error: "Original family not found" }, { status: 404 });
+      }
+      if (originalFamily.regionId !== authResult.user.regionId) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
+    }
 
     const memberIdsToMove = movedMemberIds?.length ? movedMemberIds : [newHeadMemberId];
 

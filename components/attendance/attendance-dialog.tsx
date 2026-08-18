@@ -92,8 +92,10 @@ export default function AttendanceDialog({
       toast.success("Successfull")
 
       setOpen(false)
-    } catch {
-      toast.error("Error")
+    } catch (error) {
+      // Surface the server message (e.g. a 409 duplicate date/service type)
+      // instead of a generic error toast.
+      toast.error(error instanceof Error ? error.message : "Error")
     }
   }
 

@@ -192,7 +192,7 @@ describe("API client - branch", () => {
     mockFetch.mockResolvedValueOnce(mockResponse(response));
     const result = await getBranches(1, 10, "main");
     expect(result).toEqual(response);
-    expect(mockFetch).toHaveBeenCalledWith(expect.stringContaining("/api/branch?page=1&limit=10&search=main"));
+    expect(mockFetch).toHaveBeenCalledWith(expect.stringContaining("/api/branch?page=1&limit=10&sortBy=name&sortOrder=asc&search=main"));
   });
 
   it("getBranches omits search when not provided", async () => {
@@ -451,12 +451,29 @@ describe("API client - attendance", () => {
 
   it("throws on failed POST request", async () => {
     mockFetch.mockResolvedValueOnce(mockResponse({ error: "Bad request" }, false));
-    await expect(createAttendance({} as Parameters<typeof createAttendance>[0])).rejects.toThrow("Failed to create attendance");
+    await expect(createAttendance({} as Parameters<typeof createAttendance>[0])).rejects.toThrow("Bad request");
+  });
+
+  it("surfaces the server's 409 conflict message on duplicate create", async () => {
+    mockFetch.mockResolvedValueOnce(
+      mockResponse({ error: "Attendance already exists for this date and service type" }, false),
+    );
+    await expect(
+      createAttendance({ serviceDate: "2026-06-01", serviceType: "Sunday", maleCount: 1, femaleCount: 1 }),
+    ).rejects.toThrow("Attendance already exists for this date and service type");
   });
 
   it("throws on failed PATCH request", async () => {
     mockFetch.mockResolvedValueOnce(mockResponse({ error: "Conflict" }, false));
-    await expect(updateAttendance("1", { maleCount: 99 })).rejects.toThrow("Failed to update attendance");
+    await expect(updateAttendance("1", { maleCount: 99 })).rejects.toThrow("Conflict");
+  });
+
+  it("falls back to the generic message when the error body is not JSON", async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      json: () => Promise.reject(new Error("invalid json")),
+    } as unknown as Response);
+    await expect(createAttendance({} as Parameters<typeof createAttendance>[0])).rejects.toThrow("Failed to create attendance");
   });
 
   it("throws on failed DELETE request", async () => {

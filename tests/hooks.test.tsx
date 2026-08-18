@@ -78,9 +78,7 @@ import {
   useUpdateMember,
   useDeleteMember,
   usePresbyters,
-  useMembersGenderCount,
-  useMembersBloodTypeCount,
-  useAllPelkatCounts,
+
 } from "@/hooks/use-member";
 import {
   useFamilies,
@@ -198,45 +196,10 @@ describe("usePresbyters", () => {
       { wrapper: createWrapper() },
     );
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(memberApi.getPresbyters).toHaveBeenCalledWith(1, 10, "", "all");
+    expect(memberApi.getPresbyters).toHaveBeenCalledWith(1, 10, "", "all", "firstName", "asc");
   });
 });
 
-describe("useMembersGenderCount", () => {
-  it("fetches gender counts", async () => {
-    globalThis.fetch = vi.fn().mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve({ all: 100, female: 55, male: 45 }),
-    } as Response);
-    const { result } = renderHook(() => useMembersGenderCount(), { wrapper: createWrapper() });
-    await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(result.current.data?.all).toBe(100);
-  });
-});
-
-describe("useMembersBloodTypeCount", () => {
-  it("fetches blood type counts", async () => {
-    globalThis.fetch = vi.fn().mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve({ A: 30, B: 25, AB: 10, O: 35 }),
-    } as Response);
-    const { result } = renderHook(() => useMembersBloodTypeCount(), { wrapper: createWrapper() });
-    await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(result.current.data?.A).toBe(30);
-  });
-});
-
-describe("useAllPelkatCounts", () => {
-  it("fetches pelkat counts", async () => {
-    globalThis.fetch = vi.fn().mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve([{ pelkat: "PELAYANAN_ANAK", total: 20 }]),
-    } as Response);
-    const { result } = renderHook(() => useAllPelkatCounts(), { wrapper: createWrapper() });
-    await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(result.current.data?.[0].total).toBe(20);
-  });
-});
 
 describe("useCreateMember mutation", () => {
   it("calls createMember on mutation and invalidates queries", async () => {
@@ -603,9 +566,10 @@ describe("CRUD mutations invalidate with refetchType: 'all'", () => {
     result.current.remove.mutate("1");
     await waitFor(() => expect(result.current.remove.isSuccess).toBe(true));
 
-    expect(invalidateSpy).toHaveBeenCalledTimes(6);
+    expect(invalidateSpy).toHaveBeenCalledTimes(9);
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["region"], refetchType: "all" });
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["birthday-members"], refetchType: "all" });
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["dashboard"], refetchType: "all" });
   });
 
   it("branch create/update/delete", async () => {
@@ -630,8 +594,9 @@ describe("CRUD mutations invalidate with refetchType: 'all'", () => {
     result.current.remove.mutate("1");
     await waitFor(() => expect(result.current.remove.isSuccess).toBe(true));
 
-    expect(invalidateSpy).toHaveBeenCalledTimes(3);
+    expect(invalidateSpy).toHaveBeenCalledTimes(6);
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["branch"], refetchType: "all" });
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["dashboard"], refetchType: "all" });
   });
 
   it("member create/update/delete invalidates member and family queries", async () => {
@@ -656,10 +621,11 @@ describe("CRUD mutations invalidate with refetchType: 'all'", () => {
     result.current.remove.mutate("1");
     await waitFor(() => expect(result.current.remove.isSuccess).toBe(true));
 
-    expect(invalidateSpy).toHaveBeenCalledTimes(9);
+    expect(invalidateSpy).toHaveBeenCalledTimes(12);
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["member"], refetchType: "all" });
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["family"], refetchType: "all" });
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["birthday-members"], refetchType: "all" });
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["dashboard"], refetchType: "all" });
   });
 
   it("family create/update/delete", async () => {
@@ -684,10 +650,11 @@ describe("CRUD mutations invalidate with refetchType: 'all'", () => {
     result.current.remove.mutate("1");
     await waitFor(() => expect(result.current.remove.isSuccess).toBe(true));
 
-    expect(invalidateSpy).toHaveBeenCalledTimes(9);
+    expect(invalidateSpy).toHaveBeenCalledTimes(12);
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["family"], refetchType: "all" });
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["member"], refetchType: "all" });
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["birthday-members"], refetchType: "all" });
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["dashboard"], refetchType: "all" });
   });
 
   it("user create/update/delete", async () => {

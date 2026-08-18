@@ -132,8 +132,7 @@ Individual church member. This is the most complex entity with extensive fields 
 | `isActive` | Boolean | Default `true` |
 | `isDeceased` | Boolean | Default `false` |
 | `deathDate` | DateTime? | Date of death |
-| `isPresbyter` | Boolean | Default `false` — marks as church elder |
-| `bloodType` | BloodType? | `A`, `B`, `AB`, or `O` |
+| `bloodType` | BloodType? | `A`, `B`, `AB`, or `O` — editable in the member form |
 | `pelkat` | MemberPelkat? | Cached computed value — set optionally; primary logic is runtime-computed |
 | `tanggalPindah` | DateTime? | Date of transfer out (when family status set inactive) |
 | `statusBaptis` | BaptisStatus? | `SUDAH` / `BELUM` (default `BELUM`) |
@@ -162,7 +161,9 @@ Relations:
 - `Family` (parent)
 - `Region` (optional, via `RegionCoordinator` relation — if member coordinates a region)
 
-**Indexes:** `familyId`, `firstName`, `lastName`, `isActive`, `isPresbyter`, `gender`, `pelkat`, `birthDate`
+**Indexes:** `familyId`, `firstName`, `lastName`, `isActive`, `gender`, `pelkat`, `birthDate`
+
+> **Presbyters** are members whose `jabatan` is `DIAKEN` or `PENATUA` (there is no `isPresbyter` column).
 
 ### Attendance
 

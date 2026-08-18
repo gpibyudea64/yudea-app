@@ -11,8 +11,19 @@ const eslintConfig = defineConfig([
     ".next/**",
     "out/**",
     "build/**",
+    "coverage/**",
     "next-env.d.ts",
+    // One-off QA diagnostic scripts — not part of the maintained codebase.
+    "scripts/qa/**",
   ]),
+  {
+    // Test files use `any` heavily in mock data and API payload shapes; keep
+    // the rule enforced in app source while allowing it in tests.
+    files: ["tests/**/*.{ts,tsx}"],
+    rules: {
+      "@typescript-eslint/no-explicit-any": "off",
+    },
+  },
 ]);
 
 export default eslintConfig;

@@ -13,6 +13,7 @@ import {
 } from "../ui/table";
 import { DataTablePelkatControls } from "./data-table-pelkat-control";
 import { Button } from "../ui/button";
+import { SortableHeader } from "../ui/sortable-header";
 import { Download, FileText, Printer } from "lucide-react";
 import { buildMemberAddress, formatLabel, formatDate } from "@/lib/client-helper";
 
@@ -131,12 +132,22 @@ export default function PelkatMenu() {
     search: "",
     pelkat: "all",
   });
+  const [sortBy, setSortBy] = useState("firstName");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const { data, isLoading } = useMembers({
     page,
     limit,
     pelkat: filter.pelkat,
     search: filter.search,
+    sortBy,
+    sortOrder,
   });
+
+  function handleSort(next: string) {
+    setSortBy(next);
+    setSortOrder(next === sortBy ? (sortOrder === "asc" ? "desc" : "asc") : "asc");
+    setPage(1);
+  }
   const members = data?.data ?? [];
   const enrichedMembers = enrichMembers(members);
   const totalCount = enrichedMembers.length;
@@ -206,19 +217,51 @@ export default function PelkatMenu() {
                   <TableRow className="bg-muted/50">
                     <TableHead className="font-semibold">No</TableHead>
                     <TableHead className="font-semibold">
-                      Nama Keluarga
+                      <SortableHeader
+                        label="Nama Keluarga"
+                        sortBy="familyFamilyName"
+                        currentSortBy={sortBy}
+                        sortOrder={sortOrder}
+                        onSort={handleSort}
+                      />
                     </TableHead>
                     <TableHead className="font-semibold">
-                      Nama Jemaat
+                      <SortableHeader
+                        label="Nama Jemaat"
+                        sortBy="firstName"
+                        currentSortBy={sortBy}
+                        sortOrder={sortOrder}
+                        onSort={handleSort}
+                      />
                     </TableHead>
                     <TableHead className="font-semibold">Alamat</TableHead>
                     <TableHead className="font-semibold">
-                      Tanggal Lahir
+                      <SortableHeader
+                        label="Tanggal Lahir"
+                        sortBy="birthDate"
+                        currentSortBy={sortBy}
+                        sortOrder={sortOrder}
+                        onSort={handleSort}
+                      />
                     </TableHead>
                     <TableHead className="font-semibold">
-                      Sektor Pelayanan
+                      <SortableHeader
+                        label="Sektor Pelayanan"
+                        sortBy="familyRegionName"
+                        currentSortBy={sortBy}
+                        sortOrder={sortOrder}
+                        onSort={handleSort}
+                      />
                     </TableHead>
-                    <TableHead className="font-semibold">Pelkat</TableHead>
+                    <TableHead className="font-semibold">
+                      <SortableHeader
+                        label="Pelkat"
+                        sortBy="pelkat"
+                        currentSortBy={sortBy}
+                        sortOrder={sortOrder}
+                        onSort={handleSort}
+                      />
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

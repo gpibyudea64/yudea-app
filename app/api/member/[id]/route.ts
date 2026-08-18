@@ -4,13 +4,18 @@ import { attachPelkat } from "@/lib/helper";
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 import { validateBody, handleApiError } from "@/lib/api-validate";
+import { requireEditAccess, requireViewAccess } from "@/lib/server-auth";
 import { updateMemberSchema } from "@/schemas/api.schemas";
+import { BloodType } from "@prisma/client";
 
 // GET /api/member/:id
 export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const authResult = await requireViewAccess("/dashboard/members");
+  if (authResult.error) return authResult.error;
+
   try {
     const { id } = await params;
 
@@ -34,14 +39,48 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const authResult = await requireEditAccess("/dashboard/members");
+  if (authResult.error) return authResult.error;
+
+  const { id } = await params;
+
   try {
-    const { id } = await params;
     const body = await req.json();
 
     const parsed = validateBody(updateMemberSchema, body, "member PATCH");
     if (parsed.error) return parsed.error;
 
     const d = parsed.data;
+
+    // Coordinators may only update members whose current (and, if changing,
+    // target) family is in their own region.
+    if (authResult.user.role === "COORDINATOR" && authResult.user.regionId) {
+      const member = await prisma.member.findUnique({
+        where: { id },
+        select: { familyId: true },
+      });
+      if (!member) {
+        return NextResponse.json({ error: "Member not found" }, { status: 404 });
+      }
+      const [currentFamily, targetFamily] = await Promise.all([
+        prisma.family.findUnique({
+          where: { id: member.familyId },
+          select: { regionId: true },
+        }),
+        d.familyId
+          ? prisma.family.findUnique({
+              where: { id: d.familyId },
+              select: { regionId: true },
+            })
+          : null,
+      ]);
+      if (
+        currentFamily?.regionId !== authResult.user.regionId ||
+        (targetFamily && targetFamily.regionId !== authResult.user.regionId)
+      ) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
+    }
 
     const connectFamily = d.familyId !== undefined
       ? { family: { connect: { id: d.familyId } } }
@@ -57,6 +96,9 @@ export async function PATCH(
         ...(d.birthDate !== undefined && { birthDate: new Date(d.birthDate) }),
         ...(d.phone !== undefined && { phone: d.phone }),
         ...(d.email !== undefined && { email: d.email || null }),
+        ...(d.bloodType !== undefined && {
+          bloodType: d.bloodType ? (d.bloodType as BloodType) : null,
+        }),
         ...(d.role !== undefined && { role: d.role }),
         ...(d.childNumber !== undefined && {
           childNumber: d.role === "CHILD" ? (d.childNumber || null) : null,
@@ -141,8 +183,26 @@ export async function DELETE(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const authResult = await requireEditAccess("/dashboard/members");
+  if (authResult.error) return authResult.error;
+
+  const { id } = await params;
+
   try {
-    const { id } = await params;
+    // Coordinators may only delete members in their own region.
+    if (authResult.user.role === "COORDINATOR" && authResult.user.regionId) {
+      const member = await prisma.member.findUnique({
+        where: { id },
+        select: { family: { select: { regionId: true } } },
+      });
+      if (!member) {
+        return NextResponse.json({ error: "Member not found" }, { status: 404 });
+      }
+      if (member.family.regionId !== authResult.user.regionId) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
+    }
+
     // A member may be a region coordinator — clear the reference first
     // (no DB-level onDelete for the coordinator relation).
     await prisma.$transaction([

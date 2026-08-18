@@ -55,6 +55,19 @@ describe("rbac utilities", () => {
     expect(access).toBeUndefined();
   });
 
+  it("resolves presbytery and report to their own explicit entries", () => {
+    // These two routes must have dedicated entries rather than inheriting the
+    // /dashboard fallback permissions via prefix matching.
+    expect(getRouteAccessForPath("/dashboard/presbytery")).toEqual({
+      view: ["ADMIN", "STAFF", "COORDINATOR", "MEMBER"],
+      edit: ["ADMIN", "STAFF", "COORDINATOR"],
+    });
+    expect(getRouteAccessForPath("/dashboard/report")).toEqual({
+      view: ["ADMIN", "STAFF"],
+      edit: ["ADMIN", "STAFF"],
+    });
+  });
+
   it("parses legacy and current role access JSON", () => {
     const config = parseRoleAccessConfig(
       JSON.stringify({
@@ -147,9 +160,15 @@ describe("rbac utilities", () => {
   it("checks hasRequiredRole", () => {
     expect(hasRequiredRole("ADMIN", ["ADMIN", "STAFF"])).toBe(true);
     expect(hasRequiredRole("MEMBER", ["ADMIN", "STAFF"])).toBe(false);
-    expect(hasRequiredRole("ADMIN", undefined)).toBe(true);
-    expect(hasRequiredRole("ADMIN", [])).toBe(true);
     expect(hasRequiredRole(null, ["ADMIN"])).toBe(false);
+  });
+
+  it("denies when the allow-list is empty or missing (deny-by-default)", () => {
+    // An empty or absent list must never grant access: otherwise an empty
+    // `edit` list in the persisted RBAC config would open writes to everyone.
+    expect(hasRequiredRole("ADMIN", [])).toBe(false);
+    expect(hasRequiredRole("ADMIN", undefined)).toBe(false);
+    expect(hasRequiredRole("MEMBER", [])).toBe(false);
   });
 
   it("gets allowed roles for path from config", () => {

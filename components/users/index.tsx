@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTableControls } from "@/components/ui/data-table-controls";
+import { SortableHeader } from "@/components/ui/sortable-header";
 import {
   Table,
   TableBody,
@@ -23,9 +24,17 @@ export default function UsersPage() {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [search, setSearch] = useState("");
+  const [sortBy, setSortBy] = useState("email");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const { canEdit } = usePageAccess("/dashboard/users");
 
-  const { data, isLoading } = useUsers(page, limit, search);
+  const { data, isLoading } = useUsers(page, limit, search, sortBy, sortOrder);
+
+  function handleSort(next: string) {
+    setSortBy(next);
+    setSortOrder(next === sortBy ? (sortOrder === "asc" ? "desc" : "asc") : "asc");
+    setPage(1);
+  }
   const deleteMutation = useDeleteUser();
   const users = data?.data ?? [];
 
@@ -92,9 +101,33 @@ export default function UsersPage() {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/50">
-                    <TableHead className="font-semibold">Name</TableHead>
-                    <TableHead className="font-semibold">Email</TableHead>
-                    <TableHead className="font-semibold">Role</TableHead>
+                    <TableHead className="font-semibold">
+                      <SortableHeader
+                        label="Name"
+                        sortBy="name"
+                        currentSortBy={sortBy}
+                        sortOrder={sortOrder}
+                        onSort={handleSort}
+                      />
+                    </TableHead>
+                    <TableHead className="font-semibold">
+                      <SortableHeader
+                        label="Email"
+                        sortBy="email"
+                        currentSortBy={sortBy}
+                        sortOrder={sortOrder}
+                        onSort={handleSort}
+                      />
+                    </TableHead>
+                    <TableHead className="font-semibold">
+                      <SortableHeader
+                        label="Role"
+                        sortBy="role"
+                        currentSortBy={sortBy}
+                        sortOrder={sortOrder}
+                        onSort={handleSort}
+                      />
+                    </TableHead>
                     {canEdit && (
                       <TableHead className="w-40 text-center font-semibold">
                         Actions

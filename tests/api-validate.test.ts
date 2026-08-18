@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
-import { handleApiError, validateBody } from "@/lib/api-validate";
+import { handleApiError, isPrismaUniqueViolation, validateBody } from "@/lib/api-validate";
 import { NextResponse } from "next/server";
 
 // A simple test schema
@@ -273,5 +273,25 @@ describe("handleApiError", () => {
 
     expect(response).toBeInstanceOf(NextResponse);
     expect(response.headers.get("content-type")).toContain("application/json");
+  });
+});
+
+describe("isPrismaUniqueViolation", () => {
+  it("returns true for Prisma P2002 errors", () => {
+    const p2002 = Object.assign(new Error("Unique constraint failed"), {
+      code: "P2002",
+      meta: { target: ["serviceDate_serviceType"] },
+    });
+    expect(isPrismaUniqueViolation(p2002)).toBe(true);
+  });
+
+  it("returns false for other errors", () => {
+    expect(isPrismaUniqueViolation(new Error("boom"))).toBe(false);
+    expect(isPrismaUniqueViolation(null)).toBe(false);
+    expect(isPrismaUniqueViolation(undefined)).toBe(false);
+    expect(isPrismaUniqueViolation("P2002")).toBe(false);
+    expect(
+      isPrismaUniqueViolation(Object.assign(new Error("fk failed"), { code: "P2003" })),
+    ).toBe(false);
   });
 });

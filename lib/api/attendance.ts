@@ -6,10 +6,14 @@ export async function getAttendances(
   page = 1,
   limit = 10,
   search = "",
+  sortBy = "serviceDate",
+  sortOrder: "asc" | "desc" = "desc",
 ): Promise<PaginatedResponse<Attendance>> {
   const params = new URLSearchParams({
     page: String(page),
     limit: String(limit),
+    sortBy,
+    sortOrder,
   });
   if (search) params.set("search", search);
 
@@ -24,6 +28,20 @@ export async function getAttendance(id: string): Promise<Attendance> {
   return res.json();
 }
 
+/**
+ * Reads the `{ error }` message from a failed API response so callers can
+ * surface e.g. the 409 duplicate-attendance message instead of a generic error.
+ */
+async function getApiErrorMessage(res: Response, fallback: string) {
+  try {
+    const body = (await res.json()) as { error?: unknown };
+    if (typeof body?.error === "string" && body.error) return body.error;
+  } catch {
+    // Response body was not JSON — fall through to the generic message.
+  }
+  return fallback;
+}
+
 export async function createAttendance(
   payload: AttendanceForm,
 ): Promise<Attendance> {
@@ -32,7 +50,7 @@ export async function createAttendance(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
-  if (!res.ok) throw new Error("Failed to create attendance");
+  if (!res.ok) throw new Error(await getApiErrorMessage(res, "Failed to create attendance"));
   return res.json();
 }
 
@@ -45,7 +63,7 @@ export async function updateAttendance(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
-  if (!res.ok) throw new Error("Failed to update attendance");
+  if (!res.ok) throw new Error(await getApiErrorMessage(res, "Failed to update attendance"));
   return res.json();
 }
 

@@ -45,6 +45,7 @@ export function useCreateFamily() {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY], refetchType: "all" });
       queryClient.invalidateQueries({ queryKey: ["member"], refetchType: "all" });
       queryClient.invalidateQueries({ queryKey: ["birthday-members"], refetchType: "all" });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"], refetchType: "all" });
     },
   });
 }
@@ -58,6 +59,7 @@ export function useUpdateFamily() {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY], refetchType: "all" });
       queryClient.invalidateQueries({ queryKey: ["member"], refetchType: "all" });
       queryClient.invalidateQueries({ queryKey: ["birthday-members"], refetchType: "all" });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"], refetchType: "all" });
     },
   });
 }
@@ -70,6 +72,7 @@ export function useDeleteFamily() {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY], refetchType: "all" });
       queryClient.invalidateQueries({ queryKey: ["member"], refetchType: "all" });
       queryClient.invalidateQueries({ queryKey: ["birthday-members"], refetchType: "all" });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"], refetchType: "all" });
     },
   });
 }

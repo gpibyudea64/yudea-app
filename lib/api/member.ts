@@ -30,10 +30,14 @@ export async function getPresbyters(
   limit = 10,
   search = "",
   region = "all",
+  sortBy = "firstName",
+  sortOrder: "asc" | "desc" = "asc",
 ): Promise<PaginatedResponse<Member>> {
   const params = new URLSearchParams({
     page: String(page),
     limit: String(limit),
+    sortBy,
+    sortOrder,
   });
   if (search) params.set("search", search);
   if (region) params.set("region", region);

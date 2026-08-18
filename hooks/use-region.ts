@@ -13,10 +13,16 @@ const QUERY_KEY = "region";
 
 // ── queries ───────────────────────────────────────────────
 
-export function useRegions(page = 1, limit = 10, search = "") {
+export function useRegions(
+  page = 1,
+  limit = 10,
+  search = "",
+  sortBy = "name",
+  sortOrder: "asc" | "desc" = "asc",
+) {
   return useQuery({
-    queryKey: [QUERY_KEY, page, limit, search],
-    queryFn: () => getRegions(page, limit, search),
+    queryKey: [QUERY_KEY, page, limit, search, sortBy, sortOrder],
+    queryFn: () => getRegions(page, limit, search, sortBy, sortOrder),
     staleTime: 30_000,
   });
 }
@@ -47,6 +53,7 @@ export function useCreateRegion() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY], refetchType: "all" });
       queryClient.invalidateQueries({ queryKey: ["birthday-members"], refetchType: "all" });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"], refetchType: "all" });
     },
   });
 }
@@ -59,6 +66,7 @@ export function useUpdateRegion() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY], refetchType: "all" });
       queryClient.invalidateQueries({ queryKey: ["birthday-members"], refetchType: "all" });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"], refetchType: "all" });
     },
   });
 }
@@ -70,6 +78,7 @@ export function useDeleteRegion() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY], refetchType: "all" });
       queryClient.invalidateQueries({ queryKey: ["birthday-members"], refetchType: "all" });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"], refetchType: "all" });
     },
   });
 }

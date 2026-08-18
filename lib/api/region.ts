@@ -5,10 +5,14 @@ export async function getRegions(
   page = 1,
   limit = 10,
   search = "",
+  sortBy = "name",
+  sortOrder: "asc" | "desc" = "asc",
 ): Promise<PaginatedResponse<Region>> {
   const params = new URLSearchParams({
     page: String(page),
     limit: String(limit),
+    sortBy,
+    sortOrder,
   });
   if (search) params.set("search", search);
 

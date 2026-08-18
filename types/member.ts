@@ -20,6 +20,8 @@ export type MemberPelkat =
   | "PERSEKUTUAN_KAUM_PEREMPUAN"
   | "PERSEKUTUAN_KAUM_LANJUT_USIA";
 
+export type BloodType = "A" | "B" | "AB" | "O";
+
 export type BaptisStatus = "SUDAH" | "BELUM";
 export type SidiStatus = "SUDAH" | "BELUM";
 export type PerkawinanStatus = "BELUM_MENIKAH" | "JANDA" | "DUDA" | "MENIKAH";
@@ -39,6 +41,7 @@ export type Member = {
   birthDate: Date | string;
   phone: string;
   email: string | null;
+  bloodType?: BloodType | null;
   role: MemberRole;
   childNumber: number | null;
   sameAddressAsFamily: boolean;
@@ -88,6 +91,7 @@ export type MemberForm = {
   birthDate: string;
   phone: string;
   email: string;
+  bloodType: BloodType | "";
   role: MemberRole;
   childNumber: number;
   sameAddressAsFamily: boolean;
@@ -131,6 +135,17 @@ export const genderOptions: Array<{ label: string; value: Gender }> = [
   { label: "Perempuan", value: "FEMALE" },
 ];
 
+// Radix Select forbids empty-string item values ("" clears the selection and
+// shows the placeholder), so the "not specified" option uses a sentinel that
+// the dialogs map back to "" (which the API stores as null).
+export const bloodTypeOptions: Array<{ label: string; value: BloodType | "none" }> = [
+  { label: "Tidak Diketahui", value: "none" },
+  { label: "A", value: "A" },
+  { label: "B", value: "B" },
+  { label: "AB", value: "AB" },
+  { label: "O", value: "O" },
+];
+
 export const memberRoleOptions: Array<{ label: string; value: MemberRole }> = [
   { label: "Kepala Keluarga", value: "FAMILY_HEAD" },
   { label: "Istri", value: "WIFE" },
@@ -167,20 +182,3 @@ export const jabatanOptions: Array<{ label: string; value: Jabatan }> = [
   { label: "Pengurus Komisi", value: "PENGURUS_KOMISI" },
 ];
 
-export type MemberCount = {
-  all: number;
-  female: number;
-  male: number;
-};
-
-export type BloodTypeCount = {
-  A: number;
-  B: number;
-  AB: number;
-  O: number;
-};
-
-export type PelkatCount = {
-  pelkat: MemberPelkat;
-  total: number;
-};

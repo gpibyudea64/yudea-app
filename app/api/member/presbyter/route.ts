@@ -1,19 +1,23 @@
 export const runtime = "nodejs";
 
-import { auth } from "@/auth";
+import { parsePagination } from "@/lib/helper";
 import { prisma } from "@/lib/prisma";
-import { Prisma, User } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { handleApiError } from "@/lib/api-validate";
+import { requireViewAccess } from "@/lib/server-auth";
 
 export async function GET(req: NextRequest) {
   try {
-    const session = await auth();
+    const authResult = await requireViewAccess("/dashboard/members");
+    if (authResult.error) return authResult.error;
+    const session = authResult.user;
     const { searchParams } = req.nextUrl;
-    const page = Math.max(1, Number(searchParams.get("page") ?? 1));
-    const limit = Math.max(1, Number(searchParams.get("limit") ?? 10));
+    const { page, limit } = parsePagination(searchParams);
     const search = searchParams.get("search")?.trim() ?? "";
     const region = searchParams.get("region")?.trim() ?? "";
+    const sortBy = searchParams.get("sortBy")?.trim() || "firstName";
+    const sortOrder = searchParams.get("sortOrder")?.trim() === "asc" ? "asc" : "desc";
     const skip = (page - 1) * limit;
 
     // Presbyters are members whose jabatan is DIAKEN or PENATUA.
@@ -56,8 +60,8 @@ export async function GET(req: NextRequest) {
     }
 
     // Filter by region if user is a coordinator
-    const regionId = (session?.user as User)?.regionId;
-    if (session?.user?.role === "COORDINATOR" && regionId) {
+    const regionId = session.regionId;
+    if (session.role === "COORDINATOR" && regionId) {
       where = {
         ...where,
         family: {
@@ -71,7 +75,10 @@ export async function GET(req: NextRequest) {
         where,
         skip,
         take: limit,
-        orderBy: { createdAt: "desc" },
+        orderBy:
+          sortBy === "familyRegionName"
+            ? { family: { region: { name: sortOrder } } }
+            : { [sortBy]: sortOrder },
         include: {
           family: {
             include: {

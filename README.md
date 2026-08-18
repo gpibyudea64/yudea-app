@@ -196,7 +196,7 @@ components/
 │   └── form.tsx              # Login form
 
 hooks/                        # TanStack Query hooks
-├── use-member.ts             # Members CRUD + counts + presbyters
+├── use-member.ts             # Members CRUD + presbyters
 ├── use-family.ts             # Families CRUD
 ├── use-region.ts             # Regions CRUD + member counts
 ├── use-branch.ts             # Branches CRUD
@@ -244,15 +244,21 @@ nav/
 services/                     # (Deprecated - use hooks instead)
 └── member.ts                 # Removed - functionality in hooks/use-member.ts
 
-tests/                        # Vitest test files (14 files, 170 tests)
+tests/                        # Vitest test files (20 files, 386 tests)
 ├── utils.test.ts             # cn() utility
-├── helper.test.ts            # Server helpers (pelkat, pagination)
+├── helper.test.ts            # Server helpers (pelkat, pagination, parsePagination)
 ├── client-helper.test.ts     # Client formatting helpers
-├── schemas.test.ts           # Zod schemas
+├── schemas.test.ts           # Zod schemas (auth, user, member incl. bloodType)
+├── api-validate.test.ts      # validateBody / handleApiError machinery
 ├── components.test.tsx       # Component rendering
+├── components-additional.test.tsx  # Page rendering with mocked hooks
 ├── hooks.test.tsx            # TanStack Query hooks
+├── use-dialog-form.test.tsx  # Dialog form reset hook
+├── use-page-access.test.tsx  # Page access hook
+├── use-mobile.test.tsx       # Mobile breakpoint hook
+├── use-indonesia-region.test.tsx  # Indonesian region cascade hooks
 ├── auth-session.test.ts      # Client auth session
-├── server-auth.test.ts       # Server auth guards
+├── server-auth.test.ts       # Server auth guards (incl. requireEditAccess)
 ├── auth-config.test.ts       # NextAuth config
 ├── rbac.test.ts              # RBAC logic
 ├── rbac-config.test.ts       # RBAC client config
@@ -331,17 +337,18 @@ Relations: `Region`, `Member[]`
 | `role` | MemberRole | `FAMILY_HEAD`, `WIFE`, `CHILD`, etc. |
 | `isActive` | Boolean | Default true |
 | `isDeceased` | Boolean | Default false |
-| `isPresbyter` | Boolean | Default false |
-| `bloodType` | BloodType? | A, B, AB, O |
-| `pelkat` | MemberPelkat? | Cached computed value |
+| `bloodType` | BloodType? | A, B, AB, O — set via the member form |
+| `pelkat` | MemberPelkat? | Computed from age/gender/role; not persisted by the form |
 | `statusBaptis` / `statusSidi` / `statusPerkawinan` | Enums | Sacramental status |
-| `jabatan` | Jabatan? | Church position |
+| `jabatan` | Jabatan? | Church position; `DIAKEN`/`PENATUA` = presbyter |
 | `familyId` | String | FK to Family |
 | `tanggalPindah` | DateTime? | Date of transfer out |
 
 Relations: `Family`, `Region` (coordinator, optional)
 
-**Database indexes:** familyId, firstName, lastName, isActive, isPresbyter, gender, pelkat, birthDate
+> **Presbyters** are derived from `jabatan` (`DIAKEN` or `PENATUA`) — there is no `isPresbyter` column (removed in a 2026 migration).
+
+**Database indexes:** familyId, firstName, lastName, isActive, gender, pelkat, birthDate
 
 #### Attendance
 | Field | Type | Notes |
@@ -456,9 +463,6 @@ All list endpoints return a consistent paginated response:
 | `POST` | `/api/member` | Create (firstName, gender, birthDate, role, familyId required) | Required |
 | `GET/PATCH/DELETE` | `/api/member/:id` | CRUD by ID | Required |
 | `GET` | `/api/member/presbyter` | List only presbyters with region filter | Required |
-| `GET` | `/api/member/gender-count` | Gender distribution counts | Required |
-| `GET` | `/api/member/blood-type-count` | Blood type distribution counts | Required |
-| `GET` | `/api/member/pelkat-count` | Pelkat group counts | Required |
 
 **Filtering per coordinator role:** When the user role is `COORDINATOR`, members are automatically filtered by the coordinator's assigned region.
 
@@ -543,11 +547,15 @@ Authentication uses **NextAuth v5** with a credentials provider:
 
 | Function | Returns | Description |
 |----------|---------|-------------|
-| `getSessionUser()` | `{ id, email, name, role } \| null` | Parsed session user with normalized role |
+| `getSessionUser()` | `{ id, email, name, role, regionId } \| null` | Parsed session user with normalized role |
 | `requireAuth()` | `{ user, error }` | Returns 401 if unauthenticated |
 | `requireAdmin()` | `{ user, error }` | Returns 403 if role is not ADMIN |
+| `requireEditAccess(pathname)` | `{ user, error }` | Returns 403 if the user's role is not in the route's persisted `edit` list |
+| `requireViewAccess(pathname)` | `{ user, error }` | Returns 403 if the user's role is not in the route's persisted `view` list |
 
-Used in API routes for privileged operations (user management, RBAC settings).
+Used in API routes: `requireAdmin()` on user management and RBAC settings, `requireEditAccess()` on every write endpoint (member/family/region/branch/attendance create, update, delete, status, split), and `requireViewAccess()` on every read endpoint (lists, single items, counts, birthday, report, dashboard) so the API enforces the same role lists as the client UI.
+
+> **Server-side RBAC:** Client-side guards hide buttons, but the API enforces the same view/edit lists server-side (defaults merged with the persisted `role_access_config`). A view-only `MEMBER` role user can no longer read family/region/dashboard/report data or mutate records by calling the API directly.
 
 ### Client-Side Guards
 
@@ -574,7 +582,9 @@ Used in API routes for privileged operations (user management, RBAC settings).
 | `/dashboard/birthday` | ADMIN, STAFF, COORDINATOR | ADMIN, STAFF, COORDINATOR |
 | `/dashboard/families` | ADMIN, STAFF, COORDINATOR | ADMIN, STAFF, COORDINATOR |
 | `/dashboard/members` | ADMIN, STAFF, COORDINATOR, MEMBER | ADMIN, STAFF, COORDINATOR |
+| `/dashboard/presbytery` | ADMIN, STAFF, COORDINATOR, MEMBER | ADMIN, STAFF, COORDINATOR |
 | `/dashboard/pelkat-members` | ADMIN, STAFF | ADMIN, STAFF |
+| `/dashboard/report` | ADMIN, STAFF | ADMIN, STAFF |
 | `/dashboard/attendance` | ADMIN, STAFF | ADMIN, STAFF |
 | `/dashboard/users` | ADMIN | ADMIN |
 | `/dashboard/settings` | ADMIN | ADMIN |
@@ -593,8 +603,9 @@ Route `/dashboard/settings` is hardcoded as admin-only — even persisted overri
 
 When a user has `role === "COORDINATOR"` and a `regionId` set on their account:
 - Family, member, and region API queries are automatically scoped to their region
+- **Writes are scoped too:** creating a member requires a family in their region, and updating/deleting members, families, or changing family status/splitting is rejected (403) when the target family is outside their region
 - Birthday queries filter to their region's members
-- The dashboard region table only shows their region
+- Dashboard counts, gender/blood-type/pelkat breakdowns, and the region table only reflect their region
 
 ---
 
@@ -693,13 +704,11 @@ All hooks follow a consistent pattern:
 |------|-----------|-------|
 | `useMembers({ page, limit, search, region, pelkat, sortBy, sortOrder })` | `['member', ...params]` | Paginated, filterable member list |
 | `useMember(id)` | `['member', id]` | Single member, disabled for empty id |
-| `usePresbyters({ page, limit, search, region })` | `['member', ...params]` | Presbyter-only list |
+| `usePresbyters({ page, limit, search, region, sortBy, sortOrder })` | `['member', ...params]` | Presbyter-only list |
 | `useCreateMember()` | invalidates `['member']`, `['family']` | |
 | `useUpdateMember()` | invalidates `['member']`, `['family']` | |
 | `useDeleteMember()` | invalidates `['member']`, `['family']` | |
-| `useMembersGenderCount()` | `['member', 'count', 'gender']` | Gender distribution |
-| `useMembersBloodTypeCount()` | `['member', 'count', 'blood-type']` | Blood type distribution |
-| `useAllPelkatCounts()` | `['member', 'pelkat-count']` | Pelkat distribution |
+
 
 #### Families (`hooks/use-family.ts`)
 
@@ -715,7 +724,7 @@ All hooks follow a consistent pattern:
 
 | Hook | Query Key |
 |------|-----------|
-| `useRegions(page, limit, search)` | `['region', ...params]` |
+| `useRegions(page, limit, search, sortBy, sortOrder)` | `['region', ...params]` |
 | `useRegion(id)` | `['region', id]` |
 | `useMemberPerRegions()` | `['region', 'member-count']` |
 | `useCreateRegion()` / `useUpdateRegion()` / `useDeleteRegion()` | invalidates `['region']` |
@@ -901,7 +910,7 @@ Dynamic cascading select data sourced from `idn-area-data`:
 
 - **Framework:** Vitest 4
 - **Environment:** jsdom (for component/hook tests)
-- **Total tests:** 170 across 14 test files
+- **Total tests:** 386 across 20 test files
 
 ### Running Tests
 
@@ -915,19 +924,25 @@ npm run test:watch    # Watch mode
 | File | Tests | Description |
 |------|-------|-------------|
 | `utils.test.ts` | 5 | `cn()` utility |
-| `helper.test.ts` | 14 | Server helpers (pelkat, age, pagination) |
+| `helper.test.ts` | 19 | Server helpers (pelkat, age, pagination, parsePagination) |
 | `client-helper.test.ts` | 15 | Client formatting (title case, dates, labels) |
-| `schemas.test.ts` | 11 | Zod validation schemas |
+| `schemas.test.ts` | 17 | Zod validation schemas (auth, user, member/bloodType) |
+| `api-validate.test.ts` | 22 | `validateBody` / `handleApiError` machinery |
 | `components.test.tsx` | 12 | Component rendering |
-| `hooks.test.tsx` | 28 | TanStack Query hook behaviors |
-| `auth-session.test.ts` | 9 | Client auth session persistence |
-| `server-auth.test.ts` | 9 | Server authentication guards |
+| `components-additional.test.tsx` | 24 | Page rendering with mocked hooks |
+| `hooks.test.tsx` | 46 | TanStack Query hook behaviors |
+| `use-dialog-form.test.tsx` | 14 | Dialog form reset hook |
+| `use-page-access.test.tsx` | 7 | Page access hook |
+| `use-mobile.test.tsx` | 6 | Mobile breakpoint hook |
+| `use-indonesia-region.test.tsx` | 15 | Indonesian region cascade hooks |
+| `auth-session.test.ts` | 27 | Client auth session persistence |
+| `server-auth.test.ts` | 15 | Server auth guards (incl. requireEditAccess) |
 | `auth-config.test.ts` | 3 | NextAuth config structure |
 | `rbac.test.ts` | 19 | RBAC logic (normalize, hasRequired, access checks) |
-| `rbac-config.test.ts` | 8 | Client RBAC config persistence |
+| `rbac-config.test.ts` | 21 | Client RBAC config persistence |
 | `integration-rbac-settings.test.ts` | 6 | RBAC server persistence with Prisma |
 | `proxy.test.ts` | 2 | Proxy matcher config |
-| `api-client.test.ts` | 29 | API client fetch functions |
+| `api-client.test.ts` | 83 | API client fetch functions |
 
 ### Testing Patterns
 
@@ -951,16 +966,16 @@ npm run test             # Run Vitest
 npm run test:watch       # Run Vitest in watch mode
 npm run prisma:generate  # Regenerate Prisma client
 npm run prisma:migrate   # Apply database migrations
-npm run prisma:seed      # Seed demo data
+npm run prisma:seed      # Seed demo data (safe re-run; refuses to wipe existing data)
+npm run prisma:seed -- --reset  # Wipe existing data and reseed from scratch
 ```
 
 ### Lint Status
 
-The project uses ESLint 9 with `eslint-config-next` (core-web-vitals + TypeScript rules). Current state:
+The project uses ESLint 9 with `eslint-config-next` (core-web-vitals + TypeScript rules).
 
-- **44 total issues** (21 errors, 23 warnings)
-- Remaining errors are primarily `@typescript-eslint/no-explicit-any` in test mock data (20 instances)
-- Warnings include unused imports in test files
+- **Passes with 0 errors.** `@typescript-eslint/no-explicit-any` is relaxed for `tests/**` (mock data) and the one-off diagnostic scripts in `scripts/qa/**` are ignored entirely.
+- The only remaining item is a single `react-hooks/incompatible-library` warning for `useForm().watch()` in `user-dialog.tsx` — intentional (see Code Quality Notes).
 
 ### Code Quality Notes
 

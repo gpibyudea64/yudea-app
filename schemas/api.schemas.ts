@@ -6,6 +6,7 @@ import {
   SidiStatus,
   PerkawinanStatus,
   Jabatan,
+  BloodType,
 } from "@prisma/client";
 
 // ── Prisma-native Zod enums ────────────────────────────
@@ -15,6 +16,8 @@ import {
 
 const genderSchema = z.nativeEnum(Gender);
 const memberRoleSchema = z.nativeEnum(MemberRole);
+// "" means "not specified" (the UI default); the handler stores null in that case.
+const bloodTypeSchema = z.union([z.nativeEnum(BloodType), z.literal("")]);
 const baptisStatusSchema = z.nativeEnum(BaptisStatus);
 const sidiStatusSchema = z.nativeEnum(SidiStatus);
 const perkawinanStatusSchema = z.nativeEnum(PerkawinanStatus);
@@ -29,6 +32,7 @@ export const createMemberSchema = z.object({
   birthDate: z.string().min(1, "Birth date is required"),
   phone: z.string().optional().default(""),
   email: z.string().optional().default(""),
+  bloodType: bloodTypeSchema.optional().default(""),
   role: memberRoleSchema,
   childNumber: z.coerce.number().int().min(0).optional().default(0),
   sameAddressAsFamily: z.boolean().optional().default(true),
@@ -80,6 +84,7 @@ export const updateMemberSchema = z.object({
   birthDate: z.string().optional(),
   phone: z.string().optional(),
   email: z.string().optional(),
+  bloodType: bloodTypeSchema.optional(),
   role: memberRoleSchema.optional(),
   childNumber: z.coerce.number().int().min(0).optional(),
   sameAddressAsFamily: z.boolean().optional(),
@@ -124,6 +129,7 @@ const memberInputSchema = z.object({
   birthDate: z.string().min(1, "Member birth date is required"),
   phone: z.string().optional().nullable(),
   email: z.string().optional().nullable(),
+  bloodType: bloodTypeSchema.optional(),
   role: memberRoleSchema,
   childNumber: z.coerce.number().int().min(0).optional().nullable(),
   sameAddressAsFamily: z.boolean().optional().default(true),

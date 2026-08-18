@@ -6,12 +6,7 @@ import {
   getPresbyters,
   updateMember,
 } from "@/lib/api/member";
-import type {
-  BloodTypeCount,
-  MemberCount,
-  MemberForm,
-  PelkatCount,
-} from "@/types/member";
+import type { MemberForm } from "@/types/member";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 const QUERY_KEY = "member";
@@ -57,6 +52,7 @@ export function useCreateMember() {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY], refetchType: "all" });
       queryClient.invalidateQueries({ queryKey: ["family"], refetchType: "all" });
       queryClient.invalidateQueries({ queryKey: ["birthday-members"], refetchType: "all" });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"], refetchType: "all" });
     },
   });
 }
@@ -70,6 +66,7 @@ export function useUpdateMember() {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY], refetchType: "all" });
       queryClient.invalidateQueries({ queryKey: ["family"], refetchType: "all" });
       queryClient.invalidateQueries({ queryKey: ["birthday-members"], refetchType: "all" });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"], refetchType: "all" });
     },
   });
 }
@@ -82,6 +79,7 @@ export function useDeleteMember() {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY], refetchType: "all" });
       queryClient.invalidateQueries({ queryKey: ["family"], refetchType: "all" });
       queryClient.invalidateQueries({ queryKey: ["birthday-members"], refetchType: "all" });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"], refetchType: "all" });
     },
   });
 }
@@ -91,51 +89,21 @@ export function usePresbyters({
   limit = 10,
   search = "",
   region = "all",
+  sortBy = "firstName",
+  sortOrder = "asc",
 }: {
   page: number;
   limit: number;
   search: string;
   region: string;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
 }) {
   return useQuery({
-    queryKey: [QUERY_KEY, page, limit, search, region],
-    queryFn: () => getPresbyters(page, limit, search, region),
+    queryKey: [QUERY_KEY, page, limit, search, region, sortBy, sortOrder],
+    queryFn: () => getPresbyters(page, limit, search, region, sortBy, sortOrder),
     staleTime: 30_000,
   });
 }
 
-export function useMembersGenderCount() {
-  return useQuery({
-    queryKey: ["member", "count", "gender"],
-    queryFn: async (): Promise<MemberCount> => {
-      const res = await fetch("/api/member/gender-count");
-      if (!res.ok) throw new Error("Failed to fetch member counts");
-      return res.json();
-    },
-    staleTime: 60_000,
-  });
-}
 
-export function useMembersBloodTypeCount() {
-  return useQuery({
-    queryKey: ["member", "count", "blood-type"],
-    queryFn: async (): Promise<BloodTypeCount> => {
-      const res = await fetch("/api/member/blood-type-count");
-      if (!res.ok) throw new Error("Failed to fetch member blood type counts");
-      return res.json();
-    },
-    staleTime: 60_000,
-  });
-}
-
-export function useAllPelkatCounts() {
-  return useQuery({
-    queryKey: ["member", "pelkat-count"],
-    queryFn: async (): Promise<PelkatCount[]> => {
-      const res = await fetch("/api/member/pelkat-count");
-      if (!res.ok) throw new Error("Failed to fetch pelkat counts");
-      return res.json();
-    },
-    staleTime: 60_000,
-  });
-}

@@ -5,6 +5,7 @@ import { useFamilies } from "@/hooks/use-family";
 import { useCreateMember, useUpdateMember } from "@/hooks/use-member";
 import {
   genderOptions,
+  bloodTypeOptions,
   memberRoleOptions,
   baptisStatusOptions,
   sidiStatusOptions,
@@ -88,6 +89,7 @@ export default function MemberDialog({
       birthDate: "",
       phone: "",
       email: "",
+      bloodType: "",
       role: "CHILD",
       childNumber: 0,
       sameAddressAsFamily: true,
@@ -131,6 +133,7 @@ export default function MemberDialog({
     birthDate: "",
     phone: "",
     email: "",
+    bloodType: "" as const,
     role: "CHILD" as const,
     childNumber: 0,
     sameAddressAsFamily: true,
@@ -444,6 +447,33 @@ export default function MemberDialog({
                 {errors.gender && (
                   <p className="text-sm text-red-500">{errors.gender.message}</p>
                 )}
+              </div>
+
+              <div className="space-y-2">
+                <Label>Golongan Darah</Label>
+                <Controller
+                  control={control}
+                  name="bloodType"
+                  render={({ field }) => (
+                    <Select
+                      value={field.value === "" ? "none" : field.value}
+                      onValueChange={(value) =>
+                        field.onChange(value === "none" ? "" : value)
+                      }
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Tidak Diketahui" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {bloodTypeOptions.map((item) => (
+                          <SelectItem key={item.value} value={item.value}>
+                            {item.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
               </div>
 
               <div className="space-y-2">

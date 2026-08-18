@@ -16,14 +16,23 @@ import {
 } from "../ui/table";
 import BranchDialog from "./branch-dialog";
 import { DataTableControls } from "../ui/data-table-controls";
+import { SortableHeader } from "../ui/sortable-header";
 
 export default function Branches() {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [search, setSearch] = useState("");
+  const [sortBy, setSortBy] = useState("name");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
 
   const { canEdit } = usePageAccess("/dashboard/branches");
-  const { data, isLoading } = useBranches(page, limit, search);
+  const { data, isLoading } = useBranches(page, limit, search, sortBy, sortOrder);
+
+  function handleSort(next: string) {
+    setSortBy(next);
+    setSortOrder(next === sortBy ? (sortOrder === "asc" ? "desc" : "asc") : "asc");
+    setPage(1);
+  }
   const deleteMutation = useDeleteBranch();
 
   const branches = data?.data ?? [];
@@ -92,7 +101,15 @@ export default function Branches() {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/50">
-                    <TableHead className="font-semibold">Name</TableHead>
+                    <TableHead className="font-semibold">
+                      <SortableHeader
+                        label="Name"
+                        sortBy="name"
+                        currentSortBy={sortBy}
+                        sortOrder={sortOrder}
+                        onSort={handleSort}
+                      />
+                    </TableHead>
                     {canEdit && (
                       <TableHead className="font-semibold text-center w-40">
                         Actions

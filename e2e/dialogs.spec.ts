@@ -69,8 +69,6 @@ const MOCK_BIRTHDAYS = {
 };
 
 const MOCK_COUNTS = { all: 100, male: 45, female: 55 };
-const MOCK_BLOOD_TYPES = { A: 30, B: 25, AB: 10, O: 35 };
-const MOCK_PELKAT_COUNTS: Array<{ pelkat: string; total: number }> = [];
 const MOCK_REGION_MEMBER_COUNTS = {
   data: [{ regionId: "r1", regionName: "Sektor A", memberCount: 10 }],
   meta: { total: 1, page: 1, limit: 10, totalPages: 1 },
@@ -142,18 +140,9 @@ test.beforeEach(async ({ page }) => {
     });
   });
 
-  // Mock dashboard counts, gender/blood-type/pelkat
+  // Mock dashboard counts
   await page.route("**/api/dashboard/counts", async (route) => {
     await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(MOCK_COUNTS) });
-  });
-  await page.route("**/api/member/gender-count", async (route) => {
-    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(MOCK_COUNTS) });
-  });
-  await page.route("**/api/member/blood-type-count", async (route) => {
-    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(MOCK_BLOOD_TYPES) });
-  });
-  await page.route("**/api/member/pelkat-count*", async (route) => {
-    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(MOCK_PELKAT_COUNTS) });
   });
   await page.route("**/api/region/member-count", async (route) => {
     await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(MOCK_REGION_MEMBER_COUNTS) });

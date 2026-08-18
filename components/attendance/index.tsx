@@ -31,19 +31,30 @@ import AttendanceDialog from "./attendance-dialog";
 import AttendanceCard from "./attendance-card";
 import { getServiceTypeColor } from "@/lib/client-helper";
 import { DataTableControls } from "../ui/data-table-controls";
+import { SortableHeader } from "../ui/sortable-header";
 import { Attendance } from "@prisma/client";
 
 export default function AttendancePage() {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [search, setSearch] = useState("");
+  const [sortBy, setSortBy] = useState("serviceDate");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
   const { canEdit } = usePageAccess("/dashboard/attendance");
   const { data: attendanceResult, isLoading } = useAttendances(
     page,
     limit,
     search,
+    sortBy,
+    sortOrder,
   );
+
+  function handleSort(next: string) {
+    setSortBy(next);
+    setSortOrder(next === sortBy ? (sortOrder === "asc" ? "desc" : "asc") : "asc");
+    setPage(1);
+  }
   const deleteMutation = useDeleteAttendance();
 
   const attendances = useMemo(() => attendanceResult?.data ?? [], [attendanceResult]);
@@ -175,18 +186,50 @@ export default function AttendancePage() {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/50">
-                    <TableHead className="font-semibold">Date & Time</TableHead>
                     <TableHead className="font-semibold">
-                      Service Type
+                      <SortableHeader
+                        label="Date & Time"
+                        sortBy="serviceDate"
+                        currentSortBy={sortBy}
+                        sortOrder={sortOrder}
+                        onSort={handleSort}
+                      />
+                    </TableHead>
+                    <TableHead className="font-semibold">
+                      <SortableHeader
+                        label="Service Type"
+                        sortBy="serviceType"
+                        currentSortBy={sortBy}
+                        sortOrder={sortOrder}
+                        onSort={handleSort}
+                      />
                     </TableHead>
                     <TableHead className="font-semibold text-center">
-                      Male
+                      <SortableHeader
+                        label="Male"
+                        sortBy="maleCount"
+                        currentSortBy={sortBy}
+                        sortOrder={sortOrder}
+                        onSort={handleSort}
+                      />
                     </TableHead>
                     <TableHead className="font-semibold text-center">
-                      Female
+                      <SortableHeader
+                        label="Female"
+                        sortBy="femaleCount"
+                        currentSortBy={sortBy}
+                        sortOrder={sortOrder}
+                        onSort={handleSort}
+                      />
                     </TableHead>
                     <TableHead className="font-semibold text-center">
-                      Total
+                      <SortableHeader
+                        label="Total"
+                        sortBy="totalCount"
+                        currentSortBy={sortBy}
+                        sortOrder={sortOrder}
+                        onSort={handleSort}
+                      />
                     </TableHead>
                     {canEdit && (
                       <TableHead className="font-semibold text-center w-40">
