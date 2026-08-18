@@ -81,9 +81,11 @@ export async function GET(req: NextRequest) {
             ? { family: { region: { name: sortOrder } } }
             : sortBy === "familyFamilyName"
               ? { family: { familyName: sortOrder } }
-              : sortBy === "pelkat"
-                ? { createdAt: "desc" } // pelkat sorting done in JS below
-                : { [sortBy]: sortOrder },
+              : sortBy === "fullName"
+                ? [{ firstName: sortOrder }, { lastName: sortOrder }]
+                : sortBy === "pelkat"
+                  ? { createdAt: "desc" } // pelkat sorting done in JS below
+                  : { [sortBy]: sortOrder },
         include: {
           family: {
             include: {

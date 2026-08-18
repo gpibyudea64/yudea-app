@@ -2,6 +2,7 @@ import { test, expect, type Page } from "@playwright/test";
 import {
   COORDINATOR_EMAIL,
   COORDINATOR_PASSWORD,
+  clickSortableHeader,
   login,
 } from "./helpers";
 
@@ -122,8 +123,11 @@ test.describe("Full app smoke test (real database, read-only)", () => {
     await login(page);
 
     await expectPage(page, "/dashboard/branches", "Branch Management", failures, "Central Branch");
+    await clickSortableHeader(page, "Name", "name");
     await expectPage(page, "/dashboard/regions", "Sektor Pelayanan Management", failures, "Region A");
+    await clickSortableHeader(page, "Branch", "branchName");
     await expectPage(page, "/dashboard/families", "Family Management", failures, "Region A Family 1");
+    await clickSortableHeader(page, "Kecamatan", "kecamatan");
 
     // The DB may contain records added after seeding; assert the live total
     // reported by the list pagination instead of a specific member name.
@@ -144,6 +148,7 @@ test.describe("Full app smoke test (real database, read-only)", () => {
     await expect(page.getByText(`Showing 1-10 of ${members.total}`).first()).toBeVisible({
       timeout: 30000,
     });
+    await clickSortableHeader(page, "Role", "role");
     await settle(page);
     expect(failures, "No API/console failures while visiting /dashboard/members").toEqual([]);
   });
@@ -154,12 +159,18 @@ test.describe("Full app smoke test (real database, read-only)", () => {
     await login(page);
 
     await expectPage(page, "/dashboard/attendance", "Attendance Management", failures, "Sunday Service");
+    await clickSortableHeader(page, "Service Type", "serviceType");
     await expectPage(page, "/dashboard/birthday", "Dashboard Ulang Tahun", failures);
+    await clickSortableHeader(page, "Nama Jemaat", "fullName");
     await expectPage(page, "/dashboard/report", "Laporan Warga Jemaat", failures);
+    await clickSortableHeader(page, "Nama Keluarga", "familyName");
     await expectPage(page, "/dashboard/pelkat-members", "Pelkat Members", failures);
+    await clickSortableHeader(page, "Nama Jemaat", "fullName");
     await expectPage(page, "/dashboard/presbytery", "Presbyter Management", failures);
+    await clickSortableHeader(page, "Birth Date", "birthDate");
     await expectPage(page, "/dashboard/settings", "Settings", failures, "Configure role-based access");
     await expectPage(page, "/dashboard/users", "User Management", failures, "admin@example.com");
+    await clickSortableHeader(page, "Role", "role");
 
     // /dashboard/evets is a legacy alias that redirects to attendance
     await page.goto("/dashboard/evets");

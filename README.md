@@ -20,8 +20,9 @@
 10. [State & Session Management](#state--session-management)
 11. [Dynamic Routing & Proxying](#dynamic-routing--proxying)
 12. [Testing](#testing)
-13. [Development Workflow](#development-workflow)
-14. [Deployment](#deployment)
+13. [End-to-End Tests (Playwright)](#end-to-end-tests-playwright)
+14. [Development Workflow](#development-workflow)
+15. [Deployment](#deployment)
 
 ---
 
@@ -244,7 +245,7 @@ nav/
 services/                     # (Deprecated - use hooks instead)
 └── member.ts                 # Removed - functionality in hooks/use-member.ts
 
-tests/                        # Vitest test files (20 files, 386 tests)
+tests/                        # Vitest test files (21 files, 398 tests)
 ├── utils.test.ts             # cn() utility
 ├── helper.test.ts            # Server helpers (pelkat, pagination, parsePagination)
 ├── client-helper.test.ts     # Client formatting helpers
@@ -256,6 +257,7 @@ tests/                        # Vitest test files (20 files, 386 tests)
 ├── use-dialog-form.test.tsx  # Dialog form reset hook
 ├── use-page-access.test.tsx  # Page access hook
 ├── use-mobile.test.tsx       # Mobile breakpoint hook
+├── use-url-sort.test.tsx     # URL-persisted table sort hook
 ├── use-indonesia-region.test.tsx  # Indonesian region cascade hooks
 ├── auth-session.test.ts      # Client auth session
 ├── server-auth.test.ts       # Server auth guards (incl. requireEditAccess)
@@ -265,6 +267,12 @@ tests/                        # Vitest test files (20 files, 386 tests)
 ├── integration-rbac-settings.test.ts  # RBAC server persistence
 ├── proxy.test.ts             # Proxy config matcher
 └── api-client.test.ts        # API client functions
+
+e2e/                          # Playwright end-to-end tests (real login + real DB)
+├── helpers.ts                # Shared login helper, seeded credentials, sort-header helpers
+├── full-app.spec.ts          # Smoke: auth, dashboard counts, pages, coordinator RBAC
+├── dialogs.spec.ts           # Family/member dialog CRUD flows (APIs mocked)
+└── sort.spec.ts              # Sortable headers: URL persistence, toggle, reload
 ```
 
 ---
@@ -913,7 +921,7 @@ Dynamic cascading select data sourced from `idn-area-data`:
 
 - **Framework:** Vitest 4
 - **Environment:** jsdom (for component/hook tests)
-- **Total tests:** 386 across 20 test files
+- **Total tests:** 398 across 21 test files
 
 ### Running Tests
 
@@ -937,6 +945,7 @@ npm run test:watch    # Watch mode
 | `use-dialog-form.test.tsx` | 14 | Dialog form reset hook |
 | `use-page-access.test.tsx` | 7 | Page access hook |
 | `use-mobile.test.tsx` | 6 | Mobile breakpoint hook |
+| `use-url-sort.test.tsx` | 6 | URL-persisted table sort hook |
 | `use-indonesia-region.test.tsx` | 15 | Indonesian region cascade hooks |
 | `auth-session.test.ts` | 27 | Client auth session persistence |
 | `server-auth.test.ts` | 15 | Server auth guards (incl. requireEditAccess) |
@@ -956,6 +965,52 @@ npm run test:watch    # Watch mode
 
 ---
 
+## End-to-End Tests (Playwright)
+
+Playwright specs live in `e2e/` and run the **real app against a real database**: they perform an actual UI login (credentials seeded by `prisma/seed.ts`) and drive the app in Chromium. `playwright.config.ts` starts/stops `npm run dev` automatically (`reuseExistingServer` keeps a running dev server if one is already up).
+
+### Prerequisite: local database
+
+The default `.env` points `DATABASE_URL` at a **remote Neon cloud database** — do not run e2e against it. Use a throwaway local Postgres instead:
+
+```bash
+# 1. Start a dedicated local Postgres (port 5432 is commonly taken by other
+#    projects — 5433 avoids conflicts). postgres:16-alpine is just a suggestion.
+docker run -d --name yudea-e2e-pg \
+  -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=yudea_e2e \
+  -p 5433:5432 postgres:16-alpine
+
+# 2. Point the app at the local DB, apply migrations, and seed it.
+#    (Values match the docker run above; adjust user/password/db/port if changed.)
+export DATABASE_URL="postgresql://postgres:postgres@localhost:5433/yudea_e2e"
+export DIRECT_URL="postgresql://postgres:postgres@localhost:5433/yudea_e2e"
+npx prisma migrate deploy
+npx tsx prisma/seed.ts --reset
+
+# 3. Run the suite.
+npm run test:e2e          # or: npx playwright test
+```
+
+The `full-app` and `sort` specs are **read-only** against the database and can be
+re-run against the same seed. The `dialogs` spec mocks most API routes (list
+responses and CRUD writes) but still needs the seeded admin for its real login.
+
+Teardown:
+
+```bash
+docker rm -f yudea-e2e-pg
+```
+
+### E2E Specs
+
+| Spec | Coverage |
+|------|----------|
+| `e2e/full-app.spec.ts` | Auth redirect, admin dashboard counts, master-data pages, coordinator region-scoping + sidebar RBAC; also clicks a sortable header on every sortable page (real DB, read-only) |
+| `e2e/dialogs.spec.ts` | Family/member create–update–delete dialog flows, form validation, province cascade (APIs mocked) |
+| `e2e/sort.spec.ts` | Full sort-header verification on every table: URL persistence, asc/desc toggle, reload restore (real DB, read-only, uses shared `verifySortableHeader` helper) |
+
+---
+
 ## Development Workflow
 
 ### Available Scripts
@@ -967,6 +1022,7 @@ npm run start            # Start production server
 npm run lint             # Run ESLint
 npm run test             # Run Vitest
 npm run test:watch       # Run Vitest in watch mode
+npm run test:e2e         # Run Playwright e2e (requires a local seeded DB — see above)
 npm run prisma:generate  # Regenerate Prisma client
 npm run prisma:migrate   # Apply database migrations
 npm run prisma:seed      # Seed demo data (safe re-run; refuses to wipe existing data)

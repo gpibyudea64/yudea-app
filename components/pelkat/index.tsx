@@ -127,7 +127,7 @@ const ExportXLSButton = memo(function ExportXLSButton({
 });
 
 export default function PelkatMenu({
-  initialSortBy = "firstName",
+  initialSortBy = "fullName",
   initialSortOrder = "asc",
 }: {
   initialSortBy?: string;
@@ -236,7 +236,7 @@ export default function PelkatMenu({
                     <TableHead className="font-semibold">
                       <SortableHeader
                         label="Nama Jemaat"
-                        sortBy="firstName"
+                        sortBy="fullName"
                         currentSortBy={sortBy}
                         sortOrder={sortOrder}
                         onSort={handleSort}
