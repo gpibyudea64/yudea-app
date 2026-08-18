@@ -6,7 +6,7 @@ import { useUrlSort } from "@/hooks/use-url-sort";
 import { useMembers } from "@/hooks/use-member";
 import { Region } from "@/types/region";
 import type { Member } from "@/types/member";
-import { memo, useState } from "react";
+import { memo, useState, useMemo } from "react";
 import { Button } from "../ui/button";
 import {
   Calendar,
@@ -155,6 +155,8 @@ export default function Regions({
 
   // Export state
   const [exportRegion, setExportRegion] = useState("all");
+  const [exportSortBy, setExportSortBy] = useState("familyName");
+  const [exportSortOrder, setExportSortOrder] = useState<"asc" | "desc">("asc");
   const { data: membersData, isLoading: membersLoading } = useMembers({
     page: 1,
     limit: 9999,
@@ -175,6 +177,37 @@ export default function Regions({
       regionName: member.family?.region?.name ?? "",
     }),
   );
+
+  const sortedExportMembers = useMemo(() => {
+    const sorted = [...enrichedMembers];
+    const dir = exportSortOrder === "asc" ? 1 : -1;
+    sorted.sort((a, b) => {
+      let aVal: string;
+      let bVal: string;
+      if (exportSortBy === "birthDate") {
+        aVal = new Date(a.birthDate).getTime().toString();
+        bVal = new Date(b.birthDate).getTime().toString();
+      } else if (exportSortBy === "fullName") {
+        aVal = a.fullName.toLowerCase();
+        bVal = b.fullName.toLowerCase();
+      } else {
+        aVal = a[exportSortBy as "familyName" | "regionName"].toLowerCase();
+        bVal = b[exportSortBy as "familyName" | "regionName"].toLowerCase();
+      }
+      return aVal.localeCompare(bVal) * dir;
+    });
+    return sorted;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [exportSortBy, exportSortOrder, members]);
+
+  function handleExportSort(next: string) {
+    setExportSortBy(next);
+    setExportSortOrder(
+      next === exportSortBy
+        ? exportSortOrder === "asc" ? "desc" : "asc"
+        : "asc",
+    );
+  }
 
   function openCreate() {
     setEditing(null);
@@ -358,10 +391,10 @@ export default function Regions({
               Export Data Warga Jemaat
             </CardTitle>
             <div className="flex items-center gap-2">
-              <ExportXLSButton rows={enrichedMembers} region={exportRegion} />
+              <ExportXLSButton rows={sortedExportMembers} region={exportRegion} />
               <Button
                 onClick={() => window.print()}
-                disabled={enrichedMembers.length === 0}
+                disabled={sortedExportMembers.length === 0}
                 variant="outline"
                 size="sm"
                 className="gap-2"
@@ -403,7 +436,7 @@ export default function Regions({
                 <span>Memuat data...</span>
               ) : (
                 <span>
-                  Menampilkan <strong>{enrichedMembers.length}</strong> warga
+                  Menampilkan <strong>{sortedExportMembers.length}</strong> warga
                   jemaat
                   {exportRegion !== "all" && (
                     <>
@@ -424,17 +457,41 @@ export default function Regions({
                   <TableRow className="bg-muted/50">
                     <TableHead className="font-semibold">No</TableHead>
                     <TableHead className="font-semibold">
-                      Nama Keluarga
+                      <SortableHeader
+                        label="Nama Keluarga"
+                        sortBy="familyName"
+                        currentSortBy={exportSortBy}
+                        sortOrder={exportSortOrder}
+                        onSort={handleExportSort}
+                      />
                     </TableHead>
                     <TableHead className="font-semibold">
-                      Nama Jemaat
+                      <SortableHeader
+                        label="Nama Jemaat"
+                        sortBy="fullName"
+                        currentSortBy={exportSortBy}
+                        sortOrder={exportSortOrder}
+                        onSort={handleExportSort}
+                      />
                     </TableHead>
                     <TableHead className="font-semibold">Alamat</TableHead>
                     <TableHead className="font-semibold">
-                      Tanggal Lahir
+                      <SortableHeader
+                        label="Tanggal Lahir"
+                        sortBy="birthDate"
+                        currentSortBy={exportSortBy}
+                        sortOrder={exportSortOrder}
+                        onSort={handleExportSort}
+                      />
                     </TableHead>
                     <TableHead className="font-semibold">
-                      Sektor Pelayanan
+                      <SortableHeader
+                        label="Sektor Pelayanan"
+                        sortBy="regionName"
+                        currentSortBy={exportSortBy}
+                        sortOrder={exportSortOrder}
+                        onSort={handleExportSort}
+                      />
                     </TableHead>
                   </TableRow>
                 </TableHeader>
@@ -450,7 +507,7 @@ export default function Regions({
                         </div>
                       </TableCell>
                     </TableRow>
-                  ) : enrichedMembers.length === 0 ? (
+                  ) : sortedExportMembers.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={6} className="py-12 text-center">
                         <div className="flex flex-col items-center gap-2">
@@ -462,7 +519,7 @@ export default function Regions({
                       </TableCell>
                     </TableRow>
                   ) : (
-                    enrichedMembers.map((member, index) => (
+                    sortedExportMembers.map((member, index) => (
                       <TableRow
                         key={member.id}
                         className="transition-colors hover:bg-muted/50"
