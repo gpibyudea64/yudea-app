@@ -2,6 +2,7 @@
 
 import { usePageAccess } from "@/hooks/use-page-access";
 import { useDeleteFamily, useFamilies } from "@/hooks/use-family";
+import { useUrlSort } from "@/hooks/use-url-sort";
 import { useQueryClient } from "@tanstack/react-query";
 import type { Family } from "@/types/family";
 import { Badge } from "../ui/badge";
@@ -49,16 +50,24 @@ import { DataTableControls } from "../ui/data-table-controls";
 import { SortableHeader } from "../ui/sortable-header";
 import { toast } from "sonner";
 
-export default function FamiliesPage() {
+export default function FamiliesPage({
+  initialSortBy = "familyName",
+  initialSortOrder = "asc",
+}: {
+  initialSortBy?: string;
+  initialSortOrder?: "asc" | "desc";
+}) {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [search, setSearch] = useState("");
-  const [sortBy, setSortBy] = useState("familyName");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+
+  const { sortBy, sortOrder, handleSort: sortFromUrl } = useUrlSort(
+    initialSortBy,
+    initialSortOrder,
+  );
 
   function handleSort(next: string) {
-    setSortBy(next);
-    setSortOrder(next === sortBy ? (sortOrder === "asc" ? "desc" : "asc") : "asc");
+    sortFromUrl(next);
     setPage(1);
   }
 

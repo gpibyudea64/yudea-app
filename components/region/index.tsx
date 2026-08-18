@@ -2,6 +2,7 @@
 
 import { usePageAccess } from "@/hooks/use-page-access";
 import { useDeleteRegion, useRegions } from "@/hooks/use-region";
+import { useUrlSort } from "@/hooks/use-url-sort";
 import { useMembers } from "@/hooks/use-member";
 import { Region } from "@/types/region";
 import type { Member } from "@/types/member";
@@ -118,19 +119,27 @@ const ExportXLSButton = memo(function ExportXLSButton({
   );
 });
 
-export default function Regions() {
+export default function Regions({
+  initialSortBy = "name",
+  initialSortOrder = "asc",
+}: {
+  initialSortBy?: string;
+  initialSortOrder?: "asc" | "desc";
+}) {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [search, setSearch] = useState("");
-  const [sortBy, setSortBy] = useState("name");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+
+  const { sortBy, sortOrder, handleSort: sortFromUrl } = useUrlSort(
+    initialSortBy,
+    initialSortOrder,
+  );
 
   const { canEdit } = usePageAccess("/dashboard/regions");
   const { data, isLoading } = useRegions(page, limit, search, sortBy, sortOrder);
 
   function handleSort(next: string) {
-    setSortBy(next);
-    setSortOrder(next === sortBy ? (sortOrder === "asc" ? "desc" : "asc") : "asc");
+    sortFromUrl(next);
     setPage(1);
   }
   const deleteMutation = useDeleteRegion();

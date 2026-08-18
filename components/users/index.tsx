@@ -16,23 +16,32 @@ import {
 } from "@/components/ui/table";
 import { usePageAccess } from "@/hooks/use-page-access";
 import { useDeleteUser, useUsers } from "@/hooks/use-user";
+import { useUrlSort } from "@/hooks/use-url-sort";
 import type { UserListItem } from "@/types/user";
 import { Edit, Plus, ShieldUser, Trash2 } from "lucide-react";
 import { useState } from "react";
 
-export default function UsersPage() {
+export default function UsersPage({
+  initialSortBy = "email",
+  initialSortOrder = "asc",
+}: {
+  initialSortBy?: string;
+  initialSortOrder?: "asc" | "desc";
+}) {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [search, setSearch] = useState("");
-  const [sortBy, setSortBy] = useState("email");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const { canEdit } = usePageAccess("/dashboard/users");
+
+  const { sortBy, sortOrder, handleSort: sortFromUrl } = useUrlSort(
+    initialSortBy,
+    initialSortOrder,
+  );
 
   const { data, isLoading } = useUsers(page, limit, search, sortBy, sortOrder);
 
   function handleSort(next: string) {
-    setSortBy(next);
-    setSortOrder(next === sortBy ? (sortOrder === "asc" ? "desc" : "asc") : "asc");
+    sortFromUrl(next);
     setPage(1);
   }
   const deleteMutation = useDeleteUser();

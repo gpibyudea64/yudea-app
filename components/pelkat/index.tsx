@@ -1,6 +1,7 @@
 "use client";
 
 import { useMembers } from "@/hooks/use-member";
+import { useUrlSort } from "@/hooks/use-url-sort";
 import { memo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import {
@@ -125,15 +126,23 @@ const ExportXLSButton = memo(function ExportXLSButton({
   );
 });
 
-export default function PelkatMenu() {
+export default function PelkatMenu({
+  initialSortBy = "firstName",
+  initialSortOrder = "asc",
+}: {
+  initialSortBy?: string;
+  initialSortOrder?: "asc" | "desc";
+}) {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [filter, setFilter] = useState({
     search: "",
     pelkat: "all",
   });
-  const [sortBy, setSortBy] = useState("firstName");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const { sortBy, sortOrder, handleSort: sortFromUrl } = useUrlSort(
+    initialSortBy,
+    initialSortOrder,
+  );
   const { data, isLoading } = useMembers({
     page,
     limit,
@@ -144,8 +153,7 @@ export default function PelkatMenu() {
   });
 
   function handleSort(next: string) {
-    setSortBy(next);
-    setSortOrder(next === sortBy ? (sortOrder === "asc" ? "desc" : "asc") : "asc");
+    sortFromUrl(next);
     setPage(1);
   }
   const members = data?.data ?? [];

@@ -757,6 +757,9 @@ Returns `{ canView, canEdit, role }` by reading the current user and RBAC config
 #### `useIsMobile()`
 Returns `true` when viewport width < 768px. Uses `matchMedia` for reactive updates.
 
+#### `useUrlSort(initialSortBy, initialSortOrder)`
+Returns `{ sortBy, sortOrder, handleSort }` for sortable table headers. Initial values come from the server page (which reads `searchParams`), and sorting writes `?sortBy=...&sortOrder=...` into the URL via `history.replaceState` (preserving existing params) so sort state survives refresh and navigation. Used by every sortable dashboard table.
+
 #### `useProvinces()`, `useRegencies()`, `useDistricts()`, `useVillages(provinceCode|regencyCode|districtCode)`
 Cascading Indonesian administrative region selects. Data is cached indefinitely (`staleTime: Infinity, gcTime: Infinity`) since region data is stable.
 

@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, memo } from "react";
+import { useState, useMemo, memo } from "react";
 import { useBirthdayMembers } from "@/hooks/use-birthday";
+import { useUrlSort } from "@/hooks/use-url-sort";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { SortableHeader } from "@/components/ui/sortable-header";
 import {
   Table,
   TableBody,
@@ -54,6 +56,14 @@ function buildAddress(member: {
   return [member.address, member.kotaKabupaten, member.kecamatan]
     .filter(Boolean)
     .join(", ");
+}
+
+/** "MM-DD" sort key so birthdays sort by day-of-year, not by birth year. */
+function birthDayOfYear(value: string) {
+  const d = new Date(value);
+  return `${String(d.getMonth() + 1).padStart(2, "0")}-${String(
+    d.getDate(),
+  ).padStart(2, "0")}`;
 }
 
 // Dynamically import the export button to avoid loading xlsx on page mount
@@ -132,13 +142,23 @@ const ExportXLSButton = memo(function ExportXLSButton({
   );
 });
 
-export default function BirthdayDashboard() {
+export default function BirthdayDashboard({
+  initialSortBy = "birthDate",
+  initialSortOrder = "asc",
+}: {
+  initialSortBy?: string;
+  initialSortOrder?: "asc" | "desc";
+}) {
   const [selectedDate, setSelectedDate] = useState(() => {
     const today = new Date();
     return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(
       today.getDate(),
     ).padStart(2, "0")}`;
   });
+  const { sortBy, sortOrder, handleSort } = useUrlSort(
+    initialSortBy,
+    initialSortOrder,
+  );
 
   const { data, isLoading, error } = useBirthdayMembers(selectedDate);
   const members = data?.data ?? [];
@@ -150,7 +170,29 @@ export default function BirthdayDashboard() {
     address: buildAddress(member),
   }));
 
-  const totalCount = enrichedMembers.length;
+  const sortedMembers = useMemo(() => {
+    const sorted = [...enrichedMembers];
+    const dir = sortOrder === "asc" ? 1 : -1;
+    sorted.sort((a, b) => {
+      let aVal: string;
+      let bVal: string;
+      if (sortBy === "birthDate") {
+        aVal = birthDayOfYear(a.birthDate);
+        bVal = birthDayOfYear(b.birthDate);
+      } else if (sortBy === "fullName") {
+        aVal = a.fullName.toLowerCase();
+        bVal = b.fullName.toLowerCase();
+      } else {
+        aVal = (a[sortBy as "familyName" | "regionName"] ?? "").toLowerCase();
+        bVal = (b[sortBy as "familyName" | "regionName"] ?? "").toLowerCase();
+      }
+      return aVal.localeCompare(bVal) * dir;
+    });
+    return sorted;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sortBy, sortOrder, members]);
+
+  const totalCount = sortedMembers.length;
 
   return (
     <div className="min-h-screen bg-linear-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900">
@@ -188,10 +230,10 @@ export default function BirthdayDashboard() {
           <CardHeader className="flex flex-col gap-3 border-b px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
             <CardTitle>Daftar Ulang Tahun</CardTitle>
             <div className="flex items-center gap-2">
-              <ExportXLSButton members={enrichedMembers} selectedDate={selectedDate} />
+              <ExportXLSButton members={sortedMembers} selectedDate={selectedDate} />
               <Button
                 onClick={() => window.print()}
-                disabled={enrichedMembers.length === 0}
+                disabled={sortedMembers.length === 0}
                 variant="outline"
                 size="sm"
                 className="gap-2"
@@ -218,15 +260,41 @@ export default function BirthdayDashboard() {
                   <TableRow className="bg-muted/50">
                     <TableHead className="font-semibold">No</TableHead>
                     <TableHead className="font-semibold">
-                      Nama Keluarga
+                      <SortableHeader
+                        label="Nama Keluarga"
+                        sortBy="familyName"
+                        currentSortBy={sortBy}
+                        sortOrder={sortOrder}
+                        onSort={handleSort}
+                      />
                     </TableHead>
-                    <TableHead className="font-semibold">Nama Jemaat</TableHead>
+                    <TableHead className="font-semibold">
+                      <SortableHeader
+                        label="Nama Jemaat"
+                        sortBy="fullName"
+                        currentSortBy={sortBy}
+                        sortOrder={sortOrder}
+                        onSort={handleSort}
+                      />
+                    </TableHead>
                     <TableHead className="font-semibold">Alamat</TableHead>
                     <TableHead className="font-semibold">
-                      Tanggal Lahir
+                      <SortableHeader
+                        label="Tanggal Lahir"
+                        sortBy="birthDate"
+                        currentSortBy={sortBy}
+                        sortOrder={sortOrder}
+                        onSort={handleSort}
+                      />
                     </TableHead>
                     <TableHead className="font-semibold">
-                      Sektor Pelayanan
+                      <SortableHeader
+                        label="Sektor Pelayanan"
+                        sortBy="regionName"
+                        currentSortBy={sortBy}
+                        sortOrder={sortOrder}
+                        onSort={handleSort}
+                      />
                     </TableHead>
                   </TableRow>
                 </TableHeader>
@@ -261,7 +329,7 @@ export default function BirthdayDashboard() {
                       </TableCell>
                     </TableRow>
                   ) : (
-                    enrichedMembers.map((member, index) => (
+                    sortedMembers.map((member, index) => (
                       <TableRow
                         key={member.id}
                         className="transition-colors hover:bg-muted/50"

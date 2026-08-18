@@ -1,6 +1,7 @@
 "use client";
 import { useBranches, useDeleteBranch } from "@/hooks/use-branch";
 import { usePageAccess } from "@/hooks/use-page-access";
+import { useUrlSort } from "@/hooks/use-url-sort";
 import { Branch } from "@/types/branch";
 import { useState } from "react";
 import { Button } from "../ui/button";
@@ -18,19 +19,27 @@ import BranchDialog from "./branch-dialog";
 import { DataTableControls } from "../ui/data-table-controls";
 import { SortableHeader } from "../ui/sortable-header";
 
-export default function Branches() {
+export default function Branches({
+  initialSortBy = "name",
+  initialSortOrder = "asc",
+}: {
+  initialSortBy?: string;
+  initialSortOrder?: "asc" | "desc";
+}) {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [search, setSearch] = useState("");
-  const [sortBy, setSortBy] = useState("name");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+
+  const { sortBy, sortOrder, handleSort: sortFromUrl } = useUrlSort(
+    initialSortBy,
+    initialSortOrder,
+  );
 
   const { canEdit } = usePageAccess("/dashboard/branches");
   const { data, isLoading } = useBranches(page, limit, search, sortBy, sortOrder);
 
   function handleSort(next: string) {
-    setSortBy(next);
-    setSortOrder(next === sortBy ? (sortOrder === "asc" ? "desc" : "asc") : "asc");
+    sortFromUrl(next);
     setPage(1);
   }
   const deleteMutation = useDeleteBranch();

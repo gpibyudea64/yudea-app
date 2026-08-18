@@ -1,8 +1,10 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useRegions } from "@/hooks/use-region";
+import { useUrlSort } from "@/hooks/use-url-sort";
+import { SortableHeader } from "../ui/sortable-header";
 import {
   Select,
   SelectContent,
@@ -48,10 +50,21 @@ function formatDate(value: string) {
   });
 }
 
-export default function ReportPage() {
+export default function ReportPage({
+  initialSortBy = "familyName",
+  initialSortOrder = "asc",
+}: {
+  initialSortBy?: string;
+  initialSortOrder?: "asc" | "desc";
+}) {
   const [pelkat, setPelkat] = useState("all");
   const [region, setRegion] = useState("all");
   const printRef = useRef<HTMLDivElement>(null);
+
+  const { sortBy, sortOrder, handleSort } = useUrlSort(
+    initialSortBy,
+    initialSortOrder,
+  );
 
   const { data: regionsData } = useRegions(1, 999);
   const regionOptions =
@@ -68,16 +81,35 @@ export default function ReportPage() {
     staleTime: 30_000,
   });
 
-  const reportData = data?.data ?? [];
+  const sortedReportData = useMemo(() => {
+    const sorted = [...(data?.data ?? [])];
+    const dir = sortOrder === "asc" ? 1 : -1;
+    sorted.sort((a, b) => {
+      let aVal: string;
+      let bVal: string;
+      if (sortBy === "birthDate") {
+        aVal = new Date(a.birthDate).getTime().toString();
+        bVal = new Date(b.birthDate).getTime().toString();
+      } else if (sortBy === "fullName") {
+        aVal = a.fullName.toLowerCase();
+        bVal = b.fullName.toLowerCase();
+      } else {
+        aVal = a[sortBy as "familyName" | "regionName"].toLowerCase();
+        bVal = b[sortBy as "familyName" | "regionName"].toLowerCase();
+      }
+      return aVal.localeCompare(bVal) * dir;
+    });
+    return sorted;
+  }, [sortBy, sortOrder, data]);
 
-  const totalCount = reportData.length;
+  const totalCount = sortedReportData.length;
 
   async function handleExportXLS() {
-    if (!reportData.length) return;
+    if (!sortedReportData.length) return;
 
     const XLSX = await import("xlsx");
 
-    const worksheetData = reportData.map((row) => ({
+    const worksheetData = sortedReportData.map((row) => ({
       "Nama Keluarga": row.familyName,
       "Nama Jemaat": row.fullName,
       Alamat: row.address,
@@ -181,7 +213,7 @@ export default function ReportPage() {
               <div className="flex flex-col gap-2 sm:flex-row">
                 <Button
                   onClick={handleExportXLS}
-                  disabled={reportData.length === 0}
+                  disabled={sortedReportData.length === 0}
                   variant="outline"
                   className="gap-2"
                 >
@@ -190,7 +222,7 @@ export default function ReportPage() {
                 </Button>
                 <Button
                   onClick={() => window.print()}
-                  disabled={reportData.length === 0}
+                  disabled={sortedReportData.length === 0}
                   variant="outline"
                   className="gap-2"
                 >
@@ -240,15 +272,41 @@ export default function ReportPage() {
                   <TableRow className="bg-muted/50 print:bg-muted/30">
                     <TableHead className="font-semibold">No</TableHead>
                     <TableHead className="font-semibold">
-                      Nama Keluarga
+                      <SortableHeader
+                        label="Nama Keluarga"
+                        sortBy="familyName"
+                        currentSortBy={sortBy}
+                        sortOrder={sortOrder}
+                        onSort={handleSort}
+                      />
                     </TableHead>
-                    <TableHead className="font-semibold">Nama Jemaat</TableHead>
+                    <TableHead className="font-semibold">
+                      <SortableHeader
+                        label="Nama Jemaat"
+                        sortBy="fullName"
+                        currentSortBy={sortBy}
+                        sortOrder={sortOrder}
+                        onSort={handleSort}
+                      />
+                    </TableHead>
                     <TableHead className="font-semibold">Alamat</TableHead>
                     <TableHead className="font-semibold">
-                      Tanggal Lahir
+                      <SortableHeader
+                        label="Tanggal Lahir"
+                        sortBy="birthDate"
+                        currentSortBy={sortBy}
+                        sortOrder={sortOrder}
+                        onSort={handleSort}
+                      />
                     </TableHead>
                     <TableHead className="font-semibold">
-                      Sektor Pelayanan
+                      <SortableHeader
+                        label="Sektor Pelayanan"
+                        sortBy="regionName"
+                        currentSortBy={sortBy}
+                        sortOrder={sortOrder}
+                        onSort={handleSort}
+                      />
                     </TableHead>
                   </TableRow>
                 </TableHeader>
@@ -276,7 +334,7 @@ export default function ReportPage() {
                         Gagal memuat data laporan.
                       </TableCell>
                     </TableRow>
-                  ) : reportData.length === 0 ? (
+                  ) : sortedReportData.length === 0 ? (
                     <TableRow>
                       <TableCell
                         colSpan={6}
@@ -291,7 +349,7 @@ export default function ReportPage() {
                       </TableCell>
                     </TableRow>
                   ) : (
-                    reportData.map((row, index) => (
+                    sortedReportData.map((row, index) => (
                       <TableRow
                         key={`${row.familyName}-${row.firstName}-${index}`}
                         className="transition-colors hover:bg-muted/50"

@@ -2,6 +2,7 @@
 
 import { usePageAccess } from "@/hooks/use-page-access";
 import { useDeleteMember, useMembers } from "@/hooks/use-member";
+import { useUrlSort } from "@/hooks/use-url-sort";
 import type { Member, MemberForm } from "@/types/member";
 import { Badge } from "../ui/badge";
 import {
@@ -53,9 +54,15 @@ import SplitFamilyDialog, {
 
 type MembersPageProps = {
   initialRegion?: string;
+  initialSortBy?: string;
+  initialSortOrder?: "asc" | "desc";
 };
 
-export default function MembersPage({ initialRegion }: MembersPageProps) {
+export default function MembersPage({
+  initialRegion,
+  initialSortBy = "firstName",
+  initialSortOrder = "asc",
+}: MembersPageProps) {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [filter, setFilter] = useState({
@@ -64,12 +71,13 @@ export default function MembersPage({ initialRegion }: MembersPageProps) {
     pelkat: "all",
   });
 
-  const [sortBy, setSortBy] = useState("firstName");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const { sortBy, sortOrder, handleSort: sortFromUrl } = useUrlSort(
+    initialSortBy,
+    initialSortOrder,
+  );
 
   function handleSort(next: string) {
-    setSortBy(next);
-    setSortOrder(next === sortBy ? (sortOrder === "asc" ? "desc" : "asc") : "asc");
+    sortFromUrl(next);
     setPage(1);
   }
 

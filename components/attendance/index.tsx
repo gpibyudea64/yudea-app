@@ -27,6 +27,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { usePageAccess } from "@/hooks/use-page-access";
 import { useAttendances, useDeleteAttendance } from "@/hooks/use-attendance";
+import { useUrlSort } from "@/hooks/use-url-sort";
 import AttendanceDialog from "./attendance-dialog";
 import AttendanceCard from "./attendance-card";
 import { getServiceTypeColor } from "@/lib/client-helper";
@@ -34,12 +35,21 @@ import { DataTableControls } from "../ui/data-table-controls";
 import { SortableHeader } from "../ui/sortable-header";
 import { Attendance } from "@prisma/client";
 
-export default function AttendancePage() {
+export default function AttendancePage({
+  initialSortBy = "serviceDate",
+  initialSortOrder = "desc",
+}: {
+  initialSortBy?: string;
+  initialSortOrder?: "asc" | "desc";
+}) {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [search, setSearch] = useState("");
-  const [sortBy, setSortBy] = useState("serviceDate");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+
+  const { sortBy, sortOrder, handleSort: sortFromUrl } = useUrlSort(
+    initialSortBy,
+    initialSortOrder,
+  );
 
   const { canEdit } = usePageAccess("/dashboard/attendance");
   const { data: attendanceResult, isLoading } = useAttendances(
@@ -51,8 +61,7 @@ export default function AttendancePage() {
   );
 
   function handleSort(next: string) {
-    setSortBy(next);
-    setSortOrder(next === sortBy ? (sortOrder === "asc" ? "desc" : "asc") : "asc");
+    sortFromUrl(next);
     setPage(1);
   }
   const deleteMutation = useDeleteAttendance();

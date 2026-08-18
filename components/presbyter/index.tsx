@@ -14,19 +14,28 @@ import {
   TableRow,
 } from "../ui/table";
 import { usePresbyters } from "@/hooks/use-member";
+import { useUrlSort } from "@/hooks/use-url-sort";
 import { DataTablePresbyterControls } from "./data-table-presbyter-control";
 import { SortableHeader } from "../ui/sortable-header";
 import { formatDate, formatLabel } from "@/lib/client-helper";
 
-export default function PresbyterPage() {
+export default function PresbyterPage({
+  initialSortBy = "firstName",
+  initialSortOrder = "asc",
+}: {
+  initialSortBy?: string;
+  initialSortOrder?: "asc" | "desc";
+}) {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [filter, setFilter] = useState({
     search: "",
     region: "all",
   });
-  const [sortBy, setSortBy] = useState("firstName");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const { sortBy, sortOrder, handleSort: sortFromUrl } = useUrlSort(
+    initialSortBy,
+    initialSortOrder,
+  );
   const { canEdit } = usePageAccess("/dashboard/presbytery");
   const { data, isLoading } = usePresbyters({
     page,
@@ -38,8 +47,7 @@ export default function PresbyterPage() {
   });
 
   function handleSort(next: string) {
-    setSortBy(next);
-    setSortOrder(next === sortBy ? (sortOrder === "asc" ? "desc" : "asc") : "asc");
+    sortFromUrl(next);
     setPage(1);
   }
   const members = data?.data ?? [];
