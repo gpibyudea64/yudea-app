@@ -96,6 +96,7 @@ model Family {
   @@index([familyName])
   @@index([kotaKabupaten])
   @@index([kecamatan])
+  @@index([regionId, familyName])
 }
 
 model Member {
@@ -158,6 +159,9 @@ model Member {
   @@index([gender])
   @@index([pelkat])
   @@index([birthDate])
+  @@index([isActive, isDeceased])
+  @@index([familyId, isActive])
+  @@index([pelkat, isActive])
 }
 
 enum BaptisStatus {

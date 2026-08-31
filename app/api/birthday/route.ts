@@ -2,7 +2,6 @@ export const runtime = "nodejs";
 
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
-import { Prisma } from "@prisma/client";
 import { requireViewAccess } from "@/lib/server-auth";
 
 function pad(value: number) {
@@ -23,18 +22,10 @@ function getWeekRange(date: Date) {
   return { sunday, saturday };
 }
 
-type BirthdayRow = {
-  id: string;
-  firstName: string;
-  lastName: string | null;
-  birthDate: Date;
-  regionName: string;
-  familyName: string;
-  address: string | null;
-  kotaKabupaten: string | null;
-  kecamatan: string | null;
-  pelkat: string | null;
-};
+/** Extract "MM-DD" from a date for birthday matching (ignores birth year). */
+function toMonthDay(date: Date): string {
+  return `${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
 
 export async function GET(req: NextRequest) {
   const authResult = await requireViewAccess("/dashboard/birthday");
@@ -45,49 +36,54 @@ export async function GET(req: NextRequest) {
   const today = requestedDate ? new Date(requestedDate) : new Date();
   const parsedDate = Number.isNaN(today.getTime()) ? new Date() : today;
   const { sunday, saturday } = getWeekRange(parsedDate);
-  const startKey = `${pad(sunday.getMonth() + 1)}-${pad(sunday.getDate())}`;
-  const endKey = `${pad(saturday.getMonth() + 1)}-${pad(saturday.getDate())}`;
+  const startKey = toMonthDay(sunday);
+  const endKey = toMonthDay(saturday);
 
-  // Build the birthday filter using Prisma.sql tagged templates for parameterized queries.
-  // The MM-DD keys are safe (derived from date math, not user input), but using
-  // parameterized values via Prisma.sql is the correct defense-in-depth pattern.
-  const birthdayFilter: Prisma.Sql =
-    startKey <= endKey
-      ? Prisma.sql`to_char(m."birthDate", 'MM-DD') BETWEEN ${startKey} AND ${endKey}`
-      : Prisma.sql`to_char(m."birthDate", 'MM-DD') >= ${startKey} OR to_char(m."birthDate", 'MM-DD') <= ${endKey}`;
+  // Build the Prisma where clause. Coordinator scoping is applied directly
+  // via Prisma relational filter — no raw SQL needed.
+  const members = await prisma.member.findMany({
+    where: {
+      isActive: true,
+      isDeceased: false,
+      ...(session.role === "COORDINATOR" && session.regionId
+        ? { family: { regionId: session.regionId } }
+        : {}),
+    },
+    include: {
+      family: {
+        include: { region: true },
+      },
+    },
+  });
 
-  // Restrict region when the user is a COORDINATOR — parameterized via Prisma.sql
-  const isCoordinator =
-    session.role === "COORDINATOR" && !!session.regionId;
+  // Filter by MM-DD birthday range (handles year wrap-around, e.g. Dec 28 – Jan 3).
+  const matched = members.filter((member) => {
+    const monthDay = toMonthDay(new Date(member.birthDate));
+    return startKey <= endKey
+      ? monthDay >= startKey && monthDay <= endKey
+      : monthDay >= startKey || monthDay <= endKey;
+  });
 
-  const regionClause: Prisma.Sql = isCoordinator
-    ? Prisma.sql`AND r.id = ${session.regionId}`
-    : Prisma.sql``;
-
-  const members = await prisma.$queryRaw<BirthdayRow[]>`
-    SELECT
-      m.id,
-      m."firstName",
-      m."lastName",
-      m."birthDate",
-      r.name AS "regionName",
-      f."familyName",
-      f.address,
-      f."kotaKabupaten",
-      f."kecamatan",
-      m."pelkat"
-    FROM "Member" m
-    JOIN "Family" f ON f.id = m."familyId"
-    JOIN "Region" r ON r.id = f."regionId"
-    WHERE (${birthdayFilter})
-    ${regionClause}
-    ORDER BY to_char(m."birthDate", 'MM-DD') ASC, m."firstName" ASC
-  `;
+  // Sort by day-of-year (MM-DD), then by first name.
+  matched.sort((a, b) => {
+    const aKey = toMonthDay(new Date(a.birthDate));
+    const bKey = toMonthDay(new Date(b.birthDate));
+    if (aKey !== bKey) return aKey.localeCompare(bKey);
+    return a.firstName.localeCompare(b.firstName);
+  });
 
   return NextResponse.json({
-    data: members.map((member) => ({
-      ...member,
-      birthDate: member.birthDate.toISOString(),
+    data: matched.map((member) => ({
+      id: member.id,
+      firstName: member.firstName,
+      lastName: member.lastName,
+      birthDate: new Date(member.birthDate).toISOString(),
+      regionName: member.family?.region?.name ?? "",
+      familyName: member.family?.familyName ?? "",
+      address: member.family?.address ?? null,
+      kotaKabupaten: member.family?.kotaKabupaten ?? null,
+      kecamatan: member.family?.kecamatan ?? null,
+      pelkat: member.pelkat ?? null,
     })),
     meta: {
       start: sunday.toISOString(),

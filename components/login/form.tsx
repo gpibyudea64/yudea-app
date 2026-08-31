@@ -36,6 +36,7 @@ export default function LoginForm() {
   } = adminForm;
 
   const onSubmit = async (values: LoginFormValues) => {
+    setError("");
     try {
       const res = await signIn("credentials", {
         email: values.email,

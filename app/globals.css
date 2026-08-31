@@ -167,3 +167,78 @@
     padding: 5px;
   }
 }
+
+/* ── Print styles ─────────────────────────────────────────── */
+@media print {
+  /* Hide navigation, sidebar, and interactive controls */
+  nav,
+  aside,
+  [data-sidebar],
+  [role="navigation"],
+  button:not(.no-print),
+  .no-print,
+  input[type="date"],
+  [role="menu"],
+  [role="menuitem"] {
+    display: none !important;
+  }
+
+  /* Reset page background */
+  body {
+    background: white !important;
+    background-image: none !important;
+    color: black !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Page layout */
+  .container {
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Cards: remove shadows, ensure white background */
+  [class*="shadow"] {
+    box-shadow: none !important;
+    border: 1px solid #ddd !important;
+  }
+
+  /* Table styles for print */
+  table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    page-break-inside: auto;
+  }
+
+  tr {
+    page-break-inside: avoid;
+  }
+
+  th, td {
+    border: 1px solid #ccc !important;
+    padding: 6px 8px !important;
+    font-size: 11px !important;
+    color: black !important;
+  }
+
+  th {
+    background-color: #f0f0f0 !important;
+    font-weight: bold !important;
+  }
+
+  /* Print header */
+  h1 {
+    font-size: 18px !important;
+    color: black !important;
+    background: none !important;
+    -webkit-background-clip: unset !important;
+    background-clip: unset !important;
+  }
+
+  /* Ensure page breaks between major sections */
+  .container > div {
+    page-break-inside: avoid;
+  }
+}

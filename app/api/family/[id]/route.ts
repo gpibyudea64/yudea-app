@@ -5,6 +5,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { validateBody, handleApiError } from "@/lib/api-validate";
 import { requireEditAccess, requireViewAccess } from "@/lib/server-auth";
 import { updateFamilySchema } from "@/schemas/api.schemas";
+import type { z } from "zod";
+
+type MemberInput = NonNullable<z.infer<typeof updateFamilySchema>["members"]>[number];
+
+/** Convert empty-string or non-enum values to null for Prisma. */
+function toEnumOrNull<T extends string>(value: string | null | undefined): T | null {
+  return value && value !== "" ? (value as T) : null;
+}
 
 // GET /api/family/:id
 export async function GET(
@@ -86,101 +94,57 @@ export async function PATCH(
         ...(members?.length
           ? {
               members: {
-                create: (members as never[]).map(
-                  (member: {
-                    firstName: string;
-                    lastName?: string | null;
-                    birthCity?: string;
-                    gender: "MALE" | "FEMALE";
-                    birthDate: string;
-                    phone?: string | null;
-                    email?: string | null;
-                    bloodType?: string;
-                    role: string;
-                    childNumber?: number | null;
-                    sameAddressAsFamily?: boolean;
-                    memberAddress?: string | null;
-                    memberProvinsi?: string | null;
-                    memberKotaKabupaten?: string | null;
-                    memberKecamatan?: string | null;
-                    memberKelurahan?: string | null;
-                    isActive?: boolean;
-                    isDeceased?: boolean;
-                    deathDate?: string | null;
-                    statusBaptis?: string;
-                    lokasiBaptis?: string | null;
-                    tanggalBaptis?: string | null;
-                    statusSidi?: string;
-                    lokasiSidi?: string | null;
-                    tanggalSidi?: string | null;
-                    statusPerkawinan?: string;
-                    lokasiPemberkatanGereja?: string | null;
-                    tanggalPemberkatanGereja?: string | null;
-                    lokasiPerkawinanSipil?: string | null;
-                    tanggalPerkawinanSipil?: string | null;
-                    jabatan?: string | null;
-                    gerejaAsal?: string | null;
-                    pendidikanTerakhir?: string | null;
-                    pekerjaan?: string | null;
-                    tahunDaftar?: string | null;
-                    pengalamanGereja?: string | null;
-                    pengalamanOrganisasi?: string | null;
-                    keteranganLain?: string | null;
-                  }) => ({
-                    firstName: member.firstName,
-                    lastName: member.lastName || null,
-                    birthCity: member.birthCity || '',
-                    gender: member.gender,
-                    birthDate: new Date(member.birthDate),
-                    phone: member.phone || '',
-                    email: member.email || null,
-                    bloodType: member.bloodType ? (member.bloodType as never) : null,
-                    role: member.role,
-                    childNumber: member.role === 'CHILD' ? (member.childNumber || null) : null,
-                    sameAddressAsFamily: member.sameAddressAsFamily ?? true,
-                    memberAddress: member.sameAddressAsFamily ? null : (member.memberAddress || null),
-                    memberProvinsi: member.sameAddressAsFamily ? null : (member.memberProvinsi || null),
-                    memberKotaKabupaten: member.sameAddressAsFamily ? null : (member.memberKotaKabupaten || null),
-                    memberKecamatan: member.sameAddressAsFamily ? null : (member.memberKecamatan || null),
-                    memberKelurahan: member.sameAddressAsFamily ? null : (member.memberKelurahan || null),
-                    isActive: member.isActive ?? true,
-                    isDeceased: member.isDeceased ?? false,
-                    deathDate: member.deathDate
-                      ? new Date(member.deathDate)
+                create: members.map((m: MemberInput) => ({
+                  firstName: m.firstName,
+                  lastName: m.lastName || null,
+                  birthCity: m.birthCity || '',
+                  gender: m.gender,
+                  birthDate: new Date(m.birthDate),
+                  phone: m.phone || '',
+                  email: m.email || null,
+                  bloodType: toEnumOrNull<'A' | 'B' | 'AB' | 'O'>(m.bloodType),
+                  role: m.role,
+                  childNumber: m.role === 'CHILD' ? (m.childNumber || null) : null,
+                  sameAddressAsFamily: m.sameAddressAsFamily ?? true,
+                  memberAddress: m.sameAddressAsFamily ? null : (m.memberAddress || null),
+                  memberProvinsi: m.sameAddressAsFamily ? null : (m.memberProvinsi || null),
+                  memberKotaKabupaten: m.sameAddressAsFamily ? null : (m.memberKotaKabupaten || null),
+                  memberKecamatan: m.sameAddressAsFamily ? null : (m.memberKecamatan || null),
+                  memberKelurahan: m.sameAddressAsFamily ? null : (m.memberKelurahan || null),
+                  isActive: m.isActive ?? true,
+                  isDeceased: m.isDeceased ?? false,
+                  deathDate: m.deathDate ? new Date(m.deathDate) : null,                  statusBaptis: (m.statusBaptis || 'BELUM') as 'SUDAH' | 'BELUM',
+                    lokasiBaptis: m.statusBaptis === 'SUDAH' ? (m.lokasiBaptis || null) : null,
+                    tanggalBaptis: m.statusBaptis === 'SUDAH' && m.tanggalBaptis
+                      ? new Date(m.tanggalBaptis)
                       : null,
-                    statusBaptis: member.statusBaptis || 'BELUM',
-                    lokasiBaptis: member.statusBaptis === 'SUDAH' ? (member.lokasiBaptis || null) : null,
-                    tanggalBaptis: member.statusBaptis === 'SUDAH' && member.tanggalBaptis
-                      ? new Date(member.tanggalBaptis)
+                    statusSidi: (m.statusSidi || 'BELUM') as 'SUDAH' | 'BELUM',
+                    lokasiSidi: m.statusSidi === 'SUDAH' ? (m.lokasiSidi || null) : null,
+                    tanggalSidi: m.statusSidi === 'SUDAH' && m.tanggalSidi
+                      ? new Date(m.tanggalSidi)
                       : null,
-                    statusSidi: member.statusSidi || 'BELUM',
-                    lokasiSidi: member.statusSidi === 'SUDAH' ? (member.lokasiSidi || null) : null,
-                    tanggalSidi: member.statusSidi === 'SUDAH' && member.tanggalSidi
-                      ? new Date(member.tanggalSidi)
-                      : null,
-                    statusPerkawinan: member.statusPerkawinan || 'BELUM_MENIKAH',
-                    lokasiPemberkatanGereja: member.statusPerkawinan === 'MENIKAH' ? (member.lokasiPemberkatanGereja || null) : null,
-                    tanggalPemberkatanGereja: member.statusPerkawinan === 'MENIKAH' && member.tanggalPemberkatanGereja
-                      ? new Date(member.tanggalPemberkatanGereja)
-                      : null,
-                    lokasiPerkawinanSipil: member.statusPerkawinan === 'MENIKAH' ? (member.lokasiPerkawinanSipil || null) : null,
-                    tanggalPerkawinanSipil: member.statusPerkawinan === 'MENIKAH' && member.tanggalPerkawinanSipil
-                      ? new Date(member.tanggalPerkawinanSipil)
-                      : null,
-                    jabatan: member.jabatan || null,
-                    gerejaAsal: member.gerejaAsal || null,
-                    pendidikanTerakhir: member.pendidikanTerakhir || null,
-                    pekerjaan: member.pekerjaan || null,
-                    tahunDaftar: member.tahunDaftar || null,
-                    pengalamanGereja: member.pengalamanGereja || null,
-                    pengalamanOrganisasi: member.pengalamanOrganisasi || null,
-                    keteranganLain: member.keteranganLain || null,
-                  } as never),
-                ),
+                    statusPerkawinan: (m.statusPerkawinan || 'BELUM_MENIKAH') as 'BELUM_MENIKAH' | 'JANDA' | 'DUDA' | 'MENIKAH',
+                  lokasiPemberkatanGereja: m.statusPerkawinan === 'MENIKAH' ? (m.lokasiPemberkatanGereja || null) : null,
+                  tanggalPemberkatanGereja: m.statusPerkawinan === 'MENIKAH' && m.tanggalPemberkatanGereja
+                    ? new Date(m.tanggalPemberkatanGereja)
+                    : null,
+                  lokasiPerkawinanSipil: m.statusPerkawinan === 'MENIKAH' ? (m.lokasiPerkawinanSipil || null) : null,
+                  tanggalPerkawinanSipil: m.statusPerkawinan === 'MENIKAH' && m.tanggalPerkawinanSipil
+                    ? new Date(m.tanggalPerkawinanSipil)
+                    : null,
+                  jabatan: toEnumOrNull<'WARGA_JEMAAT' | 'DIAKEN' | 'PENATUA' | 'PENGURUS_PELKAT' | 'PENGURUS_KOMISI'>(m.jabatan),
+                  gerejaAsal: m.gerejaAsal || null,
+                  pendidikanTerakhir: m.pendidikanTerakhir || null,
+                  pekerjaan: m.pekerjaan || null,
+                  tahunDaftar: m.tahunDaftar || null,
+                  pengalamanGereja: m.pengalamanGereja || null,
+                  pengalamanOrganisasi: m.pengalamanOrganisasi || null,
+                  keteranganLain: m.keteranganLain || null,
+                })),
               },
             }
           : {}),
-      } as never,
+      },
       include: {
         region: true,
         members: true,

@@ -1,3 +1,5 @@
+export const runtime = "nodejs";
+
 import { prisma } from "@/lib/prisma";
 import { buildPelkatWhere } from "@/lib/helper";
 import { BloodType, Gender, MemberPelkat } from "@prisma/client";

@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
     const skip = (page - 1) * limit;
 
     // Build where clause for search
-    let where: Prisma.MemberWhereInput = search
+    const searchWhere: Prisma.MemberWhereInput = search
       ? {
           OR: [
             { firstName: { contains: search, mode: "insensitive" as const } },
@@ -43,33 +43,28 @@ export async function GET(req: NextRequest) {
         }
       : {};
 
+    // Collect all filter conditions and combine with AND to avoid
+    // shallow-merge overwrites when multiple filters set the same key.
+    const filters: Prisma.MemberWhereInput[] = [];
+    if (Object.keys(searchWhere).length) filters.push(searchWhere);
+
     if (region && region !== "all") {
-      where = {
-        ...where,
-        family: {
-          regionId: region,
-        },
-      };
+      filters.push({ family: { regionId: region } });
     }
 
     // Filter by region if user is a coordinator
     const regionId = session.regionId;
     if (session.role === "COORDINATOR" && regionId) {
-      where = {
-        ...where,
-        family: {
-          regionId,
-        },
-      };
+      filters.push({ family: { regionId } });
     }
 
     // Apply server-side pelkat filter using the existing buildPelkatWhere helper
     if (pelkat && pelkat !== "all" && Object.values(MemberPelkat).includes(pelkat as MemberPelkat)) {
-      where = {
-        ...where,
-        AND: [where, buildPelkatWhere(pelkat as MemberPelkat)],
-      };
+      filters.push(buildPelkatWhere(pelkat as MemberPelkat));
     }
+
+    const where: Prisma.MemberWhereInput =
+      filters.length > 1 ? { AND: filters } : filters[0] ?? {};
 
     const [items, total] = await prisma.$transaction([
       prisma.member.findMany({

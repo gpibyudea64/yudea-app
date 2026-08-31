@@ -22,53 +22,41 @@ export async function GET(req: NextRequest) {
 
     // Presbyters are members whose jabatan is DIAKEN or PENATUA.
     // The jabatan filter must ALWAYS apply — not just when searching.
-    let where: Prisma.MemberWhereInput = {
-      jabatan: { in: ["DIAKEN", "PENATUA"] },
-    };
+    const filters: Prisma.MemberWhereInput[] = [
+      { jabatan: { in: ["DIAKEN", "PENATUA"] } },
+    ];
 
     if (search) {
-      where = {
-        AND: [
+      filters.push({
+        OR: [
+          { firstName: { contains: search, mode: "insensitive" as const } },
+          { lastName: { contains: search, mode: "insensitive" as const } },
+          { email: { contains: search, mode: "insensitive" as const } },
+          { phone: { contains: search, mode: "insensitive" as const } },
           {
-            OR: [
-              { firstName: { contains: search, mode: "insensitive" as const } },
-              { lastName: { contains: search, mode: "insensitive" as const } },
-              { email: { contains: search, mode: "insensitive" as const } },
-              { phone: { contains: search, mode: "insensitive" as const } },
-              {
-                family: {
-                  familyName: {
-                    contains: search,
-                    mode: "insensitive" as const,
-                  },
-                },
+            family: {
+              familyName: {
+                contains: search,
+                mode: "insensitive" as const,
               },
-            ],
+            },
           },
-          where,
         ],
-      };
+      });
     }
 
     if (region && region !== "all") {
-      where = {
-        ...where,
-        family: {
-          regionId: region,
-        },
-      };
+      filters.push({ family: { regionId: region } });
     }
 
     // Filter by region if user is a coordinator
     const regionId = session.regionId;
     if (session.role === "COORDINATOR" && regionId) {
-      where = {
-        ...where,
-        family: {
-          regionId,
-        },
-      };
+      filters.push({ family: { regionId } });
     }
+
+    const where: Prisma.MemberWhereInput =
+      filters.length > 1 ? { AND: filters } : filters[0];
 
     const [items, total] = await prisma.$transaction([
       prisma.member.findMany({
