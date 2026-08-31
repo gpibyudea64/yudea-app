@@ -138,7 +138,7 @@ model Member {
   lokasiPerkawinanSipil    String?
   tanggalPerkawinanSipil   DateTime?
   // ── Jabatan, pendidikan, dsb. ──
-  jabatan            Jabatan?
+  jabatan            Jabatan   @default(WARGA_JEMAAT)
   gerejaAsal         String?
   pendidikanTerakhir String?
   pekerjaan          String?

@@ -85,7 +85,7 @@ const emptyMember: MemberForm = {
   tanggalPemberkatanGereja: "",
   lokasiPerkawinanSipil: "",
   tanggalPerkawinanSipil: "",
-  jabatan: "",
+  jabatan: "WARGA_JEMAAT" as const,
   gerejaAsal: "",
   pendidikanTerakhir: "",
   pekerjaan: "",
@@ -679,6 +679,7 @@ export default function FamilyDialog({
                     index={index}
                     control={control}
                     register={register}
+                    errors={errors}
                     remove={remove}
                   />
                 ))
@@ -719,11 +720,13 @@ function MemberFormBlock({
   index,
   control,
   register,
+  errors,
   remove,
 }: {
   index: number;
   control: Control<FamilyForm>;
   register: UseFormRegister<FamilyForm>;
+  errors: any;
   remove: (index: number) => void;
 }) {
   const selectedRole = useWatch({ control, name: `members.${index}.role` as const });
@@ -747,119 +750,86 @@ function MemberFormBlock({
 
       {/* Data Diri */}
       <div className="grid gap-3 md:grid-cols-2">
-        <Input
-          placeholder="Nama Depan"
-          {...register(`members.${index}.firstName` as const)}
-        />
-        <Input
-          placeholder="Nama Belakang"
-          {...register(`members.${index}.lastName` as const)}
-        />
-        <Input
-          placeholder="Kota Lahir"
-          {...register(`members.${index}.birthCity` as const)}
-        />
-        <Input
-          type="date"
-          {...register(`members.${index}.birthDate` as const)}
-        />
-        <Input
-          placeholder="Phone"
-          {...register(`members.${index}.phone` as const)}
-        />
-        <Input
-          type="email"
-          placeholder="Email"
-          {...register(`members.${index}.email` as const)}
-        />
-        <Controller
-          control={control}
-          name={`members.${index}.gender` as const}
-          render={({ field }) => (
-            <Select value={field.value} onValueChange={field.onChange}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Gender" />
-              </SelectTrigger>
-              <SelectContent>
-                {genderOptions.map((item) => (
-                  <SelectItem key={item.value} value={item.value}>
-                    {item.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
-        />
-        <Controller
-          control={control}
-          name={`members.${index}.bloodType` as const}
-          render={({ field }) => (
-            <Select
-              value={field.value === "" ? "none" : field.value}
-              onValueChange={(value) =>
-                field.onChange(value === "none" ? "" : value)
-              }
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Golongan Darah" />
-              </SelectTrigger>
-              <SelectContent>
-                {bloodTypeOptions.map((item) => (
-                  <SelectItem key={item.value} value={item.value}>
-                    {item.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
-        />
-        <Controller
-          control={control}
-          name={`members.${index}.role` as const}
-          render={({ field }) => (
-            <Select value={field.value} onValueChange={field.onChange}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Role" />
-              </SelectTrigger>
-              <SelectContent>
-                {memberRoleOptions.map((item) => (
-                  <SelectItem key={item.value} value={item.value}>
-                    {item.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
-        />
-        {selectedRole === "CHILD" && (
+        <div className="space-y-1">
+          <Label className="text-sm">
+            Nama Depan <span className="text-red-500">*</span>
+          </Label>
           <Input
-            type="number"
-            min="0"
-            placeholder="Anak ke-"
-            {...register(`members.${index}.childNumber` as const, {
-              valueAsNumber: true,
+            placeholder="Nama Depan"
+            {...register(`members.${index}.firstName` as const, {
+              required: "Nama depan wajib diisi",
             })}
           />
-        )}
-      </div>
-
-      {/* Baptis */}
-      <div className="border-t pt-4">
-        <h4 className="text-sm font-medium flex items-center gap-2 mb-3">
-          <Church className="h-4 w-4" />
-          Baptis
-        </h4>
-        <div className="grid gap-3 md:grid-cols-2">
+          {errors?.members?.[index]?.firstName && (
+            <p className="text-sm text-red-500">{errors.members[index].firstName.message}</p>
+          )}
+        </div>
+        <div className="space-y-1">
+          <Label className="text-sm text-muted-foreground">
+            Nama Belakang <span className="text-xs">(Opsional)</span>
+          </Label>
+          <Input
+            placeholder="Nama Belakang"
+            {...register(`members.${index}.lastName` as const)}
+          />
+        </div>
+        <div className="space-y-1">
+          <Label className="text-sm text-muted-foreground">
+            Kota Lahir <span className="text-xs">(Opsional)</span>
+          </Label>
+          <Input
+            placeholder="Kota Lahir"
+            {...register(`members.${index}.birthCity` as const)}
+          />
+        </div>
+        <div className="space-y-1">
+          <Label className="text-sm">
+            Tanggal Lahir <span className="text-red-500">*</span>
+          </Label>
+          <Input
+            type="date"
+            {...register(`members.${index}.birthDate` as const, {
+              required: "Tanggal lahir wajib diisi",
+            })}
+          />
+          {errors?.members?.[index]?.birthDate && (
+            <p className="text-sm text-red-500">{errors.members[index].birthDate.message}</p>
+          )}
+        </div>
+        <div className="space-y-1">
+          <Label className="text-sm text-muted-foreground">
+            Phone <span className="text-xs">(Opsional)</span>
+          </Label>
+          <Input
+            placeholder="Phone"
+            {...register(`members.${index}.phone` as const)}
+          />
+        </div>
+        <div className="space-y-1">
+          <Label className="text-sm text-muted-foreground">
+            Email <span className="text-xs">(Opsional)</span>
+          </Label>
+          <Input
+            type="email"
+            placeholder="Email"
+            {...register(`members.${index}.email` as const)}
+          />
+        </div>
+        <div className="space-y-1">
+          <Label className="text-sm">
+            Gender <span className="text-red-500">*</span>
+          </Label>
           <Controller
             control={control}
-            name={`members.${index}.statusBaptis` as const}
+            name={`members.${index}.gender` as const}
+            rules={{ required: "Gender wajib dipilih" }}
             render={({ field }) => (
               <Select value={field.value} onValueChange={field.onChange}>
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Status Baptis" />
+                  <SelectValue placeholder="Pilih Gender" />
                 </SelectTrigger>
                 <SelectContent>
-                  {baptisStatusOptions.map((item) => (
+                  {genderOptions.map((item) => (
                     <SelectItem key={item.value} value={item.value}>
                       {item.label}
                     </SelectItem>
@@ -868,17 +838,126 @@ function MemberFormBlock({
               </Select>
             )}
           />
+          {errors?.members?.[index]?.gender && (
+            <p className="text-sm text-red-500">{errors.members[index].gender.message}</p>
+          )}
+        </div>
+        <div className="space-y-1">
+          <Label className="text-sm text-muted-foreground">
+            Golongan Darah <span className="text-xs">(Opsional)</span>
+          </Label>
+          <Controller
+            control={control}
+            name={`members.${index}.bloodType` as const}
+            render={({ field }) => (
+              <Select
+                value={field.value === "" ? "none" : field.value}
+                onValueChange={(value) =>
+                  field.onChange(value === "none" ? "" : value)
+                }
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Pilih Golongan Darah" />
+                </SelectTrigger>
+                <SelectContent>
+                  {bloodTypeOptions.map((item) => (
+                    <SelectItem key={item.value} value={item.value}>
+                      {item.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          />
+        </div>
+        <div className="space-y-1">
+          <Label className="text-sm">
+            Role <span className="text-red-500">*</span>
+          </Label>
+          <Controller
+            control={control}
+            name={`members.${index}.role` as const}
+            rules={{ required: "Role wajib dipilih" }}
+            render={({ field }) => (
+              <Select value={field.value} onValueChange={field.onChange}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Pilih Role" />
+                </SelectTrigger>
+                <SelectContent>
+                  {memberRoleOptions.map((item) => (
+                    <SelectItem key={item.value} value={item.value}>
+                      {item.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          />
+          {errors?.members?.[index]?.role && (
+            <p className="text-sm text-red-500">{errors.members[index].role.message}</p>
+          )}
+        </div>
+        {selectedRole === "CHILD" && (
+          <div className="space-y-1">
+            <Label className="text-sm text-muted-foreground">
+              Anak ke- <span className="text-xs">(Opsional)</span>
+            </Label>
+            <Input
+              type="number"
+              min="0"
+              placeholder="Anak ke-"
+              {...register(`members.${index}.childNumber` as const, {
+                valueAsNumber: true,
+              })}
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Baptis */}
+      <div className="border-t pt-4">
+        <h4 className="text-sm font-medium flex items-center gap-2 mb-3">
+          <Church className="h-4 w-4" />
+          Baptis <span className="text-xs text-muted-foreground font-normal">(Opsional)</span>
+        </h4>
+        <div className="grid gap-3 md:grid-cols-2">
+          <div className="space-y-1">
+            <Label className="text-sm text-muted-foreground">Status Baptis</Label>
+            <Controller
+              control={control}
+              name={`members.${index}.statusBaptis` as const}
+              render={({ field }) => (
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Pilih Status Baptis" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {baptisStatusOptions.map((item) => (
+                      <SelectItem key={item.value} value={item.value}>
+                        {item.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
+          </div>
           {selectedBaptis === "SUDAH" && (
             <>
-              <Input
-                placeholder="Lokasi Baptis"
-                {...register(`members.${index}.lokasiBaptis` as const)}
-              />
-              <Input
-                type="date"
-                placeholder="Tanggal Baptis"
-                {...register(`members.${index}.tanggalBaptis` as const)}
-              />
+              <div className="space-y-1">
+                <Label className="text-sm text-muted-foreground">Lokasi Baptis</Label>
+                <Input
+                  placeholder="Lokasi Baptis"
+                  {...register(`members.${index}.lokasiBaptis` as const)}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-sm text-muted-foreground">Tanggal Baptis</Label>
+                <Input
+                  type="date"
+                  {...register(`members.${index}.tanggalBaptis` as const)}
+                />
+              </div>
             </>
           )}
         </div>
@@ -888,38 +967,46 @@ function MemberFormBlock({
       <div className="border-t pt-4">
         <h4 className="text-sm font-medium flex items-center gap-2 mb-3">
           <Church className="h-4 w-4" />
-          Sidi
+          Sidi <span className="text-xs text-muted-foreground font-normal">(Opsional)</span>
         </h4>
         <div className="grid gap-3 md:grid-cols-2">
-          <Controller
-            control={control}
-            name={`members.${index}.statusSidi` as const}
-            render={({ field }) => (
-              <Select value={field.value} onValueChange={field.onChange}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Status Sidi" />
-                </SelectTrigger>
-                <SelectContent>
-                  {sidiStatusOptions.map((item) => (
-                    <SelectItem key={item.value} value={item.value}>
-                      {item.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-          />
+          <div className="space-y-1">
+            <Label className="text-sm text-muted-foreground">Status Sidi</Label>
+            <Controller
+              control={control}
+              name={`members.${index}.statusSidi` as const}
+              render={({ field }) => (
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Pilih Status Sidi" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {sidiStatusOptions.map((item) => (
+                      <SelectItem key={item.value} value={item.value}>
+                        {item.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
+          </div>
           {selectedSidi === "SUDAH" && (
             <>
-              <Input
-                placeholder="Lokasi Sidi"
-                {...register(`members.${index}.lokasiSidi` as const)}
-              />
-              <Input
-                type="date"
-                placeholder="Tanggal Sidi"
-                {...register(`members.${index}.tanggalSidi` as const)}
-              />
+              <div className="space-y-1">
+                <Label className="text-sm text-muted-foreground">Lokasi Sidi</Label>
+                <Input
+                  placeholder="Lokasi Sidi"
+                  {...register(`members.${index}.lokasiSidi` as const)}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-sm text-muted-foreground">Tanggal Sidi</Label>
+                <Input
+                  type="date"
+                  {...register(`members.${index}.tanggalSidi` as const)}
+                />
+              </div>
             </>
           )}
         </div>
@@ -929,47 +1016,60 @@ function MemberFormBlock({
       <div className="border-t pt-4">
         <h4 className="text-sm font-medium flex items-center gap-2 mb-3">
           <Heart className="h-4 w-4" />
-          Perkawinan
+          Perkawinan <span className="text-xs text-muted-foreground font-normal">(Opsional)</span>
         </h4>
         <div className="grid gap-3 md:grid-cols-2">
-          <Controller
-            control={control}
-            name={`members.${index}.statusPerkawinan` as const}
-            render={({ field }) => (
-              <Select value={field.value} onValueChange={field.onChange}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Status Perkawinan" />
-                </SelectTrigger>
-                <SelectContent>
-                  {perkawinanStatusOptions.map((item) => (
-                    <SelectItem key={item.value} value={item.value}>
-                      {item.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-          />
+          <div className="space-y-1">
+            <Label className="text-sm text-muted-foreground">Status Perkawinan</Label>
+            <Controller
+              control={control}
+              name={`members.${index}.statusPerkawinan` as const}
+              render={({ field }) => (
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Pilih Status Perkawinan" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {perkawinanStatusOptions.map((item) => (
+                      <SelectItem key={item.value} value={item.value}>
+                        {item.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
+          </div>
           {selectedPerkawinan === "MENIKAH" && (
             <>
-              <Input
-                placeholder="Lokasi Pemberkatan Gereja"
-                {...register(`members.${index}.lokasiPemberkatanGereja` as const)}
-              />
-              <Input
-                type="date"
-                placeholder="Tanggal Pemberkatan Gereja"
-                {...register(`members.${index}.tanggalPemberkatanGereja` as const)}
-              />
-              <Input
-                placeholder="Lokasi Perkawinan Sipil"
-                {...register(`members.${index}.lokasiPerkawinanSipil` as const)}
-              />
-              <Input
-                type="date"
-                placeholder="Tanggal Perkawinan Sipil"
-                {...register(`members.${index}.tanggalPerkawinanSipil` as const)}
-              />
+              <div className="space-y-1">
+                <Label className="text-sm text-muted-foreground">Lokasi Pemberkatan Gereja</Label>
+                <Input
+                  placeholder="Lokasi Pemberkatan Gereja"
+                  {...register(`members.${index}.lokasiPemberkatanGereja` as const)}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-sm text-muted-foreground">Tanggal Pemberkatan Gereja</Label>
+                <Input
+                  type="date"
+                  {...register(`members.${index}.tanggalPemberkatanGereja` as const)}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-sm text-muted-foreground">Lokasi Perkawinan Sipil</Label>
+                <Input
+                  placeholder="Lokasi Perkawinan Sipil"
+                  {...register(`members.${index}.lokasiPerkawinanSipil` as const)}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-sm text-muted-foreground">Tanggal Perkawinan Sipil</Label>
+                <Input
+                  type="date"
+                  {...register(`members.${index}.tanggalPerkawinanSipil` as const)}
+                />
+              </div>
             </>
           )}
         </div>
@@ -979,27 +1079,34 @@ function MemberFormBlock({
       <div className="border-t pt-4">
         <h4 className="text-sm font-medium flex items-center gap-2 mb-3">
           <Briefcase className="h-4 w-4" />
-          Jabatan
+          Jabatan <span className="text-red-500">*</span>
         </h4>
         <div className="grid gap-3 md:grid-cols-2">
-          <Controller
-            control={control}
-            name={`members.${index}.jabatan` as const}
-            render={({ field }) => (
-              <Select value={field.value} onValueChange={field.onChange}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Pilih Jabatan" />
-                </SelectTrigger>
-                <SelectContent>
-                  {jabatanOptions.map((item) => (
-                    <SelectItem key={item.value} value={item.value}>
-                      {item.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          <div className="space-y-1">
+            <Label className="text-sm">Pilih Jabatan <span className="text-red-500">*</span></Label>
+            <Controller
+              control={control}
+              name={`members.${index}.jabatan` as const}
+              rules={{ required: "Jabatan wajib dipilih" }}
+              render={({ field }) => (
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Pilih Jabatan" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {jabatanOptions.map((item) => (
+                      <SelectItem key={item.value} value={item.value}>
+                        {item.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
+            {errors?.members?.[index]?.jabatan && (
+              <p className="text-sm text-red-500">{errors.members[index].jabatan.message}</p>
             )}
-          />
+          </div>
         </div>
       </div>
 
@@ -1007,43 +1114,55 @@ function MemberFormBlock({
       <div className="border-t pt-4">
         <h4 className="text-sm font-medium flex items-center gap-2 mb-3">
           <FileText className="h-4 w-4" />
-          Informasi Lainnya
+          Informasi Lainnya <span className="text-xs text-muted-foreground font-normal">(Opsional)</span>
         </h4>
         <div className="grid gap-3 md:grid-cols-2">
-          <Input
-            placeholder="Gereja Asal (Pindahan Dari)"
-            {...register(`members.${index}.gerejaAsal` as const)}
-          />
-          <Input
-            placeholder="Pendidikan Terakhir"
-            {...register(`members.${index}.pendidikanTerakhir` as const)}
-          />
-          <Input
-            placeholder="Pekerjaan"
-            {...register(`members.${index}.pekerjaan` as const)}
-          />
-          <Input
-            placeholder="Tahun Daftar di GPIB Yudea"
-            {...register(`members.${index}.tahunDaftar` as const)}
-          />
-          <div className="space-y-2 md:col-span-2">
-            <Label className="text-xs text-muted-foreground">Pengalaman Gereja</Label>
+          <div className="space-y-1">
+            <Label className="text-sm text-muted-foreground">Gereja Asal (Pindahan Dari)</Label>
+            <Input
+              placeholder="Gereja Asal"
+              {...register(`members.${index}.gerejaAsal` as const)}
+            />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-sm text-muted-foreground">Pendidikan Terakhir</Label>
+            <Input
+              placeholder="Pendidikan Terakhir"
+              {...register(`members.${index}.pendidikanTerakhir` as const)}
+            />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-sm text-muted-foreground">Pekerjaan</Label>
+            <Input
+              placeholder="Pekerjaan"
+              {...register(`members.${index}.pekerjaan` as const)}
+            />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-sm text-muted-foreground">Tahun Daftar di GPIB Yudea</Label>
+            <Input
+              placeholder="Tahun Daftar"
+              {...register(`members.${index}.tahunDaftar` as const)}
+            />
+          </div>
+          <div className="space-y-1 md:col-span-2">
+            <Label className="text-sm text-muted-foreground">Pengalaman Gereja</Label>
             <textarea
               className="flex w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring min-h-[60px]"
               placeholder="Pengalaman Gereja"
               {...register(`members.${index}.pengalamanGereja` as const)}
             />
           </div>
-          <div className="space-y-2 md:col-span-2">
-            <Label className="text-xs text-muted-foreground">Pengalaman Organisasi</Label>
+          <div className="space-y-1 md:col-span-2">
+            <Label className="text-sm text-muted-foreground">Pengalaman Organisasi</Label>
             <textarea
               className="flex w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring min-h-[60px]"
               placeholder="Pengalaman Organisasi"
               {...register(`members.${index}.pengalamanOrganisasi` as const)}
             />
           </div>
-          <div className="space-y-2 md:col-span-2">
-            <Label className="text-xs text-muted-foreground">Keterangan Lain-Lain</Label>
+          <div className="space-y-1 md:col-span-2">
+            <Label className="text-sm text-muted-foreground">Keterangan Lain-Lain</Label>
             <textarea
               className="flex w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring min-h-[60px]"
               placeholder="Keterangan Lain-Lain"

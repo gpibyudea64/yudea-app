@@ -175,7 +175,7 @@ export async function POST(req: NextRequest) {
         tanggalPemberkatanGereja: d.tanggalPemberkatanGereja ? new Date(d.tanggalPemberkatanGereja) : null,
         lokasiPerkawinanSipil: d.lokasiPerkawinanSipil || null,
         tanggalPerkawinanSipil: d.tanggalPerkawinanSipil ? new Date(d.tanggalPerkawinanSipil) : null,
-        jabatan: d.jabatan || null,
+        jabatan: d.jabatan,
         gerejaAsal: d.gerejaAsal || null,
         pendidikanTerakhir: d.pendidikanTerakhir || null,
         pekerjaan: d.pekerjaan || null,

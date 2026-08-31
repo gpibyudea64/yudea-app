@@ -115,7 +115,7 @@ export type MemberForm = {
   lokasiPerkawinanSipil: string;
   tanggalPerkawinanSipil: string;
   // Other
-  jabatan: Jabatan | "";
+  jabatan: Jabatan;
   gerejaAsal: string;
   pendidikanTerakhir: string;
   pekerjaan: string;

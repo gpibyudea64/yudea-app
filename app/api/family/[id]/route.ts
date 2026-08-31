@@ -132,7 +132,7 @@ export async function PATCH(
                   tanggalPerkawinanSipil: m.statusPerkawinan === 'MENIKAH' && m.tanggalPerkawinanSipil
                     ? new Date(m.tanggalPerkawinanSipil)
                     : null,
-                  jabatan: toEnumOrNull<'WARGA_JEMAAT' | 'DIAKEN' | 'PENATUA' | 'PENGURUS_PELKAT' | 'PENGURUS_KOMISI'>(m.jabatan),
+                  jabatan: m.jabatan,
                   gerejaAsal: m.gerejaAsal || null,
                   pendidikanTerakhir: m.pendidikanTerakhir || null,
                   pekerjaan: m.pekerjaan || null,

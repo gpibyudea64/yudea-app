@@ -30,6 +30,8 @@ import {
   FileText,
   Printer,
 } from "lucide-react";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 type ReportRow = {
   familyName: string;
@@ -145,6 +147,59 @@ export default function ReportPage({
     URL.revokeObjectURL(url);
   }
 
+  function handleExportPDF() {
+    if (!sortedReportData.length) return;
+
+    const doc = new jsPDF({ orientation: "landscape" });
+
+    // Title
+    doc.setFontSize(16);
+    doc.text("Laporan Warga Jemaat", 14, 20);
+
+    // Filter info
+    doc.setFontSize(10);
+    let filterText = "Semua Data";
+    if (pelkat !== "all" || region !== "all") {
+      const parts: string[] = [];
+      if (pelkat !== "all") parts.push(`PELKAT: ${pelkat.replaceAll("_", " ")}`);
+      if (region !== "all")
+        parts.push(`Sektor: ${regionOptions.find((r) => r.value === region)?.label ?? region}`);
+      filterText = parts.join(" | ");
+    }
+    doc.text(filterText, 14, 28);
+    doc.text(`Total: ${sortedReportData.length} warga jemaat`, 14, 34);
+
+    // Table
+    const tableHeaders = [["No", "Nama Keluarga", "Nama Jemaat", "Alamat", "Tanggal Lahir", "Sektor Pelayanan"]];
+    const tableRows = sortedReportData.map((row, index) => [
+      String(index + 1),
+      row.familyName,
+      row.fullName,
+      row.address,
+      formatDate(row.birthDate),
+      row.regionName,
+    ]);
+
+    autoTable(doc, {
+      head: tableHeaders,
+      body: tableRows,
+      startY: 38,
+      styles: { fontSize: 8, cellPadding: 2 },
+      headStyles: { fillColor: [30, 41, 59] },
+      columnStyles: {
+        0: { cellWidth: 10 },
+        1: { cellWidth: 40 },
+        2: { cellWidth: 40 },
+        3: { cellWidth: "auto" },
+        4: { cellWidth: 30 },
+        5: { cellWidth: 40 },
+      },
+      margin: { left: 14, right: 14 },
+    });
+
+    doc.save("laporan-jemaat.pdf");
+  }
+
 
 
   return (
@@ -221,7 +276,7 @@ export default function ReportPage({
                   Export XLS
                 </Button>
                 <Button
-                  onClick={() => window.print()}
+                  onClick={handleExportPDF}
                   disabled={sortedReportData.length === 0}
                   variant="outline"
                   className="gap-2"

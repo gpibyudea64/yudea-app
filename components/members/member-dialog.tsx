@@ -109,7 +109,7 @@ export default function MemberDialog({
       tanggalPemberkatanGereja: "",
       lokasiPerkawinanSipil: "",
       tanggalPerkawinanSipil: "",
-      jabatan: "",
+      jabatan: "WARGA_JEMAAT",
       gerejaAsal: "",
       pendidikanTerakhir: "",
       pekerjaan: "",
@@ -153,7 +153,7 @@ export default function MemberDialog({
     tanggalPemberkatanGereja: "",
     lokasiPerkawinanSipil: "",
     tanggalPerkawinanSipil: "",
-    jabatan: "" as const,
+    jabatan: "WARGA_JEMAAT" as const,
     gerejaAsal: "",
     pendidikanTerakhir: "",
     pekerjaan: "",
@@ -723,14 +723,15 @@ export default function MemberDialog({
           <div className="rounded-lg border p-4 space-y-4">
             <h3 className="font-medium text-sm flex items-center gap-2">
               <Briefcase className="h-4 w-4" />
-              Jabatan
+              Jabatan <span className="text-red-500">*</span>
             </h3>
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label>Jabatan</Label>
+                <Label>Jabatan <span className="text-red-500">*</span></Label>
                 <Controller
                   control={control}
                   name="jabatan"
+                  rules={{ required: "Jabatan wajib dipilih" }}
                   render={({ field }) => (
                     <Select
                       value={field.value}
@@ -749,6 +750,9 @@ export default function MemberDialog({
                     </Select>
                   )}
                 />
+                {errors.jabatan && (
+                  <p className="text-sm text-red-500">{errors.jabatan.message}</p>
+                )}
               </div>
             </div>
           </div>

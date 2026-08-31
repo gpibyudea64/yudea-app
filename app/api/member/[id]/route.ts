@@ -151,7 +151,7 @@ export async function PATCH(
         ...(d.tanggalPerkawinanSipil !== undefined && {
           tanggalPerkawinanSipil: d.tanggalPerkawinanSipil ? new Date(d.tanggalPerkawinanSipil) : null,
         }),
-        ...(d.jabatan !== undefined && { jabatan: d.jabatan || null }),
+        ...(d.jabatan !== undefined && { jabatan: d.jabatan }),
         ...(d.gerejaAsal !== undefined && { gerejaAsal: d.gerejaAsal || null }),
         ...(d.pendidikanTerakhir !== undefined && {
           pendidikanTerakhir: d.pendidikanTerakhir || null,

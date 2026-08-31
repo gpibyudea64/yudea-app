@@ -29,6 +29,8 @@
     "clsx": "^2.1.1",
     "date-fns": "^4.3.0",
     "idn-area-data": "^4.0.1",
+    "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.8",
     "lucide-react": "^1.17.0",
     "next": "16.2.6",
     "next-auth": "^5.0.0-beta.31",
