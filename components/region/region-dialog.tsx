@@ -78,7 +78,7 @@ export default function RegionDialog({
         onCreated?.();
       }
 
-      toast.success("Successfull");
+      toast.success("Success");
 
       setOpen(false);
     } catch {

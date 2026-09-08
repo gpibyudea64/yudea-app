@@ -34,7 +34,7 @@ import {
   FileText,
 } from "lucide-react";
 import { Dispatch, SetStateAction, useCallback, useEffect, useMemo, useState } from "react";
-import { Controller, useFieldArray, useForm, useWatch, type Control, type UseFormRegister } from "react-hook-form";
+import { Controller, useFieldArray, useForm, useWatch, type Control, type UseFormRegister, type FieldErrors } from "react-hook-form";
 import { toast } from "sonner";
 import { useDialogForm } from "@/hooks/use-dialog-form";
 import { Button } from "../ui/button";
@@ -726,7 +726,7 @@ function MemberFormBlock({
   index: number;
   control: Control<FamilyForm>;
   register: UseFormRegister<FamilyForm>;
-  errors: any;
+  errors: FieldErrors<FamilyForm>;
   remove: (index: number) => void;
 }) {
   const selectedRole = useWatch({ control, name: `members.${index}.role` as const });

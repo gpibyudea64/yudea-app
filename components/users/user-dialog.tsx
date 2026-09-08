@@ -58,6 +58,7 @@ export default function UserDialog({
     },
   });
 
+  // eslint-disable-next-line react-hooks/incompatible-library -- react-hook-form watch() is intentionally not memoized
   const role = watch("role");
   const { data: regionsData } = useRegions(1, 999);
 
