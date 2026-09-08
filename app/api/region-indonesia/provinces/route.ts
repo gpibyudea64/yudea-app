@@ -13,7 +13,7 @@ export async function GET() {
       })),
     );
   } catch (error) {
-    console.error("getProvinces() failed:", error);
+    console.error("GET /api/region-indonesia/provinces failed:", error);
 
     return NextResponse.json(
       {

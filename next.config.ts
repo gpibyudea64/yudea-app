@@ -9,10 +9,11 @@ const nextConfig: NextConfig = {
 
   // Improve build performance via package import optimization
   experimental: {
-    optimizePackageImports: [
-      "lucide-react",
-      "date-fns",
-    ],
+    optimizePackageImports: ["lucide-react", "date-fns"],
+  },
+
+  outputFileTracingIncludes: {
+    "/*": ["./node_modules/idn-area-data/data/*.csv"],
   },
 
   // Compress responses

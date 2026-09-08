@@ -25,9 +25,14 @@ export async function GET(req: NextRequest) {
         name: d.name,
       })),
     );
-  } catch {
+  } catch (error) {
+    console.error("GET /api/region-indonesia/districts failed:", error);
+
     return NextResponse.json(
-      { error: "Failed to fetch districts" },
+      {
+        error: "Failed to fetch districts",
+        message: error instanceof Error ? error.message : String(error),
+      },
       { status: 500 },
     );
   }

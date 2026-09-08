@@ -25,9 +25,14 @@ export async function GET(req: NextRequest) {
         name: v.name,
       })),
     );
-  } catch {
+  } catch (error) {
+    console.error("GET /api/region-indonesia/villages failed:", error);
+
     return NextResponse.json(
-      { error: "Failed to fetch villages" },
+      {
+        error: "Failed to fetch villages",
+        message: error instanceof Error ? error.message : String(error),
+      },
       { status: 500 },
     );
   }

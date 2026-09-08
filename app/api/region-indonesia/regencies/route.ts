@@ -25,9 +25,14 @@ export async function GET(req: NextRequest) {
         name: r.name,
       })),
     );
-  } catch {
+  } catch (error) {
+    console.error("GET /api/region-indonesia/regencies failed:", error);
+
     return NextResponse.json(
-      { error: "Failed to fetch regencies" },
+      {
+        error: "Failed to fetch regencies",
+        message: error instanceof Error ? error.message : String(error),
+      },
       { status: 500 },
     );
   }
