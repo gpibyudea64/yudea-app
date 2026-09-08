@@ -12,9 +12,14 @@ export async function GET() {
         name: p.name,
       })),
     );
-  } catch {
+  } catch (error) {
+    console.error("getProvinces() failed:", error);
+
     return NextResponse.json(
-      { error: "Failed to fetch provinces" },
+      {
+        error: "Failed to fetch provinces",
+        message: error instanceof Error ? error.message : String(error),
+      },
       { status: 500 },
     );
   }
